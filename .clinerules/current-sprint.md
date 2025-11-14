@@ -1,154 +1,303 @@
-# Current Sprint: Initial Setup & Foundation
+# Current Sprint: Web-to-Mobile Migration - Phase 1
 
 ## Sprint Goal
 
-Set up the React Native/Expo project foundation and build core infrastructure while waiting for EAS enrollment approval.
+Build core data layer and type system to match web app functionality, preparing for full feature migration.
 
 ---
 
-## Priority Focus (This Sprint)
+## ✅ Foundation Complete (Sprint 0)
 
-### 1. Infrastructure Setup
-- Configure NativeWind and base styling system
-- Set up project folder structure
-- Configure Firebase with Web SDK  
-- Set up TypeScript paths and configurations
+The following foundational work has been completed:
 
-### 2. Core Architecture
-- Build navigation structure (Auth + Main stack)
-- Create Context API providers (Auth, Lobby, Game)
-- Develop custom hooks library foundation
+- ✅ NativeWind configured and working
+- ✅ Base UI components created (Button, Card, Input, LoadingSpinner, ErrorMessage)
+- ✅ Navigation structure implemented (Bottom tabs + Auth flow)
+- ✅ Firebase Web SDK integrated with environment variables
+- ✅ Email/password authentication working with persistence
+- ✅ AuthContext provider with protected routes
+- ✅ All placeholder screens created
+- ✅ App runs smoothly in Expo Go
+- ✅ Code follows style guidelines
+- ✅ Project structure established with TypeScript strict mode
 
-### 3. Base UI Components
-- Create reusable base components (Button, Card, Input, etc.)
-- Build common components (LoadingSpinner, ErrorMessage, etc.)
-- Establish component patterns and conventions
-
-### 4. Authentication Flow
-- Implement email/password authentication (Firebase Web SDK)
-- Create login and onboarding screens
-- Build protected route navigation logic
+**7 commits** successfully made to local repository.
 
 ---
 
-## Temporary Rules for This Sprint
+## 🎯 Current Focus: Phase 1 - Core Data & Types (2-3 days)
 
-### Working with Limitations
+### Goal
+Extend mobile app types and create Firestore hooks to match web app's data structure.
 
-Since **EAS enrollment is pending**:
-- ✅ Use Firebase **Web SDK** (not native modules)
-- ✅ Implement **email/password auth** (skip Google Sign-In for now)
-- ✅ Test with **Expo Go** (no custom dev builds yet)
-- ✅ Focus on **UI/UX** and **navigation flow**
-- ✅ Build **screen layouts** without full backend integration
+### Tasks
 
-### What to Skip (For Now)
+#### 1. Update Type Definitions ⏳
+**Files to modify:**
+- `src/types/user.ts`
+- `src/types/lobby.ts`
+- `src/types/game.ts` (create new)
 
-- ❌ Google Sign-In implementation
+**Add to User types:**
+```typescript
+- UserRankings (singles, doubles categories)
+- MatchHistoryRecord
+- MatchStats
+- Verification status fields
+- Admin/ban flags
+```
+
+**Add to Lobby types:**
+```typescript
+- Team structure (player1, player2)
+- Game modes (singles/doubles)
+- Countdown system
+- Score confirmations
+- Exhibition match flags
+```
+
+**Create Match types:**
+```typescript
+- Match history structure
+- Confirmation system
+- Points calculation
+```
+
+#### 2. Build Firestore Hooks 🔨
+**Create in `/src/hooks/firestore/`:**
+
+- `useUserProfile.ts` - Fetch user with rankings
+- `useLobby.ts` - Real-time lobby listener
+- `useMatches.ts` - User match history
+- `useLeaderboard.ts` - Rankings by category
+- `usePendingConfirmations.ts` - Unconfirmed matches
+
+**Hook Pattern:**
+```typescript
+// Return: { data, loading, error, refetch }
+// Always cleanup listeners in useEffect
+```
+
+#### 3. Create Utility Functions 📦
+**Create in `/src/lib/`:**
+
+- `lobbyUtils.ts` - Room code generation, validation
+- `pointsCalculation.ts` - ELO-style ranking updates
+- `matchUtils.ts` - Match creation, confirmation logic
+
+---
+
+## 📋 Upcoming Phases Overview
+
+### Phase 2: Profile & Onboarding (2-3 days)
+- Onboarding flow with photo upload
+- Profile screen with rankings display
+- Edit profile functionality
+- Match statistics view
+
+### Phase 3: Core Game Features (3-4 days) 🎯 **PRIORITY**
+- Lobby creation/joining (QR + code)
+- Real-time game screen
+- Score tracking with haptics
+- Confirmation system
+
+### Phase 4: Secondary Features (2-3 days)
+- Leaderboard screen
+- Match history screen
+- Dashboard with stats
+
+### Phase 5: Admin Features (2 days) - Optional
+- User verification
+- Ban management
+
+### Phase 6: Polish (2-3 days)
+- Loading states
+- Error boundaries
+- Offline handling
+- Performance optimization
+
+---
+
+## 🚨 Temporary Rules (EAS Pending)
+
+### Current Limitations (Web SDK)
+
+**Still Using:**
+- ✅ Firebase Web SDK (not native)
+- ✅ Email/password only (no Google Sign-In)
+- ✅ Expo Go for testing
+- ✅ Mock data for development
+
+**Cannot Use Yet:**
+- ❌ Google Sign-In
 - ❌ Push notifications
-- ❌ Native Firebase SDK features
+- ❌ Native Firebase optimizations
 - ❌ Custom native modules
 - ❌ Production builds
 
----
-
-## Definition of Done
-
-This sprint is complete when:
-
-- [ ] NativeWind configured and working
-- [ ] All base UI components created
-- [ ] Navigation structure implemented
-- [ ] Firebase Web SDK integrated
-- [ ] Email/password authentication working
-- [ ] Basic CRUD operations functional
-- [ ] All screens have UI mockups
-- [ ] App runs smoothly in Expo Go
-- [ ] Code follows all style guidelines
-- [ ] No console errors or warnings
-
----
-
-## Next Sprint Preview
-
-Once **EAS is approved**:
+### After EAS Approval
 1. Switch to native Firebase SDK
 2. Implement Google Sign-In
 3. Add push notifications
 4. Create development builds
 5. Test on physical devices
-6. Optimize performance
-7. Prepare for production deployment
 
 ---
 
-## Development Workflow
+## 📊 Priority System
+
+### 🔴 Must Have (MVP)
+- Lobby system
+- Game screen with scoring
+- Match confirmation
+- Basic leaderboard
+
+### 🟡 Should Have
+- Profile with rankings
+- Match history
+- Onboarding flow
+
+### 🟢 Nice to Have
+- Admin features
+- Analytics
+- Push notifications
+
+---
+
+## ⏱️ Timeline
+
+**Phase 1 (Current):** 2-3 days  
+**MVP Complete (Phases 1-3):** 6-9 days  
+**Full Features (Phases 1-4):** 9-13 days  
+**Complete (All phases):** 15-20 days
+
+*Estimate assumes ~4-6 hours focused work per day*
+
+---
+
+## 📱 Mobile-Specific Adaptations
+
+### Key Differences from Web
+
+1. **Image Handling**
+   - Use `expo-image-picker` (not HEIC conversion)
+   - Compress images before upload
+   - Handle camera permissions
+
+2. **QR Codes**
+   - Use `expo-camera` + `expo-barcode-scanner`
+   - Request camera permissions
+   - Fallback to manual code entry
+
+3. **Timers**
+   - Use React Native timing APIs
+   - Background timer handling
+   - App state management
+
+4. **Navigation**
+   - Bottom tabs (not sidebar)
+   - Stack navigation for details
+   - Swipe gestures
+
+5. **Haptics**
+   - `expo-haptics` for feedback
+   - Score changes, confirmations
+   - Platform-specific handling
+
+---
+
+## 💻 Development Workflow
 
 ### Daily Checklist
-- [ ] Pull latest changes
-- [ ] Run Expo Go on device/simulator
-- [ ] Work on assigned tasks
-- [ ] Test changes thoroughly
-- [ ] Commit with proper message format
+- [ ] Pull latest changes (when on team)
+- [ ] Run Expo Go: `npx expo start`
+- [ ] Work on current phase tasks
+- [ ] Test on both iOS and Android (Expo Go)
+- [ ] Commit with conventional commit format
 - [ ] Update task progress
 
-### Testing on Expo Go
+### Testing
 ```bash
 cd /Users/niazemiluulu/Code/picklebean-mobile
 npx expo start
 ```
-Then scan QR code with Expo Go app.
+Scan QR with Expo Go app (iOS/Android)
+
+### Commit Standards
+```bash
+feat: add user rankings types
+fix: lobby listener cleanup
+refactor: extract points calculation
+docs: update API documentation
+```
 
 ---
 
-## Known Limitations
+## 🎯 Code Quality Standards (Always)
 
-### Web SDK vs Native SDK
-
-**Current (Web SDK)**:
-- ✅ Auth with email/password
-- ✅ Firestore queries
-- ✅ Storage uploads  
-- ✅ Real-time listeners
-- ❌ Google Sign-In
-- ❌ Push notifications
-- ❌ Some native optimizations
-
-**After EAS (Native SDK)**:
-- ✅ All above features
-- ✅ Google Sign-In
-- ✅ Push notifications
-- ✅ Better performance
-- ✅ Full native integration
+- ✅ Type everything explicitly (no `any`)
+- ✅ Use proper error handling (try/catch, error states)
+- ✅ Clean up listeners in useEffect returns
+- ✅ Follow naming conventions (camelCase, PascalCase)
+- ✅ No console.logs in commits
+- ✅ Test on both iOS and Android
+- ✅ Memoize expensive operations
+- ✅ Use NativeWind for all styling
+- ✅ Document complex logic with comments
 
 ---
 
-## Code Quality Reminders
+## 📚 Reference
 
-Even during rapid development:
-- Type everything explicitly
-- Use proper error handling
-- Clean up all listeners
-- Follow naming conventions
-- No console.logs in commits
-- Test on both iOS and Android
+### Web App Location
+`/Users/niazemiluulu/Code/picklebean-ranking-app`
+
+### Key Web App Files to Reference
+- `src/types/user.ts` - Complete user type system
+- `src/types/lobby.ts` - Full lobby structure
+- `src/pages/Game.tsx` - Game logic implementation
+- `src/pages/Lobby.tsx` - Lobby management
+- `src/contexts/AuthContext.tsx` - Auth patterns
+
+### Mobile App Structure
+```
+src/
+├── components/      # UI components
+├── screens/         # Screen components
+├── navigation/      # Navigation setup
+├── contexts/        # Context providers
+├── hooks/           # Custom hooks
+├── types/           # TypeScript types
+├── lib/             # Utility functions
+└── config/          # Configuration
+```
 
 ---
 
-## Sprint Timeline
+## 🚧 Known Issues / Blockers
 
-**Week 1**: Setup and infrastructure
-**Week 2**: Core features and screens
-**Week 3**: Integration and testing
-
-*Note: Timeline may extend while waiting for EAS approval*
+*Document any issues here as they arise*
 
 ---
 
-## Questions or Issues?
+## ✅ Definition of Done (Phase 1)
 
-If you encounter blockers or have questions about implementation:
-1. Check relevant rules in `.clinerules/` folder
-2. Review existing patterns in web app
-3. Test approach in Expo Go before full implementation
-4. Document decisions for future reference
+Phase 1 is complete when:
+
+- [ ] All web app types replicated in mobile
+- [ ] Firestore hooks created and tested
+- [ ] Utility functions implemented
+- [ ] No TypeScript errors
+- [ ] Hooks properly clean up listeners
+- [ ] Code follows all style guidelines
+- [ ] Ready to build screens in Phase 2
+
+---
+
+## 📝 Notes
+
+- Keep Web SDK limitations in mind
+- Reference web app for implementation patterns
+- Document decisions in DECISIONS.md
+- Update this file as you progress
+- Mark tasks complete as you go
