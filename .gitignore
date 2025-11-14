@@ -36,6 +36,21 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+.*.swp
+.*.swo
+.*.swn
+*.un~
+
 # generated native folders
 /ios
 /android
