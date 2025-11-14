@@ -1,20 +1,23 @@
+import './global.css';
+import { NavigationContainer } from '@react-navigation/native';
+import { GluestackUIProvider } from '@gluestack-ui/themed';
+import { config } from '@gluestack-ui/config';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { AppNavigator } from '@/navigation/AppNavigator';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <GluestackUIProvider config={config}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <NavigationContainer>
+            <AppNavigator />
+            <StatusBar style="auto" />
+          </NavigationContainer>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GluestackUIProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
