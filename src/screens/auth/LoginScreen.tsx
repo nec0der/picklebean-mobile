@@ -17,6 +17,7 @@ import {
   Text,
 } from '@gluestack-ui/themed';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAuthErrorMessage, isValidEmail } from '@/lib/authErrors';
 
 interface LoginScreenProps {
   navigation: any;
@@ -29,8 +30,20 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const { signIn } = useAuth();
 
   const handleLogin = async (): Promise<void> => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter email and password');
+    // Field-specific validation
+    if (!email.trim()) {
+      Alert.alert('Email Required', 'Please enter your email address');
+      return;
+    }
+
+    // Email format validation
+    if (!isValidEmail(email.trim())) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      return;
+    }
+
+    if (!password.trim()) {
+      Alert.alert('Password Required', 'Please enter your password');
       return;
     }
 
@@ -39,10 +52,9 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
       await signIn(email.trim(), password);
       // Navigation handled by auth state change
     } catch (error: any) {
-      Alert.alert(
-        'Login Failed',
-        error.message || 'Invalid email or password'
-      );
+      // Use the error mapper for user-friendly messages
+      const errorMessage = getAuthErrorMessage(error);
+      Alert.alert('Sign In Failed', errorMessage);
     } finally {
       setLoading(false);
     }

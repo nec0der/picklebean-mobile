@@ -17,6 +17,7 @@ import {
   Text,
 } from '@gluestack-ui/themed';
 import { useAuth } from '@/contexts/AuthContext';
+import { getAuthErrorMessage, isValidEmail } from '@/lib/authErrors';
 
 interface SignupScreenProps {
   navigation: any;
@@ -32,24 +33,53 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
   const { signUp } = useAuth();
 
   const handleSignup = async (): Promise<void> => {
-    // Validation
-    if (
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !email.trim() ||
-      !password.trim()
-    ) {
-      Alert.alert('Error', 'Please fill in all fields');
+    // Field-specific validation with clear messages
+    if (!firstName.trim()) {
+      Alert.alert('First Name Required', 'Please enter your first name');
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+    if (!lastName.trim()) {
+      Alert.alert('Last Name Required', 'Please enter your last name');
       return;
     }
 
+    if (!email.trim()) {
+      Alert.alert('Email Required', 'Please enter your email address');
+      return;
+    }
+
+    // Email format validation
+    if (!isValidEmail(email.trim())) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address (e.g., name@example.com)');
+      return;
+    }
+
+    if (!password.trim()) {
+      Alert.alert('Password Required', 'Please enter a password');
+      return;
+    }
+
+    // Password length validation
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Alert.alert(
+        'Password Too Short',
+        'Password must be at least 6 characters long for security'
+      );
+      return;
+    }
+
+    if (!confirmPassword.trim()) {
+      Alert.alert('Confirm Password', 'Please confirm your password');
+      return;
+    }
+
+    // Password match validation
+    if (password !== confirmPassword) {
+      Alert.alert(
+        'Passwords Don\'t Match',
+        'Please make sure both passwords are identical'
+      );
       return;
     }
 
@@ -59,7 +89,9 @@ export const SignupScreen = ({ navigation }: SignupScreenProps) => {
       await signUp(email.trim(), password, displayName);
       // Navigation handled by auth state change
     } catch (error: any) {
-      Alert.alert('Signup Failed', error.message || 'Could not create account');
+      // Use the error mapper for user-friendly messages
+      const errorMessage = getAuthErrorMessage(error);
+      Alert.alert('Sign Up Failed', errorMessage);
     } finally {
       setLoading(false);
     }
