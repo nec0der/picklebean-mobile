@@ -4,8 +4,14 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
+    "start:dev": "cp .env.development .env && expo start",
+    "start:prod": "cp .env.production .env && expo start --no-dev",
     "android": "expo start --android",
+    "android:dev": "cp .env.development .env && expo start --android",
+    "android:prod": "cp .env.production .env && expo start --android --no-dev",
     "ios": "expo start --ios",
+    "ios:dev": "cp .env.development .env && expo start --ios",
+    "ios:prod": "cp .env.production .env && expo start --ios --no-dev",
     "web": "expo start --web"
   },
   "dependencies": {

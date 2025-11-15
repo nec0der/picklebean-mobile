@@ -14,6 +14,28 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || '',
 };
 
+// Environment detection
+export const ENV = process.env.EXPO_PUBLIC_ENV || 'development';
+export const IS_DEV = ENV === 'development';
+export const IS_PROD = ENV === 'production';
+
+// Log environment information in development
+if (__DEV__) {
+  console.log('='.repeat(50));
+  console.log('🔥 Firebase Configuration');
+  console.log('='.repeat(50));
+  console.log('Environment:', ENV.toUpperCase());
+  console.log('Project ID:', firebaseConfig.projectId);
+  console.log('Auth Domain:', firebaseConfig.authDomain);
+  console.log('='.repeat(50));
+
+  if (IS_PROD) {
+    console.warn('⚠️  WARNING: Using PRODUCTION Firebase!');
+    console.warn('⚠️  Be careful - this affects real user data!');
+    console.log('='.repeat(50));
+  }
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
