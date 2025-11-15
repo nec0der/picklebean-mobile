@@ -17,10 +17,11 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, firestore } from '@/config/firebase';
-import type { User } from '@/types/user';
+import type { User, UserDocument } from '@/types/user';
 
 interface AuthContextValue {
   user: User | null;
+  userDocument: UserDocument | null;
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -48,6 +49,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userDocument, setUserDocument] = useState<UserDocument | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,6 +69,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
+  // Fetch user document from Firestore
+  const fetchUserDocument = useCallback(async (uid: string): Promise<UserDocument | null> => {
+    try {
+      const userDoc = await getDoc(doc(firestore, 'users', uid));
+
+      if (userDoc.exists()) {
+        return { uid: userDoc.id, ...userDoc.data() } as UserDocument;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching user document:', error);
+      return null;
+    }
+  }, []);
+
   // Initialize auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -74,16 +92,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (firebaseUser) {
         const userData = await fetchUserData(firebaseUser.uid);
+        const userDoc = await fetchUserDocument(firebaseUser.uid);
         setUser(userData);
+        setUserDocument(userDoc);
       } else {
         setUser(null);
+        setUserDocument(null);
       }
 
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [fetchUserData]);
+  }, [fetchUserData, fetchUserDocument]);
 
   // Sign in with email and password
   const signIn = useCallback(async (email: string, password: string): Promise<void> => {
@@ -180,6 +201,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value: AuthContextValue = {
     user,
+    userDocument,
     firebaseUser,
     loading,
     signIn,
