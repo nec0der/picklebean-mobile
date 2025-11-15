@@ -36,6 +36,31 @@ style: format code with prettier
 - `chore`: Maintenance tasks
 - `style`: Code style changes (formatting, semicolons, etc)
 
+## Commit Message Rules for AI Execution
+
+**CRITICAL**: When using `execute_command` to commit, ALWAYS use short, single-line messages.
+
+```bash
+# ✅ CORRECT: Short, single-line
+git commit -m "feat: add play screen implementation"
+git commit -m "fix: resolve auto-join race condition"
+git commit -m "docs: add game flow documentation"
+
+# ❌ INCORRECT: Multi-line (breaks command execution)
+git commit -m "feat: add play screen
+
+This includes:
+- Tab navigation
+- Join flow
+- Multiple features"
+```
+
+**Why**: Multi-line strings in shell commands cause execution failures. Keep messages concise. Detailed information belongs in:
+- Code comments
+- Documentation files
+- Pull request descriptions
+- Not in commit messages executed via command line
+
 ## Branch Strategy
 
 ```
