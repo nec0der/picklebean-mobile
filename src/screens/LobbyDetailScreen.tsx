@@ -1,5 +1,6 @@
 import { memo, useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable, ScrollView, Alert, Clipboard } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { X, Copy, Check, User, Users } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -240,13 +241,13 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       {/* Header */}
-      <View className="px-4 py-3 border-b border-gray-200 flex-row items-center justify-between">
+      <View className="px-4 py-3 border-b border-gray-200 flex-row items-center justify-center relative">
         <Text className="text-xl font-bold text-gray-900">Lobby</Text>
         <Pressable
           onPress={isHost ? handleClose : handleLeave}
-          className="p-2"
+          className="absolute right-4 p-2"
         >
           <X size={24} color="#ef4444" />
         </Pressable>
@@ -277,7 +278,7 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
           </View>
 
           {/* Game Mode */}
-          <View className="flex-row items-center justify-center space-x-2">
+          <View className="flex-row items-center justify-center space-x-2 mt-6">
             {lobby.gameMode === 'singles' ? (
               <User size={20} color="#3b82f6" />
             ) : (
@@ -347,7 +348,7 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 });
 
@@ -361,7 +362,7 @@ interface PlayerSlotProps {
 const PlayerSlot = memo(({ player, isCurrentUser, isHost }: PlayerSlotProps) => {
   if (!player || !player.uid) {
     return (
-      <View className="flex-row items-center p-3 border-2 border-dashed border-gray-300 rounded-lg">
+      <View className="flex-row items-center p-3 border-2 border-dashed border-gray-300 rounded-lg min-h-[68px]">
         <LoadingSpinner size="small" />
         <Text className="ml-3 text-gray-500">Waiting for player...</Text>
       </View>
