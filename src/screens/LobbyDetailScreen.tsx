@@ -189,9 +189,24 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
     );
   };
 
-  const handleStartGame = () => {
-    // TODO: Implement start game logic
-    Alert.alert('Coming Soon', 'Game screen will be implemented next!');
+  const handleStartGame = async () => {
+    if (!roomCode || !lobby || !canStartGame()) return;
+
+    try {
+      const lobbyRef = doc(firestore, 'lobbies', roomCode);
+      await updateDoc(lobbyRef, {
+        gameStarted: true,
+        gameStartedAt: new Date(),
+        lastActivity: new Date(),
+      });
+
+      // Navigate to game screen (placeholder - will be implemented in next phase)
+      Alert.alert('Game Starting!', 'Game screen will be implemented next!');
+      // TODO: navigation.navigate('Game', { roomCode });
+    } catch (err) {
+      console.error('Error starting game:', err);
+      Alert.alert('Error', 'Failed to start game. Please try again.');
+    }
   };
 
   const canStartGame = (): boolean => {
@@ -207,6 +222,24 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
         lobby.team2.player2?.uid
       );
     }
+  };
+
+  const isRoomFull = (): boolean => {
+    if (!lobby) return false;
+    
+    const capacity = lobby.gameMode === 'singles' ? 2 : 4;
+    return getCurrentPlayerCount() >= capacity;
+  };
+
+  const isUserInLobby = (): boolean => {
+    if (!lobby || !user) return false;
+    
+    return !!(
+      lobby.team1.player1?.uid === user.id ||
+      lobby.team1.player2?.uid === user.id ||
+      lobby.team2.player1?.uid === user.id ||
+      lobby.team2.player2?.uid === user.id
+    );
   };
 
   // Loading state
@@ -288,6 +321,15 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
               {lobby.gameMode === 'singles' ? 'Singles (1v1)' : 'Doubles (2v2)'}
             </Text>
           </View>
+
+          {/* Room Full Message */}
+          {isRoomFull() && !isUserInLobby() && (
+            <View className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <Text className="text-red-600 font-medium text-center">
+                Room is full ({getCurrentPlayerCount()}/{lobby.gameMode === 'singles' ? 2 : 4})
+              </Text>
+            </View>
+          )}
 
           {/* Teams */}
           <View className="space-y-6">
