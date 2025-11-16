@@ -192,14 +192,17 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
               )}
 
               {/* Join Button */}
-              <Button
-                title={isJoining ? 'Joining...' : 'Join Game'}
+              <Pressable
                 onPress={handleJoinGame}
                 disabled={!roomCode.trim() || isJoining}
-                loading={isJoining}
-                size="lg"
-                className="bg-green-500 mt-2"
-              />
+                className={`py-6 rounded-lg bg-green-500 items-center mt-2 ${
+                  (!roomCode.trim() || isJoining) ? 'opacity-50' : 'active:bg-green-600'
+                }`}
+              >
+                <Text className="text-xl font-bold text-white">
+                  {isJoining ? 'Joining...' : 'Join Game'}
+                </Text>
+              </Pressable>
             </View>
           ) : (
             <View className="gap-4">
@@ -239,14 +242,17 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
               )}
 
               {/* Create Button */}
-              <Button
-                title={isCreating ? 'Creating...' : 'Create Game'}
+              <Pressable
                 onPress={handleCreateGame}
                 disabled={!selectedMode || isCreating}
-                loading={isCreating}
-                size="lg"
-                className="bg-green-500 mt-2"
-              />
+                className={`py-6 rounded-lg bg-green-500 items-center mt-2 ${
+                  (!selectedMode || isCreating) ? 'opacity-50' : 'active:bg-green-600'
+                }`}
+              >
+                <Text className="text-xl font-bold text-white">
+                  {isCreating ? 'Creating...' : 'Create Game'}
+                </Text>
+              </Pressable>
             </View>
           )}
         </View>
