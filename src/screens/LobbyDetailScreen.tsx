@@ -9,8 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLobby } from '@/hooks/firestore/useLobby';
 import { useLobbyActions } from '@/hooks/actions/useLobbyActions';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
-import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
+import { PlayerSlot } from '@/components/features/lobby/PlayerSlot';
 import type { Player } from '@/types/lobby';
 import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
@@ -253,7 +253,7 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1 px-4 py-6">
+      <ScrollView className="flex-1 px-4 py-6" contentContainerStyle={{ paddingBottom: isHost ? 100 : 20 }}>
         <View className="max-w-md mx-auto w-full space-y-6">
           {/* Room Code */}
           <View className="items-center">
@@ -290,11 +290,11 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
           </View>
 
           {/* Teams */}
-          <View className="space-y-4">
+          <View className="space-y-6">
             {/* Team 1 */}
             <Card className="p-4">
               <Text className="text-lg font-bold text-gray-900 mb-3">Team 1</Text>
-              <View className="space-y-3">
+              <View className="gap-3">
                 <PlayerSlot
                   player={lobby.team1.player1}
                   isCurrentUser={lobby.team1.player1?.uid === user?.id}
@@ -313,7 +313,7 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
             {/* Team 2 */}
             <Card className="p-4">
               <Text className="text-lg font-bold text-gray-900 mb-3">Team 2</Text>
-              <View className="space-y-3">
+              <View className="gap-3">
                 <PlayerSlot
                   player={lobby.team2.player1}
                   isCurrentUser={lobby.team2.player1?.uid === user?.id}
@@ -329,69 +329,28 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
               </View>
             </Card>
           </View>
-
-          {/* Start Game Button (Host Only) */}
-          {isHost && (
-            <Pressable
-              onPress={handleStartGame}
-              disabled={!canStartGame()}
-              className={`py-4 rounded-lg items-center ${
-                canStartGame()
-                  ? 'bg-green-500 active:bg-green-600'
-                  : 'bg-gray-300'
-              }`}
-            >
-              <Text className="text-lg font-bold text-white">
-                Start Game
-              </Text>
-            </Pressable>
-          )}
         </View>
       </ScrollView>
+
+      {/* Fixed Start Game Button (Host Only) */}
+      {isHost && (
+        <View className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+          <Pressable
+            onPress={handleStartGame}
+            disabled={!canStartGame()}
+            className={`py-4 rounded-lg items-center ${
+              canStartGame()
+                ? 'bg-green-500 active:bg-green-600'
+                : 'bg-gray-300'
+            }`}
+          >
+            <Text className="text-lg font-bold text-white">
+              Start Game
+            </Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 });
-
-// Player Slot Component
-interface PlayerSlotProps {
-  player?: Player;
-  isCurrentUser: boolean;
-  isHost: boolean;
-}
-
-const PlayerSlot = memo(({ player, isCurrentUser, isHost }: PlayerSlotProps) => {
-  if (!player || !player.uid) {
-    return (
-      <View className="flex-row items-center p-3 border-2 border-dashed border-gray-300 rounded-lg min-h-[68px]">
-        <LoadingSpinner size="small" />
-        <Text className="ml-3 text-gray-500">Waiting for player...</Text>
-      </View>
-    );
-  }
-
-  return (
-    <View
-      className={`flex-row items-center space-x-3 p-3 rounded-lg border-2 ${
-        isCurrentUser
-          ? 'bg-blue-50 border-blue-200'
-          : 'bg-gray-50 border-gray-200'
-      }`}
-    >
-      <Avatar
-        uri={player.photoURL || null}
-        name={player.displayName}
-        size="md"
-      />
-      <View className="flex-1">
-        <Text className="font-medium text-gray-900">{player.displayName}</Text>
-        <View className="flex-row space-x-2">
-          {isHost && <Text className="text-xs text-blue-600">Host</Text>}
-          {isCurrentUser && <Text className="text-xs text-green-600">You</Text>}
-        </View>
-      </View>
-    </View>
-  );
-});
-
-PlayerSlot.displayName = 'PlayerSlot';
 LobbyDetailScreen.displayName = 'LobbyDetailScreen';
