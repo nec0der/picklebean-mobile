@@ -93,12 +93,16 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
     setIsCreating(true);
 
     try {
-      // Prepare player data
-      const hostData = {
+      // Prepare player data - only include photoURL if it exists
+      const hostData: any = {
         uid: user.id,
         displayName: userDocument.displayName || user.id,
-        photoURL: userDocument.profilePictureUrl || undefined,
       };
+      
+      // Only add photoURL if it exists (Firestore doesn't accept undefined)
+      if (userDocument.profilePictureUrl) {
+        hostData.photoURL = userDocument.profilePictureUrl;
+      }
 
       // Create lobby
       const roomCode = await createLobby(user.id, selectedMode, hostData);

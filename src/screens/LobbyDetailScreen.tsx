@@ -71,11 +71,16 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
 
     setIsJoining(true);
     try {
-      const player: Player = {
+      // Prepare player data - only include photoURL if it exists
+      const player: any = {
         uid: user.id,
         displayName: userDocument.displayName || user.email || 'Unknown',
-        photoURL: userDocument.profilePictureUrl || undefined,
       };
+      
+      // Only add photoURL if it exists (Firestore doesn't accept undefined)
+      if (userDocument.profilePictureUrl) {
+        player.photoURL = userDocument.profilePictureUrl;
+      }
 
       // Find first empty slot
       let targetTeam: 1 | 2 = 1;
