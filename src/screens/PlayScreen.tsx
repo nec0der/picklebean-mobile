@@ -1,6 +1,6 @@
 import { memo, useState, useCallback } from 'react';
 import { View, Text, Pressable, KeyboardAvoidingView, Platform, ScrollView, TextInput } from 'react-native';
-import { User, Users } from 'lucide-react-native';
+import { User, Users, X } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { TabScreenProps } from '@/types/navigation';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -42,6 +42,12 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
     const uppercased = text.toUpperCase();
     setRoomCode(uppercased);
     if (joinError) setJoinError(''); // Clear error on change
+  }, [joinError]);
+
+  // Handle clear room code
+  const handleClearCode = useCallback(() => {
+    setRoomCode('');
+    if (joinError) setJoinError('');
   }, [joinError]);
 
   // Handle join game
@@ -174,16 +180,26 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                 <Text className="text-base font-semibold text-gray-700 mb-3">
                   Room Code
                 </Text>
-                <TextInput
-                  value={roomCode}
-                  onChangeText={handleRoomCodeChange}
-                  placeholder="ABCD"
-                  placeholderTextColor="#d1d5db"
-                  maxLength={4}
-                  autoCapitalize="characters"
-                  autoCorrect={false}
-                  className="text-4xl tracking-widest font-bold py-6 px-4 border-2 border-gray-300 rounded-lg bg-white"
-                />
+                <View className="relative">
+                  <TextInput
+                    value={roomCode}
+                    onChangeText={handleRoomCodeChange}
+                    placeholder="ABCD"
+                    placeholderTextColor="#d1d5db"
+                    maxLength={4}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    className="text-4xl tracking-widest font-bold py-6 px-4 pr-16 border-2 border-gray-300 rounded-lg bg-white"
+                  />
+                  {roomCode.length > 0 && (
+                    <Pressable
+                      onPress={handleClearCode}
+                      className="absolute right-4 top-0 bottom-0 justify-center"
+                    >
+                      <X size={32} color="#9ca3af" />
+                    </Pressable>
+                  )}
+                </View>
               </View>
 
               {/* Join Error */}
@@ -220,6 +236,7 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
               <View className="gap-3">
                 <GameModeCard
                   icon={User}
+                  iconColor="#3b82f6"
                   title="Singles (1v1)"
                   description="One-on-one match"
                   subtitle="Same-gender for ranked—keeps it fair!"
@@ -228,6 +245,7 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                 />
                 <GameModeCard
                   icon={Users}
+                  iconColor="#a855f7"
                   title="Doubles (2v2)"
                   description="Team match"
                   subtitle="Go mixed or same-gender—both rank up your score."

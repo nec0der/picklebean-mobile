@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react-native';
 
 interface GameModeCardProps {
   icon: LucideIcon;
+  iconColor: string;
   title: string;
   description: string;
   subtitle?: string;
@@ -14,6 +15,7 @@ interface GameModeCardProps {
 
 export const GameModeCard = memo(({
   icon: Icon,
+  iconColor,
   title,
   description,
   subtitle,
@@ -37,7 +39,7 @@ export const GameModeCard = memo(({
         >
           <Icon
             size={24}
-            color={selected ? '#22c55e' : '#6b7280'}
+            color={selected ? '#22c55e' : iconColor}
           />
         </View>
         <View className="flex-1">
