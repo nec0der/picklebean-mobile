@@ -1,5 +1,5 @@
 import { memo, useState, useCallback } from 'react';
-import { View, Text, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, Pressable, KeyboardAvoidingView, Platform, ScrollView, TextInput } from 'react-native';
 import { User, Users } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { TabScreenProps } from '@/types/navigation';
@@ -8,7 +8,6 @@ import type { RootStackParamList } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLobbyActions } from '@/hooks/actions/useLobbyActions';
 import { isValidRoomCode } from '@/lib/roomCode';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ErrorMessage, LoadingSpinner } from '@/components/common';
 import { GameModeCard } from '@/components/features/play/GameModeCard';
@@ -175,14 +174,15 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                 <Text className="text-base font-semibold text-gray-700 mb-3">
                   Room Code
                 </Text>
-                <Input
+                <TextInput
                   value={roomCode}
                   onChangeText={handleRoomCodeChange}
                   placeholder="ABCD"
+                  placeholderTextColor="#d1d5db"
                   maxLength={4}
                   autoCapitalize="characters"
                   autoCorrect={false}
-                  className="text-4xl tracking-widest font-bold text-center py-6"
+                  className="text-4xl tracking-widest font-bold text-center py-6 border-2 border-gray-300 rounded-lg bg-white"
                 />
               </View>
 
@@ -194,9 +194,9 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
               {/* Join Button */}
               <Pressable
                 onPress={handleJoinGame}
-                disabled={!roomCode.trim() || isJoining}
+                disabled={roomCode.length !== 4 || isJoining}
                 className={`py-4 rounded-lg bg-green-500 items-center mt-2 ${
-                  (!roomCode.trim() || isJoining) ? 'opacity-50' : 'active:bg-green-600'
+                  (roomCode.length !== 4 || isJoining) ? 'opacity-50' : 'active:bg-green-600'
                 }`}
               >
                 <Text className="text-lg font-bold text-white">
