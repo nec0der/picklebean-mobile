@@ -182,7 +182,7 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                   maxLength={4}
                   autoCapitalize="characters"
                   autoCorrect={false}
-                  className="text-4xl tracking-widest font-bold text-center py-6 border-2 border-gray-300 rounded-lg bg-white"
+                  className="text-4xl tracking-widest font-bold py-6 px-4 border-2 border-gray-300 rounded-lg bg-white"
                 />
               </View>
 
