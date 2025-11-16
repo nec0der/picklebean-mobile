@@ -195,11 +195,11 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
               <Pressable
                 onPress={handleJoinGame}
                 disabled={!roomCode.trim() || isJoining}
-                className={`py-6 rounded-lg bg-green-500 items-center mt-2 ${
+                className={`py-4 rounded-lg bg-green-500 items-center mt-2 ${
                   (!roomCode.trim() || isJoining) ? 'opacity-50' : 'active:bg-green-600'
                 }`}
               >
-                <Text className="text-xl font-bold text-white">
+                <Text className="text-lg font-bold text-white">
                   {isJoining ? 'Joining...' : 'Join Game'}
                 </Text>
               </Pressable>
@@ -245,11 +245,11 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
               <Pressable
                 onPress={handleCreateGame}
                 disabled={!selectedMode || isCreating}
-                className={`py-6 rounded-lg bg-green-500 items-center mt-2 ${
+                className={`py-4 rounded-lg bg-green-500 items-center mt-2 ${
                   (!selectedMode || isCreating) ? 'opacity-50' : 'active:bg-green-600'
                 }`}
               >
-                <Text className="text-xl font-bold text-white">
+                <Text className="text-lg font-bold text-white">
                   {isCreating ? 'Creating...' : 'Create Game'}
                 </Text>
               </Pressable>
