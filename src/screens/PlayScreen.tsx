@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useEffect } from 'react';
 import { View, Text, Pressable, KeyboardAvoidingView, Platform, ScrollView, TextInput } from 'react-native';
 import { User, Users, X } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,8 @@ import { isValidRoomCode } from '@/lib/roomCode';
 import { Button } from '@/components/ui/Button';
 import { ErrorMessage, LoadingSpinner } from '@/components/common';
 import { GameModeCard } from '@/components/features/play/GameModeCard';
+import { PendingGameBanner } from '@/components/common/PendingGameBanner';
+import { usePendingGame } from '@/hooks/firestore/usePendingGame';
 import type { GameMode } from '@/types/lobby';
 import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
@@ -36,6 +38,20 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
   const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
   const [createError, setCreateError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+
+  // Pending game detection (suppress during create/join)
+  const [isSuppressingBanner, setIsSuppressingBanner] = useState(false);
+  const { pendingGame, loading: pendingGameLoading } = usePendingGame(isSuppressingBanner);
+
+  // Reset banner suppression when leaving screen
+  useEffect(() => {
+    return () => {
+      setIsSuppressingBanner(false);
+    };
+  }, []);
+
+  // Check if functionality should be disabled
+  const isDisabled = !!pendingGame;
 
   // Handle room code input (auto-uppercase, max 4 chars)
   const handleRoomCodeChange = useCallback((text: string) => {
@@ -64,6 +80,7 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
 
     setJoinError('');
     setIsJoining(true);
+    setIsSuppressingBanner(true); // Suppress banner during join
 
     try {
       // Check if lobby exists
@@ -91,6 +108,7 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
 
     setCreateError('');
     setIsCreating(true);
+    setIsSuppressingBanner(true); // Suppress banner during create
 
     try {
       // Prepare player data - only include photoURL if it exists
@@ -134,6 +152,20 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
         keyboardShouldPersistTaps="handled"
       >
         <View className="max-w-md mx-auto w-full">
+          {/* Pending Game Banner */}
+          {pendingGame && !pendingGameLoading && (
+            <PendingGameBanner pendingGame={pendingGame} />
+          )}
+
+          {/* Disabled Overlay Message */}
+          {isDisabled && (
+            <View className="mb-4 p-4 bg-gray-100 border border-gray-200 rounded-lg">
+              <Text className="text-gray-600 font-medium text-center">
+                Complete your pending {pendingGame?.type === 'game' ? 'game' : 'lobby'} to start a new one
+              </Text>
+            </View>
+          )}
+
           {/* Tab Switcher */}
           <View className="flex-row bg-gray-100 rounded-lg p-1 mb-6">
             <Pressable
@@ -166,9 +198,10 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
             </Pressable>
           </View>
 
-          {/* Tab Content */}
-          {activeTab === 'join' ? (
-            <View className="gap-4">
+          {/* Tab Content - with disabled overlay */}
+          <View className={isDisabled ? 'opacity-50 pointer-events-none' : ''}>
+            {activeTab === 'join' ? (
+              <View className="gap-4">
               {/* Join Title */}
               <View>
                 <Text className="text-2xl font-bold text-gray-900 mb-2">
@@ -277,6 +310,7 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
               </Pressable>
             </View>
           )}
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
