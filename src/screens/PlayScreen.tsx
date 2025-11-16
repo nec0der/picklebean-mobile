@@ -172,17 +172,17 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
 
               {/* Room Code Input */}
               <View>
-                <Text className="text-sm font-medium text-gray-700 mb-2">
+                <Text className="text-base font-semibold text-gray-700 mb-3">
                   Room Code
                 </Text>
                 <Input
                   value={roomCode}
                   onChangeText={handleRoomCodeChange}
-                  placeholder="Enter code"
+                  placeholder="ABCD"
                   maxLength={4}
                   autoCapitalize="characters"
                   autoCorrect={false}
-                  className="text-lg tracking-wider"
+                  className="text-4xl tracking-widest font-bold text-center py-6"
                 />
               </View>
 
@@ -197,7 +197,8 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                 onPress={handleJoinGame}
                 disabled={!roomCode.trim() || isJoining}
                 loading={isJoining}
-                className="bg-green-500"
+                size="lg"
+                className="bg-green-500 mt-2"
               />
             </View>
           ) : (
@@ -243,7 +244,8 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                 onPress={handleCreateGame}
                 disabled={!selectedMode || isCreating}
                 loading={isCreating}
-                className="bg-green-500"
+                size="lg"
+                className="bg-green-500 mt-2"
               />
             </View>
           )}
