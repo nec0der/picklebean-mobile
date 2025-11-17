@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Avatar } from '@/components/ui/Avatar';
+import { LoadingSpinner } from '@/components/common';
 import type { Player } from '@/types/lobby';
 
 interface DraggablePlayerSlotProps {
@@ -64,7 +65,6 @@ export const DraggablePlayerSlot = memo(({
   // Track card size from placeholder (which matches actual card dimensions)
   const handleCardSizeLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
-    console.log('📏 handleCardSizeLayout called:', { width, height, teamNumber, slotNumber });
     cardWidth.value = width;
     cardHeight.value = height;
   };
@@ -136,15 +136,14 @@ export const DraggablePlayerSlot = memo(({
       <View 
         ref={viewRef}
         onLayout={handleLayout}
-        className={`p-3 border-2 border-dashed rounded-lg ${
+        className={`h-16 flex-row items-center px-3 border-2 border-dashed rounded-lg ${
           isHighlighted 
             ? 'border-green-400 bg-green-50' 
             : 'border-gray-300 bg-gray-50'
         }`}
       >
-        <View className="flex-row items-center justify-center py-2">
-          <Text className="text-gray-400 text-sm">Waiting for player...</Text>
-        </View>
+        <LoadingSpinner size="small" />
+        <Text className="ml-3 text-gray-400 text-sm">Waiting for player...</Text>
       </View>
     );
   }
