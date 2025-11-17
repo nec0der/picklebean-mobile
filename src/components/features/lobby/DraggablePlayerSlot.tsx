@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { View, Text } from 'react-native';
+import { memo, useRef } from 'react';
+import { View, Text, LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -19,7 +19,10 @@ interface DraggablePlayerSlotProps {
   isCurrentUser: boolean;
   hostId: string;
   onDragStart: (team: number, slot: number) => void;
-  onDragEnd: (targetTeam: number, targetSlot: number) => void;
+  onDragMove?: (x: number, y: number) => void;
+  onDragEnd: (x: number, y: number) => void;
+  onLayout: (team: number, slot: number, layout: { x: number; y: number; width: number; height: number }) => void;
+  isHighlighted?: boolean;
 }
 
 export const DraggablePlayerSlot = memo(({
@@ -30,8 +33,12 @@ export const DraggablePlayerSlot = memo(({
   isCurrentUser,
   hostId,
   onDragStart,
+  onDragMove,
   onDragEnd,
+  onLayout,
+  isHighlighted = false,
 }: DraggablePlayerSlotProps) => {
+  const viewRef = useRef<View>(null);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -40,6 +47,17 @@ export const DraggablePlayerSlot = memo(({
   const hasPlayer = !!player?.uid;
   const canDrag = isHost && hasPlayer;
   const isHostPlayer = player?.uid === hostId;
+
+  // Track position when layout changes
+  const handleLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    // Use setTimeout to ensure measurement after layout
+    setTimeout(() => {
+      viewRef.current?.measureInWindow((x, y) => {
+        onLayout(teamNumber, slotNumber, { x, y, width, height });
+      });
+    }, 0);
+  };
 
   // Long press gesture for dragging (host only)
   const longPressGesture = Gesture.LongPress()
@@ -63,11 +81,15 @@ export const DraggablePlayerSlot = memo(({
     .onUpdate((event) => {
       translateX.value = event.translationX;
       translateY.value = event.translationY;
+      
+      // Notify parent of current drag position for highlighting
+      if (onDragMove) {
+        runOnJS(onDragMove)(event.absoluteX, event.absoluteY);
+      }
     })
-    .onEnd(() => {
-      // For now, we'll make it simpler - just trigger the callback
-      // The parent will handle the drop logic
-      runOnJS(onDragEnd)(teamNumber, slotNumber);
+    .onEnd((event) => {
+      // Pass absolute position to parent to determine drop target
+      runOnJS(onDragEnd)(event.absoluteX, event.absoluteY);
       runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
 
       // Snap back to original position
@@ -92,7 +114,15 @@ export const DraggablePlayerSlot = memo(({
   if (!hasPlayer) {
     // Empty slot - show drop target
     return (
-      <View className="p-3 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+      <View 
+        ref={viewRef}
+        onLayout={handleLayout}
+        className={`p-3 border-2 border-dashed rounded-lg ${
+          isHighlighted 
+            ? 'border-green-400 bg-green-50' 
+            : 'border-gray-300 bg-gray-50'
+        }`}
+      >
         <View className="flex-row items-center justify-center py-2">
           <Text className="text-gray-400 text-sm">Waiting for player...</Text>
         </View>
@@ -104,10 +134,14 @@ export const DraggablePlayerSlot = memo(({
     <GestureDetector gesture={composedGesture}>
       <Animated.View style={animatedStyle}>
         <View 
+          ref={viewRef}
+          onLayout={handleLayout}
           className={`flex-row items-center p-3 rounded-lg ${
-            isCurrentUser 
-              ? 'bg-blue-50 border-2 border-blue-300' 
-              : 'bg-gray-100 border-2 border-gray-200'
+            isHighlighted
+              ? 'bg-green-50 border-2 border-green-400'
+              : isCurrentUser 
+                ? 'bg-blue-50 border-2 border-blue-300' 
+                : 'bg-gray-100 border-2 border-gray-200'
           }`}
         >
           <Avatar

@@ -33,9 +33,53 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
     slot: number;
     player: Player;
   } | null>(null);
+  const [slotPositions, setSlotPositions] = useState<Record<string, {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }>>({});
+  const [activeDropZone, setActiveDropZone] = useState<{
+    team: number;
+    slot: number;
+  } | null>(null);
 
   // Check if current user is host
   const isHost = user?.id === lobby?.hostId;
+
+  // Position tracking handler
+  const handleSlotLayout = useCallback((
+    team: number,
+    slot: number,
+    layout: { x: number; y: number; width: number; height: number }
+  ) => {
+    setSlotPositions(prev => ({
+      ...prev,
+      [`${team}-${slot}`]: layout
+    }));
+  }, []);
+
+  // Calculate which slot the drag is over
+  const calculateDropTarget = useCallback((x: number, y: number): {
+    team: number;
+    slot: number;
+  } | null => {
+    for (const [key, pos] of Object.entries(slotPositions)) {
+      const [team, slot] = key.split('-').map(Number);
+      
+      // Check if drag position is within this slot's bounds
+      if (
+        x >= pos.x &&
+        x <= pos.x + pos.width &&
+        y >= pos.y &&
+        y <= pos.y + pos.height
+      ) {
+        return { team, slot };
+      }
+    }
+    
+    return null;
+  }, [slotPositions]);
 
   // Drag & drop handlers
   const handleDragStart = useCallback((team: number, slot: number) => {
@@ -46,11 +90,29 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
     }
   }, [lobby]);
 
-  const handleDragEnd = useCallback(async (targetTeam: number, targetSlot: number) => {
-    if (!draggedPlayer || !lobby || !roomCode) return;
+  // Update active drop zone during drag
+  const handleDragMove = useCallback((x: number, y: number) => {
+    const dropTarget = calculateDropTarget(x, y);
+    setActiveDropZone(dropTarget);
+  }, [calculateDropTarget]);
 
+  // Handle drop with calculated position
+  const handleDragEnd = useCallback(async (x: number, y: number) => {
+    if (!draggedPlayer || !lobby || !roomCode) return;
+    
+    const dropTarget = calculateDropTarget(x, y);
+    setActiveDropZone(null);
+    
+    if (!dropTarget) {
+      // Dropped outside any slot
+      setDraggedPlayer(null);
+      return;
+    }
+    
     const sourceTeam = draggedPlayer.team;
     const sourceSlot = draggedPlayer.slot;
+    const targetTeam = dropTarget.team;
+    const targetSlot = dropTarget.slot;
 
     // Can't drop on same slot
     if (sourceTeam === targetTeam && sourceSlot === targetSlot) {
@@ -74,7 +136,7 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
     } finally {
       setDraggedPlayer(null);
     }
-  }, [draggedPlayer, lobby, roomCode]);
+  }, [draggedPlayer, lobby, roomCode, calculateDropTarget]);
 
   // Check if user is in lobby
   const isInLobby = useCallback(() => {
@@ -391,7 +453,14 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
                   isCurrentUser={lobby.team1.player1?.uid === user?.id}
                   hostId={lobby.hostId}
                   onDragStart={handleDragStart}
+                  onDragMove={handleDragMove}
                   onDragEnd={handleDragEnd}
+                  onLayout={handleSlotLayout}
+                  isHighlighted={
+                    activeDropZone?.team === 1 && 
+                    activeDropZone?.slot === 1 &&
+                    !(draggedPlayer?.team === 1 && draggedPlayer?.slot === 1)
+                  }
                 />
                 {lobby.gameMode === 'doubles' && (
                   <DraggablePlayerSlot
@@ -402,7 +471,14 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
                     isCurrentUser={lobby.team1.player2?.uid === user?.id}
                     hostId={lobby.hostId}
                     onDragStart={handleDragStart}
+                    onDragMove={handleDragMove}
                     onDragEnd={handleDragEnd}
+                    onLayout={handleSlotLayout}
+                    isHighlighted={
+                      activeDropZone?.team === 1 && 
+                      activeDropZone?.slot === 2 &&
+                      !(draggedPlayer?.team === 1 && draggedPlayer?.slot === 2)
+                    }
                   />
                 )}
               </View>
@@ -420,7 +496,14 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
                   isCurrentUser={lobby.team2.player1?.uid === user?.id}
                   hostId={lobby.hostId}
                   onDragStart={handleDragStart}
+                  onDragMove={handleDragMove}
                   onDragEnd={handleDragEnd}
+                  onLayout={handleSlotLayout}
+                  isHighlighted={
+                    activeDropZone?.team === 2 && 
+                    activeDropZone?.slot === 1 &&
+                    !(draggedPlayer?.team === 2 && draggedPlayer?.slot === 1)
+                  }
                 />
                 {lobby.gameMode === 'doubles' && (
                   <DraggablePlayerSlot
@@ -431,7 +514,14 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
                     isCurrentUser={lobby.team2.player2?.uid === user?.id}
                     hostId={lobby.hostId}
                     onDragStart={handleDragStart}
+                    onDragMove={handleDragMove}
                     onDragEnd={handleDragEnd}
+                    onLayout={handleSlotLayout}
+                    isHighlighted={
+                      activeDropZone?.team === 2 && 
+                      activeDropZone?.slot === 2 &&
+                      !(draggedPlayer?.team === 2 && draggedPlayer?.slot === 2)
+                    }
                   />
                 )}
               </View>
