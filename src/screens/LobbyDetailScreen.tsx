@@ -73,16 +73,31 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
     team: number;
     slot: number;
   } | null => {
-    if (!cardWidth || !cardHeight) return null;
+    console.log('🔍 calculateDropTarget called:', { x, y, cardWidth, cardHeight });
+    console.log('📦 slotPositions keys:', Object.keys(slotPositions));
+    
+    if (!cardWidth || !cardHeight) {
+      console.log('❌ No card dimensions!');
+      return null;
+    }
 
     // Dragged card bounds (center point is x,y)
     const draggedTop = y - (cardHeight / 2);
     const draggedBottom = y + (cardHeight / 2);
     const draggedLeft = x - (cardWidth / 2);
     const draggedRight = x + (cardWidth / 2);
+    
+    console.log('📐 Dragged card bounds:', {
+      top: draggedTop,
+      bottom: draggedBottom,
+      left: draggedLeft,
+      right: draggedRight
+    });
 
     for (const [key, pos] of Object.entries(slotPositions)) {
       const [team, slot] = key.split('-').map(Number);
+      
+      console.log(`Checking slot ${key}:`, pos);
       
       // Check if dragged card overlaps with this slot (AABB intersection)
       const verticalOverlap = 
@@ -93,11 +108,15 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
         draggedRight > pos.x &&
         draggedLeft < pos.x + pos.width;
       
+      console.log(`  Overlaps: vertical=${verticalOverlap}, horizontal=${horizontalOverlap}`);
+      
       if (verticalOverlap && horizontalOverlap) {
+        console.log(`✅ Found match: team ${team}, slot ${slot}`);
         return { team, slot };
       }
     }
     
+    console.log('❌ No overlapping slot found');
     return null;
   }, [slotPositions]);
 
@@ -108,23 +127,30 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
     width: number, 
     height: number
   ) => {
+    console.log('🟢 DRAG START:', { team, slot, width, height });
+    console.log('📍 slotPositions:', JSON.stringify(slotPositions, null, 2));
     if (!lobby) return;
     const player = lobby[`team${team as 1 | 2}`][`player${slot as 1 | 2}`];
     if (player) {
       setDraggedPlayer({ team, slot, player });
       setDraggedCardSize({ width, height });
     }
-  }, [lobby]);
+  }, [lobby, slotPositions]);
 
   // Update active drop zone during drag
   const handleDragMove = useCallback((x: number, y: number) => {
-    if (!draggedCardSize) return;
+    console.log('🔵 DRAG MOVE:', { x, y, draggedCardSize });
+    if (!draggedCardSize) {
+      console.log('❌ No draggedCardSize!');
+      return;
+    }
     const dropTarget = calculateDropTarget(
       x, 
       y, 
       draggedCardSize.width, 
       draggedCardSize.height
     );
+    console.log('🎯 dropTarget:', dropTarget);
     setActiveDropZone(dropTarget);
   }, [calculateDropTarget, draggedCardSize]);
 
