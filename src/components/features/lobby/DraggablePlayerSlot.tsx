@@ -147,7 +147,10 @@ export const DraggablePlayerSlot = memo(({
   }
 
   return (
-    <View>
+    <View 
+      ref={viewRef}
+      onLayout={handleLayout}
+    >
       {/* Placeholder - shows at original position during drag */}
       <Animated.View 
         style={placeholderStyle}
@@ -167,8 +170,6 @@ export const DraggablePlayerSlot = memo(({
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={animatedStyle}>
             <View 
-              ref={viewRef}
-              onLayout={handleLayout}
               className={`flex-row items-center p-3 rounded-lg ${
                 isHighlighted
                   ? 'bg-green-50 border-2 border-green-400'
