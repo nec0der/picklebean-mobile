@@ -136,7 +136,7 @@ export const DraggablePlayerSlot = memo(({
       <View 
         ref={viewRef}
         onLayout={handleLayout}
-        className={`h-16 flex-row items-center px-3 border-2 border-dashed rounded-lg ${
+        className={`h-20 flex-row items-center px-3 border-2 border-dashed rounded-lg ${
           isHighlighted 
             ? 'border-green-400 bg-green-50' 
             : 'border-gray-300 bg-gray-50'
@@ -156,7 +156,7 @@ export const DraggablePlayerSlot = memo(({
       {/* Placeholder - shows at original position during drag */}
       <Animated.View 
         style={placeholderStyle}
-        className="border-2 border-dashed border-blue-400 bg-blue-50 rounded-lg p-3"
+        className="h-20 border-2 border-dashed border-blue-400 bg-blue-50 rounded-lg p-3"
       >
         <View className="flex-row items-center py-2">
           <View className="w-10 h-10 rounded-full bg-blue-200" />
