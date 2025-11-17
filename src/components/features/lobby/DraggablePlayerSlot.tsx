@@ -74,7 +74,6 @@ export const DraggablePlayerSlot = memo(({
     .enabled(canDrag)
     .minDuration(300)
     .onStart(() => {
-      scale.value = withSpring(1.05);
       runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
     });
 
@@ -82,8 +81,7 @@ export const DraggablePlayerSlot = memo(({
   const panGesture = Gesture.Pan()
     .enabled(canDrag)
     .onStart(() => {
-      // Start drag - lift effect and show placeholder
-      scale.value = withSpring(1.1);
+      // Start drag - show placeholder and boost z-index
       zIndex.value = 999;
       showPlaceholder.value = withSpring(1);
       runOnJS(onDragStart)(
@@ -112,7 +110,6 @@ export const DraggablePlayerSlot = memo(({
       // Snap back to original position and hide placeholder
       translateX.value = withSpring(0);
       translateY.value = withSpring(0);
-      scale.value = withSpring(1);
       zIndex.value = 1;
       showPlaceholder.value = withSpring(0);
     });
