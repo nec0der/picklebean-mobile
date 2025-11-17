@@ -39,7 +39,8 @@ export const DraggablePlayerSlot = memo(({
   isHighlighted = false,
 }: DraggablePlayerSlotProps) => {
   const viewRef = useRef<View>(null);
-  const cardSize = useRef({ width: 0, height: 0 });
+  const cardWidth = useSharedValue(0);
+  const cardHeight = useSharedValue(0);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -63,7 +64,9 @@ export const DraggablePlayerSlot = memo(({
   // Track card size from placeholder (which matches actual card dimensions)
   const handleCardSizeLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
-    cardSize.current = { width, height };
+    console.log('📏 handleCardSizeLayout called:', { width, height, teamNumber, slotNumber });
+    cardWidth.value = width;
+    cardHeight.value = height;
   };
 
   // Long press gesture for dragging (host only)
@@ -86,8 +89,8 @@ export const DraggablePlayerSlot = memo(({
       runOnJS(onDragStart)(
         teamNumber, 
         slotNumber, 
-        cardSize.current.width, 
-        cardSize.current.height
+        cardWidth.value, 
+        cardHeight.value
       );
       runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
     })
