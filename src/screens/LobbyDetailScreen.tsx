@@ -1,6 +1,7 @@
 import { memo, useState, useEffect, useCallback } from 'react';
 import { View, Text, Pressable, ScrollView, Alert, Clipboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { X, Copy, Check, User, Users } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,7 +11,7 @@ import { useLobby } from '@/hooks/firestore/useLobby';
 import { useLobbyActions } from '@/hooks/actions/useLobbyActions';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Card } from '@/components/ui/Card';
-import { PlayerSlot } from '@/components/features/lobby/PlayerSlot';
+import { DraggablePlayerSlot } from '@/components/features/lobby/DraggablePlayerSlot';
 import type { Player } from '@/types/lobby';
 import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
@@ -27,9 +28,53 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
   const [copied, setCopied] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [draggedPlayer, setDraggedPlayer] = useState<{
+    team: number;
+    slot: number;
+    player: Player;
+  } | null>(null);
 
   // Check if current user is host
   const isHost = user?.id === lobby?.hostId;
+
+  // Drag & drop handlers
+  const handleDragStart = useCallback((team: number, slot: number) => {
+    if (!lobby) return;
+    const player = lobby[`team${team as 1 | 2}`][`player${slot as 1 | 2}`];
+    if (player) {
+      setDraggedPlayer({ team, slot, player });
+    }
+  }, [lobby]);
+
+  const handleDragEnd = useCallback(async (targetTeam: number, targetSlot: number) => {
+    if (!draggedPlayer || !lobby || !roomCode) return;
+
+    const sourceTeam = draggedPlayer.team;
+    const sourceSlot = draggedPlayer.slot;
+
+    // Can't drop on same slot
+    if (sourceTeam === targetTeam && sourceSlot === targetSlot) {
+      setDraggedPlayer(null);
+      return;
+    }
+
+    try {
+      const lobbyRef = doc(firestore, 'lobbies', roomCode);
+      const targetPlayer = lobby[`team${targetTeam as 1 | 2}`][`player${targetSlot as 1 | 2}`];
+
+      // Swap players
+      await updateDoc(lobbyRef, {
+        [`team${sourceTeam}.player${sourceSlot}`]: targetPlayer || {},
+        [`team${targetTeam}.player${targetSlot}`]: draggedPlayer.player,
+        lastActivity: new Date(),
+      });
+    } catch (err) {
+      console.error('Error moving player:', err);
+      Alert.alert('Error', 'Failed to move player');
+    } finally {
+      setDraggedPlayer(null);
+    }
+  }, [draggedPlayer, lobby, roomCode]);
 
   // Check if user is in lobby
   const isInLobby = useCallback(() => {
@@ -274,7 +319,8 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       {/* Header */}
       <View className="px-4 py-3 border-b border-gray-200 flex-row items-center justify-center relative">
         <Text className="text-xl font-bold text-gray-900">Lobby</Text>
@@ -337,16 +383,26 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
             <Card className="p-4">
               <Text className="text-lg font-bold text-gray-900 mb-3">Team 1</Text>
               <View className="gap-3">
-                <PlayerSlot
+                <DraggablePlayerSlot
                   player={lobby.team1.player1}
+                  teamNumber={1}
+                  slotNumber={1}
+                  isHost={isHost}
                   isCurrentUser={lobby.team1.player1?.uid === user?.id}
-                  isHost={lobby.team1.player1?.uid === lobby.hostId}
+                  hostId={lobby.hostId}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
                 />
                 {lobby.gameMode === 'doubles' && (
-                  <PlayerSlot
+                  <DraggablePlayerSlot
                     player={lobby.team1.player2}
+                    teamNumber={1}
+                    slotNumber={2}
+                    isHost={isHost}
                     isCurrentUser={lobby.team1.player2?.uid === user?.id}
-                    isHost={lobby.team1.player2?.uid === lobby.hostId}
+                    hostId={lobby.hostId}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
                   />
                 )}
               </View>
@@ -356,16 +412,26 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
             <Card className="p-4">
               <Text className="text-lg font-bold text-gray-900 mb-3">Team 2</Text>
               <View className="gap-3">
-                <PlayerSlot
+                <DraggablePlayerSlot
                   player={lobby.team2.player1}
+                  teamNumber={2}
+                  slotNumber={1}
+                  isHost={isHost}
                   isCurrentUser={lobby.team2.player1?.uid === user?.id}
-                  isHost={lobby.team2.player1?.uid === lobby.hostId}
+                  hostId={lobby.hostId}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
                 />
                 {lobby.gameMode === 'doubles' && (
-                  <PlayerSlot
+                  <DraggablePlayerSlot
                     player={lobby.team2.player2}
+                    teamNumber={2}
+                    slotNumber={2}
+                    isHost={isHost}
                     isCurrentUser={lobby.team2.player2?.uid === user?.id}
-                    isHost={lobby.team2.player2?.uid === lobby.hostId}
+                    hostId={lobby.hostId}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
                   />
                 )}
               </View>
@@ -392,7 +458,8 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
           </Pressable>
         </View>
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 });
 LobbyDetailScreen.displayName = 'LobbyDetailScreen';
