@@ -52,15 +52,18 @@ export const DraggablePlayerSlot = memo(({
 
   // Track position when layout changes
   const handleLayout = (event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    cardSize.current = { width, height };
-    
     // Use setTimeout to ensure measurement after layout
     setTimeout(() => {
-      viewRef.current?.measureInWindow((x, y) => {
+      viewRef.current?.measureInWindow((x, y, width, height) => {
         onLayout(teamNumber, slotNumber, { x, y, width, height });
       });
     }, 0);
+  };
+
+  // Track card size from placeholder (which matches actual card dimensions)
+  const handleCardSizeLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    cardSize.current = { width, height };
   };
 
   // Long press gesture for dragging (host only)
@@ -154,6 +157,7 @@ export const DraggablePlayerSlot = memo(({
       {/* Placeholder - shows at original position during drag */}
       <Animated.View 
         style={placeholderStyle}
+        onLayout={handleCardSizeLayout}
         className="border-2 border-dashed border-blue-400 bg-blue-50 rounded-lg p-3"
       >
         <View className="flex-row items-center py-2">
