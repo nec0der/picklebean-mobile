@@ -33,6 +33,10 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
     slot: number;
     player: Player;
   } | null>(null);
+  const [draggedCardSize, setDraggedCardSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [slotPositions, setSlotPositions] = useState<Record<string, {
     x: number;
     y: number;
@@ -59,21 +63,37 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
     }));
   }, []);
 
-  // Calculate which slot the drag is over
-  const calculateDropTarget = useCallback((x: number, y: number): {
+  // Calculate which slot the drag is over using AABB intersection
+  const calculateDropTarget = useCallback((
+    x: number, 
+    y: number,
+    cardWidth: number,
+    cardHeight: number
+  ): {
     team: number;
     slot: number;
   } | null => {
+    if (!cardWidth || !cardHeight) return null;
+
+    // Dragged card bounds (center point is x,y)
+    const draggedTop = y - (cardHeight / 2);
+    const draggedBottom = y + (cardHeight / 2);
+    const draggedLeft = x - (cardWidth / 2);
+    const draggedRight = x + (cardWidth / 2);
+
     for (const [key, pos] of Object.entries(slotPositions)) {
       const [team, slot] = key.split('-').map(Number);
       
-      // Check if drag position is within this slot's bounds
-      if (
-        x >= pos.x &&
-        x <= pos.x + pos.width &&
-        y >= pos.y &&
-        y <= pos.y + pos.height
-      ) {
+      // Check if dragged card overlaps with this slot (AABB intersection)
+      const verticalOverlap = 
+        draggedBottom > pos.y && 
+        draggedTop < pos.y + pos.height;
+      
+      const horizontalOverlap =
+        draggedRight > pos.x &&
+        draggedLeft < pos.x + pos.width;
+      
+      if (verticalOverlap && horizontalOverlap) {
         return { team, slot };
       }
     }
@@ -82,25 +102,42 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
   }, [slotPositions]);
 
   // Drag & drop handlers
-  const handleDragStart = useCallback((team: number, slot: number) => {
+  const handleDragStart = useCallback((
+    team: number, 
+    slot: number, 
+    width: number, 
+    height: number
+  ) => {
     if (!lobby) return;
     const player = lobby[`team${team as 1 | 2}`][`player${slot as 1 | 2}`];
     if (player) {
       setDraggedPlayer({ team, slot, player });
+      setDraggedCardSize({ width, height });
     }
   }, [lobby]);
 
   // Update active drop zone during drag
   const handleDragMove = useCallback((x: number, y: number) => {
-    const dropTarget = calculateDropTarget(x, y);
+    if (!draggedCardSize) return;
+    const dropTarget = calculateDropTarget(
+      x, 
+      y, 
+      draggedCardSize.width, 
+      draggedCardSize.height
+    );
     setActiveDropZone(dropTarget);
-  }, [calculateDropTarget]);
+  }, [calculateDropTarget, draggedCardSize]);
 
   // Handle drop with calculated position
   const handleDragEnd = useCallback(async (x: number, y: number) => {
-    if (!draggedPlayer || !lobby || !roomCode) return;
+    if (!draggedPlayer || !lobby || !roomCode || !draggedCardSize) return;
     
-    const dropTarget = calculateDropTarget(x, y);
+    const dropTarget = calculateDropTarget(
+      x, 
+      y, 
+      draggedCardSize.width, 
+      draggedCardSize.height
+    );
     setActiveDropZone(null);
     
     if (!dropTarget) {
