@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
-import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
 import { Platform } from 'react-native';
+
+// Conditionally import NFC manager - not available in Expo Go
+let NfcManager: any = null;
+let NfcTech: any = null;
+let Ndef: any = null;
+
+try {
+  const nfcModule = require('react-native-nfc-manager');
+  NfcManager = nfcModule.default;
+  NfcTech = nfcModule.NfcTech;
+  Ndef = nfcModule.Ndef;
+} catch (e) {
+  console.log('📱 NFC not available (Expo Go or unsupported device) - feature will be skipped');
+}
 
 interface UseNFCOptions {
   onTagRead: (url: string) => void;
@@ -27,6 +40,15 @@ export const useNFC = ({ onTagRead, enabled = true }: UseNFCOptions): UseNFCRetu
     let isMounted = true;
 
     const initNFC = async (): Promise<void> => {
+      // Skip if NFC module not available (Expo Go)
+      if (!NfcManager) {
+        if (isMounted) {
+          setIsSupported(false);
+          setError('NFC not available in Expo Go - will work after building with EAS');
+        }
+        return;
+      }
+
       try {
         // Check if NFC is supported
         const supported = await NfcManager.isSupported();
@@ -120,16 +142,18 @@ export const useNFC = ({ onTagRead, enabled = true }: UseNFCOptions): UseNFCRetu
 
     return () => {
       isListening = false;
-      NfcManager.cancelTechnologyRequest().catch(() => {
-        // Ignore cleanup errors
-      });
+      if (NfcManager) {
+        NfcManager.cancelTechnologyRequest().catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
   }, [isSupported, isEnabled, enabled, onTagRead]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (isEnabled) {
+      if (isEnabled && NfcManager) {
         NfcManager.cancelTechnologyRequest().catch(() => {
           // Ignore cleanup errors  
         });
