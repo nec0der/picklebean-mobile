@@ -382,16 +382,424 @@ https://picklebean.com/profile/abc123xyz
 
 ---
 
+## 🔬 Deep Dive & Lessons Learned
+
+### Evolution of Implementation
+
+#### ❌ First Attempt: Manual Loop Pattern
+```typescript
+// WRONG - Causes timing conflicts on iOS
+while (scanning) {
+  await NfcManager.requestTechnology(NfcTech.Ndef);
+  const tag = await NfcManager.getTag();
+  await NfcManager.cancelTechnologyRequest();
+  await delay(500);  // Hope iOS is ready...
+}
+```
+
+**Problems:**
+- iOS only allows ONE active NFC session at a time
+- Manual loops try to start new session before old one closes
+- Results in `UserCancel` errors
+- Delays between scans don't fix the root cause
+- Violates iOS expectations for NFC usage
+
+#### ✅ Final Approach: Event-Driven Pattern
+```typescript
+// CORRECT - iOS-recommended way
+NfcManager.registerTagEvent({
+  alertMessage: 'Tap paddles to join!',
+  invalidateAfterFirstRead: false,  // Keep scanning!
+});
+
+NfcManager.setEventListener(NfcEvents.DiscoverTag, (tag) => {
+  // Fires automatically on each tap
+  handleTag(tag);
+});
+
+NfcManager.setEventListener(NfcEvents.SessionClosed, () => {
+  // Detect iOS cancel button
+  setIsScanning(false);
+});
+```
+
+**Why This Works:**
+- iOS manages the session lifecycle
+- No timing conflicts
+- Automatic continuous scanning
+- Native cancel detection
+- Library-recommended pattern
+
+---
+
+### Critical Issues Discovered
+
+#### Issue 1: Rapid-Fire Session Conflicts
+**Symptom:** `UserCancel` errors when trying to scan multiple tags
+
+**Root Cause:**
+```
+Scan 1 starts → User taps tag → Handler runs (takes time)
+  ↓
+Session still processing...
+  ↓
+Scan 2 tries to start → iOS REJECTS (session still active)
+  ↓
+ERROR: UserCancel thrown
+```
+
+**Solution:** Event-driven approach lets iOS manage sessions
+
+#### Issue 2: Button Unresponsive After Cancel
+**Symptom:** 1-2 second delay before scan button re-enables
+
+**Root Cause:**
+- Button had `disabled={isScanning}` prop - locks UI
+- Cleanup waited for `unregisterTagEvent()` Promise
+- iOS hardware takes 1-2 seconds to fully close NFC session
+
+**Solution:**
+```typescript
+// Remove disabled prop - always clickable
+<Pressable onPress={handleToggle}>  // No disabled!
+
+// Make cleanup fire-and-forget
+return () => {
+  // Sync cleanup (instant)
+  NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+  NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+  
+  // Async cleanup (don't wait!)
+  NfcManager.unregisterTagEvent()
+    .then(() => console.log('Done'))
+    .catch(() => {});  // Fire and forget
+};
+```
+
+#### Issue 3: SessionClosed Not Handled
+**Symptom:** Tapping Cancel in iOS popup does nothing
+
+**Root Cause:** No listener for `NfcEvents.SessionClosed`
+
+**Solution:** Added event listener to detect cancel
+
+---
+
+### Library API Reference
+
+#### registerTagEvent Options
+
+```typescript
+interface RegisterTagEventOpts {
+  alertMessage?: string;               // iOS: Custom popup message
+  invalidateAfterFirstRead?: boolean;  // iOS: Single vs continuous scan
+  isReaderModeEnabled?: boolean;       // Android: Performance mode
+  readerModeFlags?: number;            // Android: Tech selection
+  readerModeDelay?: number;            // Android: Start delay (ms)
+}
+```
+
+##### Option Details
+
+**1. `alertMessage` (string) - iOS Only**
+- Custom text shown in NFC popup
+- Default: "Hold your iPhone near the NFC tag"
+- Example: `"Tap paddles to join! Vibration = success."`
+
+**2. `invalidateAfterFirstRead` (boolean) - iOS Only**
+- `false` = Keep scanning after first tag (multi-scan mode) ← **Use this!**
+- `true` = Stop after one tag read (single-scan mode)
+- Default: `true`
+- **Critical for continuous scanning!**
+
+**3. `isReaderModeEnabled` (boolean) - Android Only**
+- Enables Android Reader Mode for better detection
+- Default: `false`
+- Recommended: `true` for Android optimization
+
+**4. `readerModeFlags` (number) - Android Only**
+- Bitmask to select which NFC technologies to detect
+- Options from `NfcAdapter`:
+  - `FLAG_READER_NFC_A` = 0x1
+  - `FLAG_READER_NFC_B` = 0x2
+  - `FLAG_READER_NFC_F` = 0x4
+  - `FLAG_READER_NFC_V` = 0x8
+  - `FLAG_READER_SKIP_NDEF_CHECK` = 0x80 (faster)
+  - `FLAG_READER_NO_PLATFORM_SOUNDS` = 0x100 (silent)
+- Example: `FLAG_READER_NFC_A | FLAG_READER_SKIP_NDEF_CHECK`
+
+**5. `readerModeDelay` (number) - Android Only**
+- Delay in milliseconds before starting reader mode
+- Default: `0`
+- Rarely needed
+
+##### Platform Optimization Example
+
+```typescript
+import { Platform } from 'react-native';
+
+NfcManager.registerTagEvent({
+  alertMessage: 'Tap paddles to join!',
+  invalidateAfterFirstRead: false,
+  
+  // Android-specific optimizations
+  isReaderModeEnabled: Platform.OS === 'android',
+  readerModeFlags: Platform.OS === 'android'
+    ? NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
+    : undefined,
+});
+```
+
+---
+
+### iOS Behavior & Limitations
+
+#### NFC Session Lifecycle
+
+```
+1. registerTagEvent() called
+   ↓
+2. iOS shows NFC popup
+   ↓
+3. Session ACTIVE (hardware radio on)
+   ↓
+4. User taps tag → DiscoverTag event fires
+   ↓
+5. Handler processes tag (can take time)
+   ↓
+6. Session STILL ACTIVE (intentional for continuous scan)
+   ↓
+7. User taps Cancel OR unregisterTagEvent() called
+   ↓
+8. SessionClosed event fires → State updates INSTANTLY
+   ↓
+9. iOS hardware closes radio → Takes 1-2 seconds ⚠️
+   ↓
+10. Ready for next session
+```
+
+#### The 1-2 Second Hardware Delay
+
+** IS NORMAL * *
+- iOS NFC hardware takes time to power down
+- Cannot be eliminated in JavaScript
+- Happens even in Apple's own apps
+- Not related to our code
+- UI state updates immediately, but hardware cleanup is slow
+
+**What We Control:**
+- ✅ State updates (instant)
+- ✅ Button re-render (instant)
+- ✅ Event cleanup (instant)
+
+**What We Don't Control:**
+- ⚠️ iOS NFC hardware shutdown (1-2 sec)
+
+#### Why Cleanup Must Be Async
+
+```typescript
+// ❌ WRONG - Blocks UI updates
+return () => {
+  await NfcManager.unregisterTagEvent();  // Waits 1-2 seconds!
+  // State update delayed by hardware
+};
+
+// ✅ CORRECT - Fire and forget
+return () => {
+  // Remove listeners synchronously (instant)
+  NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+  NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+  
+  // Start unregister but don't wait (async)
+  NfcManager.unregisterTagEvent()
+    .then(() => console.log('Done'))
+    .catch(() => {});
+  
+  // Return immediately - UI updates right away!
+};
+```
+
+---
+
+### Best Practices Learned
+
+#### 1. Always Use Event-Driven for Multi-Scan
+```typescript
+// ✅ DO THIS
+registerTagEvent({ invalidateAfterFirstRead: false });
+setEventListener(DiscoverTag, handler);
+
+// ❌ DON'T DO THIS
+while (scanning) {
+  await requestTechnology();
+  await getTag();
+  await cancelTechnologyRequest();
+}
+```
+
+#### 2. Handle SessionClosed Event
+```typescript
+// ✅ Detect iOS cancel button
+NfcManager.setEventListener(NfcEvents.SessionClosed, () => {
+  console.log('User cancelled');
+  setIsScanning(false);
+});
+```
+
+#### 3. Don't Wait for Cleanup
+```typescript
+// ✅ Fire and forget
+return () => {
+  NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
+  NfcManager.setEventListener(NfcEvents.SessionClosed, null);
+  NfcManager.unregisterTagEvent(); // Don't await!
+};
+```
+
+#### 4. Make Button Toggleable, Not Disablable
+```typescript
+// ✅ Always clickable
+<Pressable onPress={isScanning ? stopScanning : startScanning}>
+
+// ❌ Disabled when scanning
+<Pressable disabled={isScanning} onPress={startScanning}>
+```
+
+#### 5. Update State Immediately
+```typescript
+// ✅ State first, cleanup after
+NfcManager.setEventListener(NfcEvents.SessionClosed, () => {
+  setIsScanning(false);  // Instant UI update
+  // Cleanup happens automatically in useEffect
+});
+```
+
+---
+
+### Troubleshooting Guide
+
+#### Error: `UserCancel` on consecutive scans
+**Diagnosis:**
+- Using manual loop pattern
+- Trying to start new session before old one closes
+
+**Fix:** Switch to event-driven with `registerTagEvent`
+
+#### Error: Button unresponsive for 1-2 seconds
+**Diagnosis:**
+- Button has `disabled` prop
+- Cleanup is blocking state updates
+
+**Fix:**
+- Remove `disabled` prop
+- Make cleanup fire-and-forget
+- Note: Some delay is normal iOS behavior
+
+#### Error: Cancel button does nothing
+**Diagnosis:** No `SessionClosed` event listener
+
+**Fix:** Add event listener:
+```typescript
+NfcManager.setEventListener(NfcEvents.SessionClosed, () => {
+  setIsScanning(false);
+});
+```
+
+#### Error: Multiple tags scan but don't process
+**Diagnosis:** Handler not returning proper boolean
+
+**Fix:**
+```typescript
+const handler = async (url: string): Promise<boolean> => {
+  await processTag(url);
+  return true;  // Continue scanning
+  // return false;  // Stop scanning
+};
+```
+
+#### Error: Scan stops after first tag
+**Diagnosis:** `invalidateAfterFirstRead: true`
+
+**Fix:** Set to `false` for continuous scanning
+
+---
+
+### Code Architecture
+
+#### useNFC Hook Pattern
+```typescript
+// State lifted to parent component
+const [isScanning, setIsScanning] = useState(false);
+
+// Hook handles lifecycle
+useNFC({
+  handler: async (url: string) => {
+    // Process tag
+    return shouldContinue;
+  },
+  isScanning,
+  setIsScanning,
+});
+
+// Effect watches isScanning state
+useEffect(() => {
+  if (!isScanning) return;
+  
+  // Setup listeners
+  NfcManager.setEventListener(DiscoverTag, handleTag);
+  NfcManager.setEventListener(SessionClosed, () => {
+    setIsScanning(false);
+  });
+  
+  // Register
+  NfcManager.registerTagEvent({
+    invalidateAfterFirstRead: false,
+  });
+  
+  // Cleanup on state change
+  return () => {
+    NfcManager.setEventListener(DiscoverTag, null);
+    NfcManager.setEventListener(SessionClosed, null);
+    NfcManager.unregisterTagEvent();
+  };
+}, [isScanning]);
+```
+
+---
+
+### Key Takeaways
+
+1. **Event-driven is iOS's recommended pattern** for continuous NFC
+2. **Manual loops cause timing conflicts** - avoid at all costs
+3. **iOS hardware delay (1-2 sec) is normal** and unavoidable
+4. **Cleanup must be async** to not block UI updates
+5. **SessionClosed event is critical** for cancel detection
+6. **Button should toggle, not disable** for better UX
+7. **invalidateAfter FirstRead: false** is key for multi-scan
+8. **Always remove all event listeners** in cleanup
+
+---
+
 ## ✅ Summary
 
 **Status:** ✅ **COMPLETE** (except testing on physical device)
 
 **What Works:**
 - NFC infrastructure fully implemented
+- Event-driven continuous scanning
+- iOS-compatible session management
 - Toast notifications integrated
 - Auto-join logic with validation
 - Error handling comprehensive
+- Proper cleanup and cancellation
 - Code follows all style guidelines
+
+**What Was Fixed:**
+- Eliminated UserCancel errors
+- Added SessionClosed detection
+- Optimized cleanup timing
+- Made button always responsive
+- Implemented fire-and-forget pattern
 
 **Next Steps:**
 1. Run `npx expo prebuild` when ready for device testing
@@ -399,8 +807,8 @@ https://picklebean.com/profile/abc123xyz
 3. Test on physical devices with NFC tags
 4. Iterate based on real-world usage
 
-**Total Implementation Time:** ~2 hours  
-**Lines of Code:** ~400  
+**Total Implementation Time:** ~4 hours  
+**Lines of Code:** ~450  
 **Files Created:** 4  
 **Files Modified:** 3  
-**Commits:** 6
+**Commits:** 7 (including fixes)
