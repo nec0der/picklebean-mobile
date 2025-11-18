@@ -1,6 +1,6 @@
 import './global.css';
 import { NavigationContainer } from '@react-navigation/native';
-import { GluestackUIProvider, Toast, ToastTitle, ToastDescription } from '@gluestack-ui/themed';
+import { GluestackUIProvider } from '@gluestack-ui/themed';
 import { config } from '@gluestack-ui/config';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -14,7 +14,6 @@ export default function App() {
         <AuthProvider>
           <NavigationContainer>
             <AppNavigator />
-            <Toast />
             <StatusBar style="auto" />
           </NavigationContainer>
         </AuthProvider>
