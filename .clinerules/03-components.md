@@ -1,5 +1,69 @@
 # Component Architecture
 
+## UI Component Library - Gluestack UI
+
+### Primary Component Library
+
+**Always use Gluestack UI components first** before creating custom components or suggesting alternatives.
+
+**Installed:** `@gluestack-ui/themed`, `@gluestack-ui/config`
+
+### Common Gluestack UI Components
+
+**Layout:**
+- `Box`, `HStack`, `VStack`, `Center`, `Divider`
+
+**Typography:**
+- `Text`, `Heading`
+
+**Forms:**
+- `Input`, `Button`, `ButtonText`, `Checkbox`, `Radio`, `Select`, `Textarea`, `Switch`
+
+**Feedback:**
+- `Alert`, `Toast`, `ToastTitle`, `ToastDescription`, `Spinner`, `Progress`
+
+**Overlay:**
+- `Modal`, `Popover`, `Tooltip`, `Menu`
+
+**Data Display:**
+- `Avatar`, `Badge`, `Card`
+
+**Media:**
+- `Image`, `Icon`
+
+### Usage Rules
+
+```typescript
+// ✅ CORRECT: Gluestack UI component
+import { Button, ButtonText } from '@gluestack-ui/themed';
+
+<Button onPress={handlePress}>
+  <ButtonText>Click me</ButtonText>
+</Button>
+
+// ❌ INCORRECT: Basic React Native component
+import { TouchableOpacity, Text } from 'react-native';
+
+<TouchableOpacity onPress={handlePress}>
+  <Text>Click me</Text>
+</TouchableOpacity>
+```
+
+### When to Create Custom Components
+
+Only create custom components when:
+- Gluestack UI doesn't provide the functionality
+- Complex business logic is needed
+- Specific composition is required
+
+Even then, **base custom components on Gluestack UI primitives**.
+
+### Documentation
+
+Reference: https://gluestack.io/ui/docs
+
+---
+
 ## Component File Structure
 
 ### One Component Per File
