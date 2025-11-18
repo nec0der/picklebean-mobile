@@ -14,11 +14,11 @@ export default function App() {
         <AuthProvider>
           <NavigationContainer>
             <AppNavigator />
+            <Toast />
             <StatusBar style="auto" />
           </NavigationContainer>
         </AuthProvider>
       </SafeAreaProvider>
-      <Toast />
     </GluestackUIProvider>
   );
 }
