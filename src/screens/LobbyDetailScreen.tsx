@@ -9,12 +9,15 @@ import type { RootStackParamList, RootStackScreenProps } from '@/types/navigatio
 import { useAuth } from '@/contexts/AuthContext';
 import { useLobby } from '@/hooks/firestore/useLobby';
 import { useLobbyActions } from '@/hooks/actions/useLobbyActions';
+import { useToast } from '@/hooks/common/useToast';
+import { useNFC } from '@/hooks/common/useNFC';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Card } from '@/components/ui/Card';
 import { DraggablePlayerSlot } from '@/components/features/lobby/DraggablePlayerSlot';
 import type { Player } from '@/types/lobby';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
+import { extractUserIdFromNFCUrl } from '@/lib/nfc';
 
 type LobbyDetailNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LobbyDetail'>;
 
@@ -24,6 +27,7 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
   const { user, userDocument } = useAuth();
   const { lobby, loading, error, exists } = useLobby(roomCode);
   const { joinLobby, leaveLobby, deleteLobby } = useLobbyActions();
+  const toast = useToast();
 
   const [copied, setCopied] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
@@ -212,6 +216,113 @@ export const LobbyDetailScreen = memo(({ route }: RootStackScreenProps<'LobbyDet
       lobby.team2.player2?.uid === user.id
     );
   }, [lobby, user]);
+
+  // NFC Tag Handler - Auto-join player from NFC scan
+  const handleNFCTagRead = useCallback(async (url: string) => {
+    console.log('📱 NFC tag detected:', url);
+    
+    // Extract user ID from URL
+    const scannedUserId = extractUserIdFromNFCUrl(url);
+    
+    if (!scannedUserId) {
+      toast.error('Invalid NFC tag format');
+      return;
+    }
+
+    // Check if lobby is full
+    if (!lobby) return;
+    
+    const capacity = lobby.gameMode === 'singles' ? 2 : 4;
+    const currentCount = getCurrentPlayerCount();
+    
+    if (currentCount >= capacity) {
+      toast.error(`Lobby is full (${currentCount}/${capacity} players)`);
+      return;
+    }
+
+    // Check if player already in lobby
+    const isPlayerInLobby = !!(
+      lobby.team1.player1?.uid === scannedUserId ||
+      lobby.team1.player2?.uid === scannedUserId ||
+      lobby.team2.player1?.uid === scannedUserId ||
+      lobby.team2.player2?.uid === scannedUserId
+    );
+
+    if (isPlayerInLobby) {
+      toast.info('Player already in lobby');
+      return;
+    }
+
+    try {
+      // Fetch scanned user's data
+      const userDoc = await getDoc(doc(firestore, 'users', scannedUserId));
+      
+      if (!userDoc.exists()) {
+        toast.error('Player not found');
+        return;
+      }
+
+      const scannedUser = userDoc.data();
+      
+      // Prepare player data
+      const player: any = {
+        uid: scannedUserId,
+        displayName: scannedUser.displayName || 'Unknown',
+      };
+      
+      if (scannedUser.profilePictureUrl) {
+        player.photoURL = scannedUser.profilePictureUrl;
+      }
+
+      // Find first empty slot
+      let targetTeam: 1 | 2 = 1;
+      let targetSlot: 1 | 2 = 1;
+
+      if (lobby.gameMode === 'singles') {
+        const hasTeam1 = !!lobby.team1.player1?.uid;
+        const hasTeam2 = !!lobby.team2.player1?.uid;
+        
+        if (!hasTeam1) {
+          targetTeam = 1;
+        } else if (!hasTeam2) {
+          targetTeam = 2;
+        }
+        targetSlot = 1;
+      } else {
+        if (!lobby.team1.player1?.uid) {
+          targetTeam = 1;
+          targetSlot = 1;
+        } else if (!lobby.team1.player2?.uid) {
+          targetTeam = 1;
+          targetSlot = 2;
+        } else if (!lobby.team2.player1?.uid) {
+          targetTeam = 2;
+          targetSlot = 1;
+        } else if (!lobby.team2.player2?.uid) {
+          targetTeam = 2;
+          targetSlot = 2;
+        }
+      }
+
+      // Add player to lobby
+      const lobbyRef = doc(firestore, 'lobbies', roomCode);
+      await updateDoc(lobbyRef, {
+        [`team${targetTeam}.player${targetSlot}`]: player,
+        lastActivity: new Date(),
+      });
+
+      toast.success(`${player.displayName} joined the lobby!`);
+    } catch (error) {
+      console.error('Error adding player via NFC:', error);
+      toast.error('Failed to add player');
+    }
+  }, [lobby, roomCode, toast]);
+
+  // Initialize NFC listening
+  useNFC({
+    onTagRead: handleNFCTagRead,
+    enabled: !!lobby && !loading, // Only listen when lobby is loaded
+  });
 
   // Auto-join when lobby loads
   useEffect(() => {
