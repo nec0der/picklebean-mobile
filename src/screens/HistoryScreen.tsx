@@ -163,14 +163,6 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
   return (
     <>
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        {/* Header */}
-        <View className="px-4 py-3 border-b border-gray-200">
-          <Text className="text-2xl font-bold text-gray-900">Match History</Text>
-          <Text className="text-sm text-gray-600">
-            {matches.length} {matches.length === 1 ? 'match' : 'matches'}
-          </Text>
-        </View>
-
         {/* Match List */}
         <FlatList
           data={matches}
