@@ -5,10 +5,18 @@
 /**
  * Formats a date to a relative time string (e.g., "2 hours ago", "Yesterday")
  * or absolute date for older dates
+ * @param date - Date object or Firestore Timestamp
  */
-export const formatRelativeDate = (date: Date): string => {
+export const formatRelativeDate = (date: Date | any): string => {
+  // Convert Firestore Timestamp to Date if needed
+  const dateObj = date?.toDate ? date.toDate() : date;
+  
+  if (!dateObj || !(dateObj instanceof Date)) {
+    return 'Unknown date';
+  }
+
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = now.getTime() - dateObj.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
@@ -37,11 +45,11 @@ export const formatRelativeDate = (date: Date): string => {
   const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
   
   // If different year, include year
-  if (date.getFullYear() !== now.getFullYear()) {
+  if (dateObj.getFullYear() !== now.getFullYear()) {
     options.year = 'numeric';
   }
 
-  return date.toLocaleDateString('en-US', options);
+  return dateObj.toLocaleDateString('en-US', options);
 };
 
 /**
