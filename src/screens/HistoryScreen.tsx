@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMatches } from '@/hooks/firestore/useMatches';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { MatchCard } from '@/components/history/MatchCard';
+import { MatchDetailModal } from '@/components/history/MatchDetailModal';
 import type { MatchHistoryRecord } from '@/types/user';
 
 /**
@@ -71,6 +72,8 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
   const { user } = useAuth();
   const { matches, loading, error, refetch } = useMatches(user?.id || '', 50);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<MatchHistoryRecord | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -78,6 +81,17 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
     // Give it a moment to feel responsive
     setTimeout(() => setRefreshing(false), 500);
   }, [refetch]);
+
+  const handleMatchPress = useCallback((match: MatchHistoryRecord) => {
+    setSelectedMatch(match);
+    setModalVisible(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setModalVisible(false);
+    // Wait for animation to complete before clearing
+    setTimeout(() => setSelectedMatch(null), 300);
+  }, []);
 
   const renderItem = useCallback(
     ({ item, index }: { item: MatchHistoryRecord; index: number }) => {
@@ -94,11 +108,11 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
               </Text>
             </View>
           )}
-          <MatchCard match={item} />
+          <MatchCard match={item} onPress={handleMatchPress} />
         </Fragment>
       );
     },
-    [matches]
+    [matches, handleMatchPress]
   );
 
   const keyExtractor = useCallback((item: MatchHistoryRecord) => item.id, []);
@@ -147,31 +161,40 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
-      <View className="px-4 py-3 border-b border-gray-200">
-        <Text className="text-2xl font-bold text-gray-900">Match History</Text>
-        <Text className="text-sm text-gray-600">
-          {matches.length} {matches.length === 1 ? 'match' : 'matches'}
-        </Text>
-      </View>
+    <>
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        {/* Header */}
+        <View className="px-4 py-3 border-b border-gray-200">
+          <Text className="text-2xl font-bold text-gray-900">Match History</Text>
+          <Text className="text-sm text-gray-600">
+            {matches.length} {matches.length === 1 ? 'match' : 'matches'}
+          </Text>
+        </View>
 
-      {/* Match List */}
-      <FlatList
-        data={matches}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        contentContainerStyle={{
-          padding: 16,
-          flexGrow: 1,
-        }}
-        ListEmptyComponent={renderEmptyState}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
+        {/* Match List */}
+        <FlatList
+          data={matches}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          contentContainerStyle={{
+            padding: 16,
+            flexGrow: 1,
+          }}
+          ListEmptyComponent={renderEmptyState}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+
+      {/* Match Detail Modal */}
+      <MatchDetailModal
+        visible={modalVisible}
+        match={selectedMatch}
+        onClose={handleCloseModal}
       />
-    </SafeAreaView>
+    </>
   );
 });
 
