@@ -59,9 +59,7 @@ export const CountdownOverlay = ({ visible, value }: CountdownOverlayProps) => {
       >
         {/* Main countdown text */}
         <Text
-          className={`font-bold ${
-            isStart ? 'text-green-600' : 'text-gray-900'
-          }`}
+          className={`font-bold text-green-600`}
           style={{ fontSize: isStart ? 72 : 96 }}
         >
           {displayText}
