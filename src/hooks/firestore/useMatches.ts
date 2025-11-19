@@ -42,24 +42,24 @@ export const useMatches = (
     setLoading(true);
     setError(null);
 
-    // Build query
-    let q = query(
-      collection(firestore, 'matches'),
-      where('playerId', '==', userId),
-      orderBy('createdAt', 'desc'),
-      limit(limitCount + 1) // Fetch one extra to check if there are more
-    );
-
-    // Add status filter if provided
-    if (status) {
-      q = query(
-        collection(firestore, 'matches'),
+      // Build query
+      let q = query(
+        collection(firestore, 'matchHistory'),
         where('playerId', '==', userId),
-        where('status', '==', status),
         orderBy('createdAt', 'desc'),
-        limit(limitCount + 1)
+        limit(limitCount + 1) // Fetch one extra to check if there are more
       );
-    }
+
+      // Add status filter if provided
+      if (status) {
+        q = query(
+          collection(firestore, 'matchHistory'),
+          where('playerId', '==', userId),
+          where('status', '==', status),
+          orderBy('createdAt', 'desc'),
+          limit(limitCount + 1)
+        );
+      }
 
     const unsubscribe = onSnapshot(
       q,

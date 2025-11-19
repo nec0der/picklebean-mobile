@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, Fragment } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { History } from 'lucide-react-native';
@@ -8,6 +8,64 @@ import { useMatches } from '@/hooks/firestore/useMatches';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { MatchCard } from '@/components/history/MatchCard';
 import type { MatchHistoryRecord } from '@/types/user';
+
+/**
+ * Helper function to determine time group for a match (from web app)
+ */
+const getTimeGroup = (matchDate: Date | unknown): string => {
+  let date: Date;
+  
+  // Convert to Date object
+  if (matchDate instanceof Date) {
+    date = matchDate;
+  } else if (matchDate && typeof matchDate === 'object' && 'toDate' in matchDate) {
+    date = (matchDate as { toDate: () => Date }).toDate();
+  } else {
+    date = new Date(matchDate as string | number);
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const matchDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const daysDiff = Math.floor((today.getTime() - matchDay.getTime()) / (1000 * 60 * 60 * 24));
+
+  // Today
+  if (matchDay.getTime() === today.getTime()) {
+    return 'Today';
+  }
+  
+  // Yesterday
+  if (matchDay.getTime() === yesterday.getTime()) {
+    return 'Yesterday';
+  }
+  
+  // This Week (2-6 days ago)
+  if (daysDiff >= 2 && daysDiff <= 6) {
+    return 'This Week';
+  }
+  
+  // Last Week (7-13 days ago)
+  if (daysDiff >= 7 && daysDiff <= 13) {
+    return 'Last Week';
+  }
+  
+  // Earlier This Month (14+ days but same month)
+  if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+    return 'Earlier This Month';
+  }
+  
+  // Last Month
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  if (date.getMonth() === lastMonth.getMonth() && date.getFullYear() === lastMonth.getFullYear()) {
+    return 'Last Month';
+  }
+  
+  // Older
+  return 'Older';
+};
 
 export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
   const { user } = useAuth();
@@ -22,8 +80,25 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
   }, [refetch]);
 
   const renderItem = useCallback(
-    ({ item }: { item: MatchHistoryRecord }) => <MatchCard match={item} />,
-    []
+    ({ item, index }: { item: MatchHistoryRecord; index: number }) => {
+      const currentGroup = getTimeGroup(item.createdAt);
+      const previousGroup = index > 0 ? getTimeGroup(matches[index - 1].createdAt) : null;
+      const showDivider = currentGroup !== previousGroup;
+
+      return (
+        <Fragment>
+          {showDivider && (
+            <View className={currentGroup === 'Today' ? 'pb-2' : 'py-4'}>
+              <Text className="text-xs font-semibold text-gray-500 uppercase">
+                {currentGroup}
+              </Text>
+            </View>
+          )}
+          <MatchCard match={item} />
+        </Fragment>
+      );
+    },
+    [matches]
   );
 
   const keyExtractor = useCallback((item: MatchHistoryRecord) => item.id, []);

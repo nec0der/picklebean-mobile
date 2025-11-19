@@ -66,7 +66,7 @@ export const completeMatch = async (
     const partnerName = partnerId ? await getPlayerName(lobby, partnerId) : undefined;
 
     // Create match record
-    const matchRef = doc(collection(firestore, 'matches'));
+    const matchRef = doc(collection(firestore, 'matchHistory'));
     batch.set(matchRef, {
       gameId: lobby.roomCode,
       playerId,
