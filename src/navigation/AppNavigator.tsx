@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { LoginScreen } from '@/screens/auth/LoginScreen';
 import { SignupScreen } from '@/screens/auth/SignupScreen';
 import { LobbyDetailScreen } from '@/screens/LobbyDetailScreen';
+import { GameScreen } from '@/screens/GameScreen';
 import { TabNavigator } from './TabNavigator';
 import { Box, Spinner } from '@gluestack-ui/themed';
 import type { RootStackParamList, AuthStackParamList } from '@/types/navigation';
@@ -30,7 +31,7 @@ export const AppNavigator = memo(() => {
   // Show loading spinner while checking auth state
   if (loading) {
     return (
-      <Box className="flex-1 justify-center items-center bg-white">
+      <Box className="items-center justify-center flex-1 bg-white">
         <Spinner size="large" />
       </Box>
     );
@@ -43,6 +44,7 @@ export const AppNavigator = memo(() => {
         <>
           <RootStack.Screen name="Tabs" component={TabNavigator} />
           <RootStack.Screen name="LobbyDetail" component={LobbyDetailScreen} />
+          <RootStack.Screen name="Game" component={GameScreen} />
         </>
       ) : (
         // Guest routes

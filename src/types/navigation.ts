@@ -29,6 +29,7 @@ export type RootStackParamList = {
   Auth: undefined;
   Tabs: undefined;
   LobbyDetail: { roomCode: string };
+  Game: { roomCode: string };
   GamePlay: { gameId: string };
   UserProfile: { userId: string };
 };

@@ -632,8 +632,7 @@ export const LobbyDetailScreen = memo(
             });
 
             // Navigate to game screen
-            Alert.alert("Game Starting!", "Game screen will be implemented in Phase 3B!");
-            // TODO: navigation.navigate('Game', { roomCode });
+            navigation.navigate('Game', { roomCode });
           } catch (err) {
             console.error('Error starting game:', err);
           }
