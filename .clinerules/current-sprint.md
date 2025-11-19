@@ -25,65 +25,198 @@ The following foundational work has been completed:
 
 ---
 
-## 🎯 Current Focus: Phase 1 - Core Data & Types (2-3 days)
+## ✅ Phase 1 Complete - Core Data & Types
+
+**All tasks completed:**
+- ✅ Types: `user.ts`, `lobby.ts`, `game.ts` 
+- ✅ Hooks: `useLobby`, `useMatches`, `useLeaderboard`, `usePendingGame`
+- ✅ Utilities: `points.ts`, `validation.ts`, `roomCode.ts`
+- ✅ Services: `lobbyService`, `matchService`, `userService`
+- ✅ Actions: `useLobbyActions`, `useMatchActions`
+- ✅ NFC: Full event-driven implementation (bonus!)
+
+---
+
+## 🎯 Current Focus: Phase 3 - Game Features (2-3 days)
 
 ### Goal
-Extend mobile app types and create Firestore hooks to match web app's data structure.
+Build complete game flow: Lobby countdown → Game screen → Score entry → Match completion
 
-### Tasks
+### Important Notes
+- **NO real-time scoring** - Scores entered AFTER game completes
+- **Countdown: "ZERO-ZERO-START!"** - Custom pickleball-themed countdown
+- **Synchronized via Firestore** - All players see same countdown
+- **Haptic feedback** - On each countdown step
 
-#### 1. Update Type Definitions ⏳
-**Files to modify:**
-- `src/types/user.ts`
-- `src/types/lobby.ts`
-- `src/types/game.ts` (create new)
+---
 
-**Add to User types:**
+### Phase 3A: Lobby Countdown (Day 1, 5-6 hours) 🔴 IN PROGRESS
+
+**Goal:** Host can start game with synchronized countdown
+
+**Tasks:**
+- [ ] Add "Start Game" button to LobbyDetailScreen (host only)
+- [ ] Validate lobby is full before allowing start
+- [ ] Create CountdownOverlay component (full-screen)
+- [ ] Implement countdown logic in useLobbyCountdown hook
+- [ ] Sequence: ZERO → ZERO → START! (1 sec each)
+- [ ] Real-time sync via Firestore (countdownActive, countdownValue)
+- [ ] Haptic feedback on each step (MEDIUM, MEDIUM, HEAVY)
+- [ ] Navigate to GameScreen on complete
+- [ ] Update lobby: gameStarted = true, gameStartedAt = timestamp
+
+**Components to create:**
+- `src/components/features/lobby/CountdownOverlay.tsx`
+- `src/hooks/lobby/useLobbyCountdown.ts` (optional)
+
+**Lobby document updates:**
 ```typescript
-- UserRankings (singles, doubles categories)
-- MatchHistoryRecord
-- MatchStats
-- Verification status fields
-- Admin/ban flags
+{
+  countdownActive?: boolean;
+  countdownValue?: 'ZERO' | 'START!';
+  gameStarted: boolean;
+  gameStartedAt?: Timestamp;
+}
 ```
 
-**Add to Lobby types:**
+---
+
+### Phase 3B: Game Screen (Day 1-2, 3-4 hours)
+
+**Goal:** Display active game with timer
+
+**Tasks:**
+- [ ] Create GameScreen.tsx
+- [ ] Add to navigation: /game/:roomCode
+- [ ] Fetch lobby with useLobby(roomCode)
+- [ ] Create GameTimer component (MM:SS stopwatch)
+- [ ] Display both teams with player avatars/names
+- [ ] Host: Show "Complete Game" button
+- [ ] All players: Show "Leave Game" button
+- [ ] Handle loading/error states
+- [ ] Show "You" indicator for current user
+- [ ] Show host indicator
+
+**Components to create:**
+- `src/screens/GameScreen.tsx`
+- `src/components/game/GameTimer.tsx`
+- `src/components/game/TeamDisplay.tsx` (optional)
+
+**Timer logic:**
 ```typescript
-- Team structure (player1, player2)
-- Game modes (singles/doubles)
-- Countdown system
-- Score confirmations
-- Exhibition match flags
+// Calculate elapsed time
+const elapsed = Date.now() - lobby.gameStartedAt.toDate().getTime();
+const seconds = Math.floor(elapsed / 1000);
+const minutes = Math.floor(seconds / 60);
+const displaySeconds = seconds % 60;
+// Format: MM:SS
 ```
 
-**Create Match types:**
+---
+
+### Phase 3C: Score Entry & Completion (Day 2, 3-4 hours)
+
+**Goal:** Host enters scores, system creates history and updates rankings
+
+**Tasks:**
+- [ ] Create ScoreEntryDrawer component (bottom sheet/modal)
+- [ ] Two number inputs (Team 1 score, Team 2 score)
+- [ ] Validate on submit (pickleball scoring rules)
+- [ ] Show validation errors clearly
+- [ ] Submit scores to Firestore
+- [ ] Update lobby: finalScores, gameCompleted, gameCompletedAt
+- [ ] Create match history record for EACH player
+- [ ] Calculate points: Winner +25, Loser -25
+- [ ] Batch update all player rankings
+- [ ] Update matchStats (totalMatches, wins, losses)
+- [ ] Handle submission errors gracefully
+
+**Components to create:**
+- `src/components/game/ScoreEntryDrawer.tsx`
+
+**Scoring rules (from validation.ts):**
 ```typescript
-- Match history structure
-- Confirmation system
-- Points calculation
+1. No negative scores
+2. At least one team scored (not 0-0)
+3. Winner must have at least 11 points
+4. Win by 2 if both teams >= 10
+5. Maximum 50 points (prevent typos)
 ```
 
-#### 2. Build Firestore Hooks 🔨
-**Create in `/src/hooks/firestore/`:**
-
-- `useUserProfile.ts` - Fetch user with rankings
-- `useLobby.ts` - Real-time lobby listener
-- `useMatches.ts` - User match history
-- `useLeaderboard.ts` - Rankings by category
-- `usePendingConfirmations.ts` - Unconfirmed matches
-
-**Hook Pattern:**
+**Match history structure:**
 ```typescript
-// Return: { data, loading, error, refetch }
-// Always cleanup listeners in useEffect
+{
+  gameId: string;        // Lobby doc ID
+  playerId: string;
+  gameType: 'singles' | 'doubles';
+  result: 'win' | 'loss';
+  pointsChange: number;  // ±25
+  opponentNames: string[];
+  partnerName?: string;
+  status: 'confirmed';   // MVP: always confirmed
+  createdAt: Date;
+}
 ```
 
-#### 3. Create Utility Functions 📦
-**Create in `/src/lib/`:**
+---
 
-- `lobbyUtils.ts` - Room code generation, validation
-- `pointsCalculation.ts` - ELO-style ranking updates
-- `matchUtils.ts` - Match creation, confirmation logic
+### Phase 3D: Game Summary (Day 2-3, 1-2 hours)
+
+**Goal:** Show results after game completion
+
+**Tasks:**
+- [ ] Create GameSummary component
+- [ ] Show winner banner with 🏆
+- [ ] Display final scores (large, prominent)
+- [ ] Show points gained/lost per player:
+  - Green text: +25
+  - Red text: -25
+- [ ] Display game duration (MM:SS)
+- [ ] "Play Again" button → Navigate to Play screen
+- [ ] Optional: Confetti animation for winners
+
+**Components to create:**
+- `src/components/game/GameSummary.tsx`
+
+---
+
+### Phase 3E: Polish & Testing (Day 3, 2-3 hours)
+
+**Goal:** Improve UX and handle edge cases
+
+**Tasks:**
+- [ ] Add haptic feedback throughout:
+  - Countdown steps
+  - Score submission
+  - Game completion
+- [ ] Loading animations
+- [ ] Error boundaries on all screens
+- [ ] Confirmation dialog: Leave game?
+- [ ] Confirmation dialog: Close lobby?
+- [ ] Handle player leaving during game
+- [ ] Test singles mode
+- [ ] Test doubles mode
+- [ ] Test validation edge cases
+- [ ] Pull-to-refresh on lobby (optional)
+- [ ] Empty states
+
+---
+
+## ⏱️ Phase 3 Timeline
+
+**Total: 2-3 days** (13-17 hours)
+
+**Day 1 (5-9 hrs):**
+- Morning: Countdown implementation (5-6 hrs)
+- Afternoon: Basic game screen (3-4 hrs)
+
+**Day 2 (5-7 hrs):**
+- Morning: Score entry + validation (2-3 hrs)
+- Afternoon: Match history + rankings (2-3 hrs)
+- Evening: Game summary (1-2 hrs)
+
+**Day 3 (2-3 hrs):**
+- Polish, haptics, testing
 
 ---
 
