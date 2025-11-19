@@ -46,7 +46,7 @@ export const CountdownOverlay = ({ visible, value }: CountdownOverlayProps) => {
   }
 
   const isStart = value === 'START!';
-  const displayText = value === 1 || value === 2 ? 'ZERO' : value;
+  const displayText = value === 1 || value === 2 ? '0' : value;
 
   return (
     <View className="absolute inset-0 z-50 flex items-center justify-center bg-white/95">
@@ -66,20 +66,6 @@ export const CountdownOverlay = ({ visible, value }: CountdownOverlayProps) => {
         >
           {displayText}
         </Text>
-
-        {/* Show 0-0 score below ZERO */}
-        {(value === 1 || value === 2) && (
-          <Text className="mt-4 text-4xl font-semibold text-gray-500">
-            0 - 0
-          </Text>
-        )}
-
-        {/* Show "Starting game..." below START! */}
-        {isStart && (
-          <Text className="mt-4 text-2xl font-medium text-green-600 animate-pulse">
-            Starting game...
-          </Text>
-        )}
       </Animated.View>
     </View>
   );

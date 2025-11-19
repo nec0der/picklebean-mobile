@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ArrowLeft, Crown } from 'lucide-react-native';
+import { Crown } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList, RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,10 +22,6 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   const { lobby, loading, error, exists } = useLobby(roomCode);
 
   const isHost = user?.id === lobby?.hostId;
-
-  const handleBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
 
   const handleLeaveGame = useCallback(() => {
     Alert.alert(
@@ -130,11 +126,11 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
               }
             />
             <Pressable
-              onPress={handleBack}
+              onPress={() => navigation.navigate('Tabs')}
               className="py-3 mt-4 bg-green-500 rounded-lg"
             >
               <Text className="font-semibold text-center text-white">
-                Back
+                Back to Home
               </Text>
             </Pressable>
           </View>
@@ -151,11 +147,11 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
           <View className="px-4 py-6">
             <ErrorMessage message="Game has not started yet." />
             <Pressable
-              onPress={handleBack}
+              onPress={() => navigation.navigate('Tabs')}
               className="py-3 mt-4 bg-green-500 rounded-lg"
             >
               <Text className="font-semibold text-center text-white">
-                Back to Lobby
+                Back to Home
               </Text>
             </Pressable>
           </View>
@@ -166,16 +162,10 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-        <Pressable onPress={handleBack} className="p-2 -ml-2">
-          <ArrowLeft size={24} color="#374151" />
-        </Pressable>
-        <View className="items-center">
-          <Text className="text-xs font-medium text-gray-500">Room Code</Text>
-          <Text className="text-lg font-bold text-gray-900">{roomCode}</Text>
-        </View>
-        <View className="w-10" />
+      {/* Header - Room Code Only */}
+      <View className="items-center px-4 py-3 border-b border-gray-200">
+        <Text className="text-xs font-medium text-gray-500">Room Code</Text>
+        <Text className="text-lg font-bold text-gray-900">{roomCode}</Text>
       </View>
 
       <ScrollView
