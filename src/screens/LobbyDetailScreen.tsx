@@ -24,8 +24,9 @@ import { useNFC } from "@/hooks/common/useNFC";
 import { LoadingSpinner, ErrorMessage } from "@/components/common";
 import { Card } from "@/components/ui/Card";
 import { DraggablePlayerSlot } from "@/components/features/lobby/DraggablePlayerSlot";
+import { CountdownOverlay } from "@/components/features/lobby/CountdownOverlay";
 import type { Player } from "@/types/lobby";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { firestore } from "@/config/firebase";
 import { extractUserIdFromNFCUrl } from "@/lib/nfc";
 
@@ -569,20 +570,78 @@ export const LobbyDetailScreen = memo(
 
       try {
         const lobbyRef = doc(firestore, "lobbies", roomCode);
+        
+        // Trigger countdown - start with 1 (first ZERO)
         await updateDoc(lobbyRef, {
-          gameStarted: true,
-          gameStartedAt: new Date(),
+          countdownActive: true,
+          countdownValue: 1,
           lastActivity: new Date(),
         });
-
-        // Navigate to game screen (placeholder - will be implemented in next phase)
-        Alert.alert("Game Starting!", "Game screen will be implemented next!");
-        // TODO: navigation.navigate('Game', { roomCode });
       } catch (err) {
-        console.error("Error starting game:", err);
+        console.error("Error starting countdown:", err);
         Alert.alert("Error", "Failed to start game. Please try again.");
       }
     };
+
+    // Countdown effect - host manages countdown progression
+    useEffect(() => {
+      if (!isHost || !lobby?.countdownActive || !lobby?.countdownValue) return;
+
+      console.log('⏱️ Countdown active:', lobby.countdownValue);
+
+      const lobbyRef = doc(firestore, 'lobbies', roomCode);
+
+      if (lobby.countdownValue === 1) {
+        // First ZERO - wait 1 second, then show second ZERO
+        const timer = setTimeout(async () => {
+          try {
+            await updateDoc(lobbyRef, {
+              countdownValue: 2, // Second ZERO
+              lastActivity: new Date(),
+            });
+          } catch (err) {
+            console.error('Error updating countdown:', err);
+          }
+        }, 1000);
+
+        return () => clearTimeout(timer);
+      } else if (lobby.countdownValue === 2) {
+        // Second ZERO - wait 1 second, then show START!
+        const timer = setTimeout(async () => {
+          try {
+            await updateDoc(lobbyRef, {
+              countdownValue: 'START!',
+              lastActivity: new Date(),
+            });
+          } catch (err) {
+            console.error('Error updating countdown:', err);
+          }
+        }, 1000);
+
+        return () => clearTimeout(timer);
+      } else if (lobby.countdownValue === 'START!') {
+        // START! - wait 800ms, then start game
+        const timer = setTimeout(async () => {
+          try {
+            await updateDoc(lobbyRef, {
+              gameStarted: true,
+              gameStartedAt: serverTimestamp(),
+              countdownActive: false,
+              countdownValue: null,
+              lastActivity: new Date(),
+            });
+
+            // Navigate to game screen
+            Alert.alert("Game Starting!", "Game screen will be implemented in Phase 3B!");
+            // TODO: navigation.navigate('Game', { roomCode });
+          } catch (err) {
+            console.error('Error starting game:', err);
+          }
+        }, 800);
+
+        return () => clearTimeout(timer);
+      }
+    }, [isHost, lobby?.countdownActive, lobby?.countdownValue, roomCode]);
 
     const canStartGame = (): boolean => {
       if (!lobby) return false;
@@ -877,6 +936,12 @@ export const LobbyDetailScreen = memo(
               </Pressable>
             </View>
           )}
+
+          {/* Countdown Overlay - Shows for all players */}
+          <CountdownOverlay
+            visible={!!lobby.countdownActive}
+            value={lobby.countdownValue || null}
+          />
         </SafeAreaView>
       </GestureHandlerRootView>
     );

@@ -32,7 +32,7 @@ export interface Lobby {
   gameCategory?: 'singles' | 'same_gender_doubles' | 'mixed_doubles';
   // Countdown fields
   countdownActive?: boolean;
-  countdownValue?: number | 'GO';
+  countdownValue?: 1 | 2 | 'START!';  // 1 = first ZERO, 2 = second ZERO
   createdAt: Timestamp;
   lastActivity: Timestamp;
 }
