@@ -217,3 +217,48 @@ export const getTeamAssignment = (lobby: Lobby): 'team1' | 'team2' | 'waiting' =
 
   return 'waiting';
 };
+
+/**
+ * Validates pickleball scores according to official rules
+ * @param team1Score - Team 1's final score
+ * @param team2Score - Team 2's final score
+ * @returns Error message if invalid, null if valid
+ */
+export const validatePickleballScore = (
+  team1Score: number,
+  team2Score: number
+): string | null => {
+  // Rule 1: No negative scores
+  if (team1Score < 0 || team2Score < 0) {
+    return 'Scores cannot be negative';
+  }
+
+  // Rule 2: At least one team scored (not 0-0)
+  if (team1Score === 0 && team2Score === 0) {
+    return 'At least one team must score';
+  }
+
+  // Rule 3: Maximum 50 points (prevent typos)
+  if (team1Score > 50 || team2Score > 50) {
+    return 'Maximum score is 50 points';
+  }
+
+  // Determine winner and loser
+  const winnerScore = Math.max(team1Score, team2Score);
+  const loserScore = Math.min(team1Score, team2Score);
+
+  // Rule 4: Winner must have at least 11 points
+  if (winnerScore < 11) {
+    return 'Winning team must have at least 11 points';
+  }
+
+  // Rule 5: Win by 2 if both teams >= 10
+  if (loserScore >= 10) {
+    const scoreDifference = winnerScore - loserScore;
+    if (scoreDifference < 2) {
+      return 'Must win by 2 points when score is 10-10 or higher';
+    }
+  }
+
+  return null; // Valid score
+};

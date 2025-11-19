@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,9 @@ import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { GameTimer } from '@/components/game/GameTimer';
+import { ScoreEntryModal } from '@/components/game/ScoreEntryModal';
+import { GameSummary } from '@/components/game/GameSummary';
+import { completeMatch, calculateGameDuration } from '@/lib/matchHistory';
 import type { Player } from '@/types/lobby';
 
 type GameNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Game'>;
@@ -20,6 +23,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   const navigation = useNavigation<GameNavigationProp>();
   const { user } = useAuth();
   const { lobby, loading, error, exists } = useLobby(roomCode);
+  const [showScoreEntry, setShowScoreEntry] = useState(false);
 
   const isHost = user?.id === lobby?.hostId;
 
@@ -41,21 +45,43 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   }, [navigation]);
 
   const handleCompleteGame = useCallback(() => {
-    Alert.alert(
-      'Complete Game',
-      'Ready to enter final scores?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Enter Scores',
-          onPress: () => {
-            Alert.alert('Score Entry', 'Score entry will be implemented in Phase 3C!');
-            // TODO: Navigate to score entry
-          },
-        },
-      ]
-    );
+    setShowScoreEntry(true);
   }, []);
+
+  const handleSubmitScores = useCallback(async (team1Score: number, team2Score: number) => {
+    if (!lobby || !lobby.gameStartedAt) {
+      throw new Error('Game data not available');
+    }
+
+    try {
+      // Determine winner
+      const winner = team1Score > team2Score ? 1 : 2;
+      
+      // Calculate game duration
+      const gameDuration = calculateGameDuration(lobby.gameStartedAt.toDate());
+
+      // Complete match (creates history records and updates rankings)
+      await completeMatch(lobby, {
+        team1Score,
+        team2Score,
+        winner,
+        gameDuration,
+      });
+
+      // Close modal
+      setShowScoreEntry(false);
+      
+      // Show success message
+      Alert.alert('Success', 'Match completed! Ranks updated.');
+    } catch (err) {
+      console.error('Error completing match:', err);
+      throw new Error('Failed to complete match. Please try again.');
+    }
+  }, [lobby]);
+
+  const handlePlayAgain = useCallback(() => {
+    navigation.navigate('Tabs');
+  }, [navigation]);
 
   const renderPlayer = useCallback(
     (player: Player | undefined, teamNumber: number) => {
@@ -160,6 +186,20 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
     );
   }
 
+  // Show game summary if game is completed
+  if (lobby.gameCompleted && user?.id) {
+    return (
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <GameSummary
+          lobby={lobby}
+          currentUserId={user.id}
+          onPlayAgain={handlePlayAgain}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Active game view
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       {/* Header - Room Code Only */}
@@ -247,6 +287,13 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
           </Pressable>
         )}
       </View>
+
+      {/* Score Entry Modal */}
+      <ScoreEntryModal
+        visible={showScoreEntry}
+        onClose={() => setShowScoreEntry(false)}
+        onSubmit={handleSubmitScores}
+      />
     </SafeAreaView>
   );
 });

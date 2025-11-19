@@ -26,6 +26,7 @@ export interface Lobby {
     team1: number;
     team2: number;
   };
+  winner?: 1 | 2;
   scoreConfirmations?: { [playerId: string]: boolean };
   // Exhibition match fields
   isExhibition?: boolean;
