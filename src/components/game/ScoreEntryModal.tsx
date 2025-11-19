@@ -78,7 +78,7 @@ export const ScoreEntryModal = ({ visible, onClose, onSubmit }: ScoreEntryModalP
 
             {/* Team 1 Score */}
             <View className="mb-4">
-              <Text className="mb-2 text-sm font-semibold text-gray-700">
+              <Text className="mb-2 text-base font-semibold text-gray-700">
                 Team 1 Score
               </Text>
               <Input
@@ -87,13 +87,13 @@ export const ScoreEntryModal = ({ visible, onClose, onSubmit }: ScoreEntryModalP
                 placeholder="0"
                 keyboardType="number-pad"
                 editable={!isSubmitting}
-                className="text-lg"
+                className="py-4 text-2xl font-bold text-center"
               />
             </View>
 
             {/* Team 2 Score */}
             <View className="mb-4">
-              <Text className="mb-2 text-sm font-semibold text-gray-700">
+              <Text className="mb-2 text-base font-semibold text-gray-700">
                 Team 2 Score
               </Text>
               <Input
@@ -102,7 +102,7 @@ export const ScoreEntryModal = ({ visible, onClose, onSubmit }: ScoreEntryModalP
                 placeholder="0"
                 keyboardType="number-pad"
                 editable={!isSubmitting}
-                className="text-lg"
+                className="py-4 text-2xl font-bold text-center"
               />
             </View>
 

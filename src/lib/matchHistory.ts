@@ -79,8 +79,8 @@ export const completeMatch = async (
       pointsChange: isWinner ? winnerPoints : loserPoints,
       opponentIds,
       opponentNames,
-      partnerId,
-      partnerName,
+      // Only include partnerId and partnerName for doubles (avoid undefined in Firestore)
+      ...(partnerId ? { partnerId, partnerName } : {}),
       duration: gameDuration,
       status: 'confirmed',
       createdAt: serverTimestamp(),
