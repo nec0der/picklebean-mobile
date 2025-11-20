@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Trophy } from 'lucide-react-native';
@@ -14,12 +14,20 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
   const { user: currentUser } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('mens_doubles');
   const [refreshing, setRefreshing] = useState(false);
+  const isInitialLoad = useRef(true);
 
   // Parse category filter to get game category and gender
   const { category, gender } = parseCategoryFilter(selectedCategory);
 
   // Fetch leaderboard data
   const { rankings, loading, error, refetch } = useLeaderboard(category, gender, 50);
+
+  // Mark initial load as complete once data loads
+  useEffect(() => {
+    if (!loading) {
+      isInitialLoad.current = false;
+    }
+  }, [loading]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -65,8 +73,8 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
     );
   }, [loading]);
 
-  // Loading state (initial load)
-  if (loading && !refreshing) {
+  // Loading state (initial load only)
+  if (loading && isInitialLoad.current) {
     return (
       <View className="items-center justify-center flex-1 bg-white">
         <LoadingSpinner />
@@ -92,11 +100,8 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
+      {/* Category Filter */}
       <View className="px-4 pt-3 pb-4 border-b border-gray-200">
-        <Text className="mb-3 text-2xl font-bold text-gray-900">Leaderboard</Text>
-        
-        {/* Category Filter */}
         <CategorySelect
           value={selectedCategory}
           onChange={setSelectedCategory}
