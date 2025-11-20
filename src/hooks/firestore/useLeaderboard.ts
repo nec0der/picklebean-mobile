@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
 import type { UserDocument } from '@/types/user';
 import type { GameCategory } from '@/types/lobby';
@@ -19,11 +19,13 @@ interface UseLeaderboardReturn {
 /**
  * Hook to listen to leaderboard rankings in real-time
  * @param category - Game category to get rankings for
+ * @param gender - Gender filter ('male' | 'female') - only applies to singles/same_gender_doubles
  * @param limitCount - Maximum number of users to fetch (default: 50)
  * @returns Ranking data, loading state, and error
  */
 export const useLeaderboard = (
   category: GameCategory = 'singles',
+  gender?: 'male' | 'female',
   limitCount = 50
 ): UseLeaderboardReturn => {
   const [rankings, setRankings] = useState<UserDocument[]>([]);
@@ -43,11 +45,22 @@ export const useLeaderboard = (
 
     const rankingField = categoryToField[category];
 
-    const q = query(
+    // Build query with gender filter if provided
+    let q = query(
       collection(firestore, 'users'),
       orderBy(rankingField, 'desc'),
       limit(limitCount)
     );
+
+    // Add gender filter for singles and same_gender_doubles
+    if (gender && category !== 'mixed_doubles') {
+      q = query(
+        collection(firestore, 'users'),
+        where('gender', '==', gender),
+        orderBy(rankingField, 'desc'),
+        limit(limitCount)
+      );
+    }
 
     const unsubscribe = onSnapshot(
       q,
@@ -68,7 +81,7 @@ export const useLeaderboard = (
     );
 
     return () => unsubscribe();
-  }, [category, limitCount]);
+  }, [category, gender, limitCount]);
 
   const refetch = useCallback(() => {
     setLoading(true);
@@ -81,14 +94,14 @@ export const useLeaderboard = (
 /**
  * Convenience hooks for specific categories
  */
-export const useSinglesLeaderboard = (limitCount = 50): UseLeaderboardReturn => {
-  return useLeaderboard('singles', limitCount);
+export const useSinglesLeaderboard = (gender?: 'male' | 'female', limitCount = 50): UseLeaderboardReturn => {
+  return useLeaderboard('singles', gender, limitCount);
 };
 
-export const useSameGenderDoublesLeaderboard = (limitCount = 50): UseLeaderboardReturn => {
-  return useLeaderboard('same_gender_doubles', limitCount);
+export const useSameGenderDoublesLeaderboard = (gender?: 'male' | 'female', limitCount = 50): UseLeaderboardReturn => {
+  return useLeaderboard('same_gender_doubles', gender, limitCount);
 };
 
 export const useMixedDoublesLeaderboard = (limitCount = 50): UseLeaderboardReturn => {
-  return useLeaderboard('mixed_doubles', limitCount);
+  return useLeaderboard('mixed_doubles', undefined, limitCount);
 };
