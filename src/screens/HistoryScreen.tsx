@@ -162,14 +162,16 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
 
   return (
     <>
-      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
         {/* Match List */}
         <FlatList
           data={matches}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           contentContainerStyle={{
-            padding: 16,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 16,
             flexGrow: 1,
           }}
           ListEmptyComponent={renderEmptyState}

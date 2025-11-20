@@ -54,7 +54,7 @@ export const LeaderboardRow = memo(({ user, rank, category, isCurrentUser }: Lea
   const displayName = user.displayName || 'Unknown User';
 
   return (
-    <Card className={`mb-3 py-0 ${isCurrentUser ? 'border-2 border-blue-500' : ''}`}>
+    <Card variant="outlined" className={`mb-3 py-0 ${isCurrentUser ? 'border-2 border-blue-500' : ''}`}>
       <View className="flex-row items-center p-4">
         {/* Rank */}
         <View className="items-center justify-center w-12 mr-4">

@@ -99,7 +99,7 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
       {/* Category Filter */}
       <View className="px-4 pt-3 pb-4 border-b border-gray-200">
         <CategorySelect
@@ -114,7 +114,9 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         contentContainerStyle={{
-          padding: 16,
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 16,
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmptyState}
