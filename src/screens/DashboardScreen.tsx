@@ -133,7 +133,7 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
       >
         {/* Header */}
         <View className="mb-6">
-          <Text className="text-2xl font-bold text-gray-900">
+          <Text className="text-3xl font-bold text-gray-900">
             {hasPlayedBefore ? `Welcome back, ${firstName}!` : `Hi, ${firstName}! 👋`}
           </Text>
           <Text className="mt-1 text-base text-gray-600">
@@ -187,8 +187,7 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
               onPress={handleCreateGame}
               className="flex-row items-center justify-center px-6 py-4 bg-green-600 shadow-sm rounded-xl active:bg-green-700"
             >
-              <Play size={20} color="#fff" fill="#fff" />
-              <Text className="ml-2 text-base font-semibold text-white">
+              <Text className="text-base font-semibold text-white">
                 Play Your First Game
               </Text>
             </Pressable>
