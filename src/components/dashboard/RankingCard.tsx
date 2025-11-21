@@ -7,6 +7,7 @@ interface RankingCardProps {
   position: number | null;
   category: 'singles' | 'same_gender_doubles' | 'mixed_doubles';
   points: number;
+  gender?: 'male' | 'female';
   movement?: number; // Positive = moved up, negative = moved down
   onPress?: () => void;
 }
@@ -15,15 +16,29 @@ export const RankingCard = memo(({
   position,
   category,
   points,
+  gender,
   movement,
   onPress,
 }: RankingCardProps) => {
-  const categoryLabel = 
-    category === 'singles' 
-      ? 'Singles' 
-      : category === 'same_gender_doubles'
-      ? 'Same Gender Doubles'
-      : 'Mixed Doubles';
+  // Generate gender-specific labels
+  const getCategoryLabel = (): string => {
+    if (category === 'mixed_doubles') {
+      return 'Mixed Doubles';
+    }
+    
+    if (category === 'singles') {
+      if (gender === 'male') return "Men's Singles";
+      if (gender === 'female') return "Women's Singles";
+      return 'Singles';
+    }
+    
+    // same_gender_doubles
+    if (gender === 'male') return "Men's Doubles";
+    if (gender === 'female') return "Women's Doubles";
+    return 'Same Gender Doubles';
+  };
+
+  const categoryLabel = getCategoryLabel();
   const hasRanking = position !== null;
 
   return (

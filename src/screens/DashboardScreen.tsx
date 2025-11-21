@@ -19,7 +19,16 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
   const { user, userDocument } = useAuth();
   const { matches, loading, refetch } = useMatches(userDocument?.uid || '', 5);
   const { pendingGame, loading: pendingGameLoading } = usePendingGame();
-  const { rankings, loading: leaderboardLoading } = useLeaderboard('mixed_doubles', undefined, 100);
+  
+  // Get rankings for all categories
+  const userGender =
+    userDocument?.gender === 'male' || userDocument?.gender === 'female'
+      ? userDocument.gender
+      : undefined;
+  const { rankings: singlesRankings } = useLeaderboard('singles', userGender, 100);
+  const { rankings: doublesRankings } = useLeaderboard('same_gender_doubles', userGender, 100);
+  const { rankings: mixedRankings } = useLeaderboard('mixed_doubles', undefined, 100);
+  
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
@@ -75,15 +84,29 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
 
   const firstName = getFirstName();
 
-  // Calculate ranking position
-  const userRankingPosition = useMemo(() => {
-    if (!userDocument?.uid || rankings.length === 0) return null;
-    const position = rankings.findIndex((u) => u.uid === userDocument.uid);
-    return position >= 0 ? position + 1 : null;
-  }, [rankings, userDocument?.uid]);
+  // Calculate ranking positions for all categories
+  const singlesPosition = useMemo(() => {
+    if (!userDocument?.uid || singlesRankings.length === 0) return null;
+    const pos = singlesRankings.findIndex((u) => u.uid === userDocument.uid);
+    return pos >= 0 ? pos + 1 : null;
+  }, [singlesRankings, userDocument?.uid]);
 
-  // Get user's current points for mixed doubles
-  const userPoints = userDocument?.rankings?.mixedDoubles || 1000;
+  const doublesPosition = useMemo(() => {
+    if (!userDocument?.uid || doublesRankings.length === 0) return null;
+    const pos = doublesRankings.findIndex((u) => u.uid === userDocument.uid);
+    return pos >= 0 ? pos + 1 : null;
+  }, [doublesRankings, userDocument?.uid]);
+
+  const mixedPosition = useMemo(() => {
+    if (!userDocument?.uid || mixedRankings.length === 0) return null;
+    const pos = mixedRankings.findIndex((u) => u.uid === userDocument.uid);
+    return pos >= 0 ? pos + 1 : null;
+  }, [mixedRankings, userDocument?.uid]);
+
+  // Get user's current points for each category
+  const singlesPoints = userDocument?.rankings?.singles || 1000;
+  const doublesPoints = userDocument?.rankings?.sameGenderDoubles || 1000;
+  const mixedPoints = userDocument?.rankings?.mixedDoubles || 1000;
 
   const handleViewLeaderboard = useCallback(() => {
     navigation.navigate('Leaderboard');
@@ -193,11 +216,28 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
               <PendingGameBanner pendingGame={pendingGame} />
             )}
 
-            {/* Ranking Card */}
+            {/* Ranking Cards */}
             <RankingCard
-              position={userRankingPosition}
+              position={singlesPosition}
+              category="singles"
+              points={singlesPoints}
+              gender={userGender}
+              onPress={handleViewLeaderboard}
+            />
+
+            <RankingCard
+              position={doublesPosition}
+              category="same_gender_doubles"
+              points={doublesPoints}
+              gender={userGender}
+              onPress={handleViewLeaderboard}
+            />
+
+            <RankingCard
+              position={mixedPosition}
               category="mixed_doubles"
-              points={userPoints}
+              points={mixedPoints}
+              gender={userGender}
               onPress={handleViewLeaderboard}
             />
 

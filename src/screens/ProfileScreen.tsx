@@ -71,12 +71,6 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
       ? `${userDocument.firstName} ${userDocument.lastName}`
       : firebaseUser?.displayName || userDocument?.displayName || 'User';
 
-  // Calculate total points across all categories
-  const totalPoints =
-    (userDocument?.rankings?.singles || 1000) +
-    (userDocument?.rankings?.sameGenderDoubles || 1000) +
-    (userDocument?.rankings?.mixedDoubles || 1000);
-
   // Calculate stats for simple text display
   const totalMatches = userDocument?.matchStats?.totalMatches || 0;
   const wins = userDocument?.matchStats?.wins || 0;
@@ -116,13 +110,12 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
         <ProfileHeroSection
           profilePicture={profilePicture}
           fullName={fullName}
-          totalPoints={totalPoints}
           onEditPress={handleEditProfile}
         />
 
