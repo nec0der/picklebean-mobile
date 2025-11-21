@@ -1,6 +1,6 @@
 import { memo, useState, useMemo } from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import { LogOut, User, Eye } from 'lucide-react-native';
+import { LogOut, User, Eye, Users, UsersRound } from 'lucide-react-native';
 import type { TabScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
@@ -134,6 +134,7 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
               position={singlesPosition}
               points={userDocument?.rankings?.singles || 1000}
               color="bg-blue-500"
+              icon={User}
             />
 
             <RankingItem
@@ -141,6 +142,7 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
               position={doublesPosition}
               points={userDocument?.rankings?.sameGenderDoubles || 1000}
               color="bg-green-500"
+              icon={Users}
             />
 
             <RankingItem
@@ -148,6 +150,7 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
               position={mixedPosition}
               points={userDocument?.rankings?.mixedDoubles || 1000}
               color="bg-purple-500"
+              icon={UsersRound}
             />
           </View>
 

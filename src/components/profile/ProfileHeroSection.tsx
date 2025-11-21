@@ -15,7 +15,7 @@ export const ProfileHeroSection = memo(({
   onEditPress,
 }: ProfileHeroSectionProps) => {
   return (
-    <View className="px-4 pt-8 pb-6 bg-blue-500">
+    <View className="px-4 pt-8 pb-6 bg-green-600">
       <View className="items-center">
         {/* Avatar with Edit Overlay */}
         <View className="relative mb-4">
@@ -25,7 +25,7 @@ export const ProfileHeroSection = memo(({
               onPress={onEditPress}
               className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg active:bg-gray-50"
             >
-              <Edit2 size={16} color="#3b82f6" />
+              <Edit2 size={16} color="#16a34a" />
             </Pressable>
           )}
         </View>
