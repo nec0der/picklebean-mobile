@@ -25,6 +25,7 @@ import { LoadingSpinner, ErrorMessage } from "@/components/common";
 import { Card } from "@/components/ui/Card";
 import { DraggablePlayerSlot } from "@/components/features/lobby/DraggablePlayerSlot";
 import { CountdownOverlay } from "@/components/features/lobby/CountdownOverlay";
+import { LobbyHeader } from "@/components/features/lobby/LobbyHeader";
 import type { Player } from "@/types/lobby";
 import { doc, updateDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { firestore } from "@/config/firebase";
@@ -44,8 +45,7 @@ export const LobbyDetailScreen = memo(
     const { joinLobby, leaveLobby, deleteLobby } = useLobbyActions();
     const toast = useToast();
 
-    const [copied, setCopied] = useState(false);
-    const [isJoining, setIsJoining] = useState(false);
+      const [isJoining, setIsJoining] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
     const [draggedPlayer, setDraggedPlayer] = useState<{
       team: number;
@@ -497,14 +497,9 @@ export const LobbyDetailScreen = memo(
       }
     };
 
-    const handleCopyCode = async () => {
-      try {
-        Clipboard.setString(roomCode);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
-        console.error("Failed to copy room code:", err);
-      }
+    const handleQrPress = () => {
+      // TODO: Show QR code modal
+      toast.info("QR code feature coming soon!");
     };
 
     const handleLeave = () => {
@@ -720,7 +715,7 @@ export const LobbyDetailScreen = memo(
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-          {/* Header */}
+          {/* Compact Header */}
           <View className="relative flex-row items-center justify-center px-4 py-3 border-b border-gray-200">
             <Text className="text-xl font-bold text-gray-900">Game Lobby</Text>
             <Pressable
@@ -731,34 +726,28 @@ export const LobbyDetailScreen = memo(
             </Pressable>
           </View>
 
+          {/* Lobby Header with Room Code and Actions */}
+          {isHost && isSupported && !isRoomFull() && (
+            <LobbyHeader
+              roomCode={roomCode}
+              isScanning={isScanning}
+              onQrPress={handleQrPress}
+              onScanPress={handleScanPlayers}
+            />
+          )}
+          {(!isHost || !isSupported || isRoomFull()) && (
+            <View className="flex-row items-center justify-center px-4 py-3 bg-white border-b border-gray-200">
+              <Text className="text-3xl font-bold tracking-wide text-gray-900">
+                {roomCode}
+              </Text>
+            </View>
+          )}
+
           <ScrollView
             className="flex-1 px-4 py-6"
             contentContainerStyle={{ paddingBottom: isHost ? 100 : 20 }}
           >
             <View className="w-full max-w-md mx-auto space-y-6">
-              {/* Scan Players Button (Host Only) */}
-              {isHost && isSupported && !isRoomFull() && (
-                <Pressable
-                  onPress={handleScanPlayers}
-                  className={`flex-row items-center justify-center gap-2 p-4 mb-4 border-2 rounded-lg ${
-                    isScanning
-                      ? "bg-green-100 border-green-400 active:bg-green-200"
-                      : "bg-green-500 border-green-500 active:bg-green-600"
-                  }`}
-                >
-                  <Radio size={20} color={isScanning ? "#22c55e" : "#ffffff"} />
-                  <Text
-                    className={`text-base font-semibold ${
-                      isScanning ? "text-green-700" : "text-white"
-                    }`}
-                  >
-                    {isScanning
-                      ? "Scanning... (Tap to Stop)"
-                      : "Scan Players"}
-                  </Text>
-                </Pressable>
-              )}
-
               {/* NFC Not Supported Warning */}
               {isHost && nfcError && (
                 <View className="p-3 mb-4 border rounded-lg bg-amber-50 border-amber-200">
@@ -768,34 +757,15 @@ export const LobbyDetailScreen = memo(
                 </View>
               )}
 
-              {/* Room Code */}
-              <View className="items-center mb-2">
-                <View className="flex-row items-center gap-3 px-6 py-4 border-2 border-green-200 bg-green-50 rounded-xl">
-                  <Text className="text-4xl font-bold tracking-widest text-green-600">
-                    {roomCode}
-                  </Text>
-                  <Pressable onPress={handleCopyCode} className="p-2">
-                    {copied ? (
-                      <Check size={28} color="#22c55e" />
-                    ) : (
-                      <Copy size={28} color="#16a34a" />
-                    )}
-                  </Pressable>
-                </View>
-                {copied && (
-                  <Text className="mt-2 text-sm font-medium text-green-600">Copied!</Text>
-                )}
-              </View>
-
-              {/* Game Mode - Made More Prominent */}
-              <View className="items-center px-4 py-3 mx-8 mb-6 border-2 border-gray-300 rounded-lg bg-gray-50">
-                <View className="flex-row items-center space-x-2">
+              {/* Game Mode Badge - Subtle */}
+              <View className="items-center py-2">
+                <View className="flex-row items-center gap-2">
                   {lobby.gameMode === "singles" ? (
-                    <User size={24} color="#3b82f6" />
+                    <User size={18} color="#6b7280" />
                   ) : (
-                    <Users size={24} color="#a855f7" />
+                    <Users size={18} color="#6b7280" />
                   )}
-                  <Text className="text-xl font-bold text-gray-900">
+                  <Text className="text-sm font-medium text-gray-600">
                     {lobby.gameMode === "singles"
                       ? "Singles (1v1)"
                       : "Doubles (2v2)"}
@@ -814,10 +784,10 @@ export const LobbyDetailScreen = memo(
               )}
 
               {/* Teams */}
-              <View className="space-y-4">
+              <View className="space-y-6">
                 {/* Team 1 */}
-                <Card className="p-4 border-green-200 bg-green-50">
-                  <Text className="mb-3 text-lg font-bold text-green-700">
+                <Card variant="outlined" padding="lg" className="border-green-200 bg-green-50/30">
+                  <Text className="mb-4 text-base font-semibold text-green-700">
                     Team 1
                   </Text>
                   <View className="gap-3">
@@ -865,18 +835,18 @@ export const LobbyDetailScreen = memo(
                   </View>
                 </Card>
 
-                {/* VS Divider */}
-                <View className="items-center py-2">
-                  <View className="px-6 py-2 bg-gray-900 border-2 border-gray-900 rounded-full">
-                    <Text className="text-2xl font-black tracking-wider text-white">
-                      VS
-                    </Text>
-                  </View>
+                {/* VS Divider - Minimalist */}
+                <View className="flex-row items-center justify-center py-3">
+                  <View className="flex-1 h-px bg-gray-300" />
+                  <Text className="px-3 text-sm font-medium text-gray-500">
+                    vs
+                  </Text>
+                  <View className="flex-1 h-px bg-gray-300" />
                 </View>
 
                 {/* Team 2 */}
-                <Card className="p-4 border-blue-200 bg-blue-50">
-                  <Text className="mb-3 text-lg font-bold text-blue-700">
+                <Card variant="outlined" padding="lg" className="border-blue-200 bg-blue-50/30">
+                  <Text className="mb-4 text-base font-semibold text-blue-700">
                     Team 2
                   </Text>
                   <View className="gap-3">
