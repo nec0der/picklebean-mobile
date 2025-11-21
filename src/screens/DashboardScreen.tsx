@@ -1,30 +1,253 @@
-import { memo, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { memo, useCallback, useState } from 'react';
+import { View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Sparkles, Trophy, TrendingUp, Play } from 'lucide-react-native';
 import type { TabScreenProps } from '@/types/navigation';
-import { useToast } from '@/hooks/common/useToast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMatches } from '@/hooks/firestore/useMatches';
+import { Avatar } from '@/components/ui/Avatar';
+import { Card } from '@/components/ui/Card';
+import { LoadingSpinner } from '@/components/common';
+import { MatchCard } from '@/components/history/MatchCard';
 
-export const DashboardScreen = memo(({}: TabScreenProps<'Dashboard'>) => {
-  const toast = useToast();
+export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>) => {
+  const { user, userDocument } = useAuth();
+  const { matches, loading, refetch } = useMatches(userDocument?.uid || '', 5);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Show welcome toast on mount
-  useEffect(() => {
-    toast.success('Welcome to Picklebean! 🎾');
-  }, []);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    refetch();
+    setTimeout(() => setRefreshing(false), 500);
+  }, [refetch]);
+
+  const handleCreateGame = useCallback(() => {
+    navigation.navigate('Play');
+  }, [navigation]);
+
+  const handleViewAllMatches = useCallback(() => {
+    navigation.navigate('History');
+  }, [navigation]);
+
+  const handleViewProfile = useCallback(() => {
+    navigation.navigate('Profile');
+  }, [navigation]);
+
+  // Calculate stats
+  const totalMatches = userDocument?.matchStats?.totalMatches || 0;
+  const wins = userDocument?.matchStats?.wins || 0;
+  const losses = userDocument?.matchStats?.losses || 0;
+  const winRate = totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(0) : '0';
+
+  // Calculate current streak
+  const calculateStreak = (): { type: 'win' | 'loss' | null; count: number } => {
+    if (matches.length === 0) return { type: null, count: 0 };
+    
+    const recentResult = matches[0].result;
+    let streak = 0;
+    
+    for (const match of matches) {
+      if (match.result === recentResult) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    return { type: recentResult, count: streak };
+  };
+
+  const streak = calculateStreak();
+  const hasPlayedBefore = totalMatches > 0;
+
+  // Loading state
+  if (loading && !refreshing) {
+    return (
+      <View className="items-center justify-center flex-1 bg-white">
+        <LoadingSpinner />
+        <Text className="mt-4 text-gray-600">Loading dashboard...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View className="items-center justify-center flex-1 px-4 bg-white">
-      <View className="items-center">
-        <Text className="mb-3 text-3xl font-bold text-primary-600">
-          Dashboard
-        </Text>
-        <Text className="mb-4 text-base text-center text-secondary-600">
-          Your home for quick stats, recent matches, and personalized insights.
-        </Text>
-        <Text className="text-sm text-center text-secondary-400">
-          Coming soon: Match history preview, current rank, and quick actions.
-        </Text>
-      </View>
-    </View>
+    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
+        {/* Header */}
+        <View className="flex-row items-center justify-between mb-6">
+          <View className="flex-1">
+            <Text className="text-2xl font-bold text-gray-900">
+              {hasPlayedBefore ? 'Welcome back!' : 'Welcome!'}
+            </Text>
+            <Text className="mt-1 text-base text-gray-600">
+              {user?.displayName || 'Player'}
+            </Text>
+          </View>
+          <Pressable onPress={handleViewProfile}>
+            <Avatar
+              uri={userDocument?.profilePictureUrl || user?.photoURL}
+              name={user?.displayName || 'User'}
+              size="lg"
+            />
+          </Pressable>
+        </View>
+
+        {/* NEW USER VIEW */}
+        {!hasPlayedBefore && (
+          <>
+            {/* Welcome Card */}
+            <Card variant="outlined" className="p-6 mb-4">
+              <View className="items-center">
+                <View className="items-center justify-center w-16 h-16 mb-4 rounded-full bg-primary-100">
+                  <Sparkles size={32} color="#3b82f6" />
+                </View>
+                <Text className="mb-2 text-xl font-bold text-center text-gray-900">
+                  Welcome to Picklebean! 🎾
+                </Text>
+                <Text className="text-base text-center text-gray-600">
+                  Track your matches, climb the leaderboard, and compete with friends in this pickleball ranking system.
+                </Text>
+              </View>
+            </Card>
+
+            {/* Get Started CTA */}
+            <Card variant="elevated" className="p-6 mb-4 bg-primary-500">
+              <Text className="mb-3 text-lg font-bold text-white">
+                Ready to play?
+              </Text>
+              <Text className="mb-4 text-sm text-white opacity-90">
+                Create or join a game to start tracking your matches and building your ranking.
+              </Text>
+              <Pressable
+                onPress={handleCreateGame}
+                className="flex-row items-center justify-center px-6 py-3 bg-white rounded-lg"
+              >
+                <Play size={20} color="#3b82f6" fill="#3b82f6" />
+                <Text className="ml-2 font-semibold text-primary-600">
+                  Play Your First Game
+                </Text>
+              </Pressable>
+            </Card>
+
+            {/* How It Works */}
+            <Card variant="outlined" className="p-6">
+              <Text className="mb-4 text-lg font-bold text-gray-900">
+                How it works
+              </Text>
+              <View className="space-y-3">
+                <View className="flex-row">
+                  <View className="items-center justify-center w-8 h-8 mr-3 rounded-full bg-primary-100">
+                    <Text className="font-bold text-primary-600">1</Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-medium text-gray-900">Create or join a game</Text>
+                    <Text className="text-sm text-gray-600">Choose singles or doubles</Text>
+                  </View>
+                </View>
+                <View className="flex-row">
+                  <View className="items-center justify-center w-8 h-8 mr-3 rounded-full bg-primary-100">
+                    <Text className="font-bold text-primary-600">2</Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-medium text-gray-900">Play your match</Text>
+                    <Text className="text-sm text-gray-600">Standard pickleball rules apply</Text>
+                  </View>
+                </View>
+                <View className="flex-row">
+                  <View className="items-center justify-center w-8 h-8 mr-3 rounded-full bg-primary-100">
+                    <Text className="font-bold text-primary-600">3</Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-medium text-gray-900">Submit your score</Text>
+                    <Text className="text-sm text-gray-600">Earn or lose ranking points</Text>
+                  </View>
+                </View>
+              </View>
+            </Card>
+          </>
+        )}
+
+        {/* EXISTING USER VIEW */}
+        {hasPlayedBefore && (
+          <>
+            {/* Quick Stats */}
+            <View className="flex-row mb-4 space-x-3">
+              <Card variant="outlined" className="flex-1 p-4">
+                <View className="items-center">
+                  <Trophy size={24} color="#3b82f6" />
+                  <Text className="mt-2 text-2xl font-bold text-gray-900">
+                    {totalMatches}
+                  </Text>
+                  <Text className="text-xs text-gray-500">Matches</Text>
+                </View>
+              </Card>
+
+              <Card variant="outlined" className="flex-1 p-4">
+                <View className="items-center">
+                  <TrendingUp size={24} color="#10b981" />
+                  <Text className="mt-2 text-2xl font-bold text-gray-900">
+                    {winRate}%
+                  </Text>
+                  <Text className="text-xs text-gray-500">Win Rate</Text>
+                </View>
+              </Card>
+
+              <Card variant="outlined" className="flex-1 p-4">
+                <View className="items-center">
+                  <Text className="text-2xl">
+                    {streak.type === 'win' ? '🔥' : streak.type === 'loss' ? '💔' : '➖'}
+                  </Text>
+                  <Text className="mt-2 text-2xl font-bold text-gray-900">
+                    {streak.count}
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    {streak.type === 'win' ? 'Win' : streak.type === 'loss' ? 'Loss' : 'No'} Streak
+                  </Text>
+                </View>
+              </Card>
+            </View>
+
+            {/* Recent Matches */}
+            {matches.length > 0 && (
+              <View className="mb-4">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-lg font-bold text-gray-900">
+                    Recent Matches
+                  </Text>
+                  <Pressable onPress={handleViewAllMatches}>
+                    <Text className="text-sm font-medium text-primary-600">
+                      View All →
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {matches.slice(0, 3).map((match) => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+              </View>
+            )}
+
+            {/* Create Game CTA */}
+            <Pressable
+              onPress={handleCreateGame}
+              className="flex-row items-center justify-center px-6 py-4 rounded-lg bg-primary-500"
+            >
+              <Play size={20} color="#fff" fill="#fff" />
+              <Text className="ml-2 text-base font-semibold text-white">
+                Create New Game
+              </Text>
+            </Pressable>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 });
 
