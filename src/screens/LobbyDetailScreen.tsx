@@ -769,7 +769,7 @@ export const LobbyDetailScreen = memo(
               )}
 
               {/* Room Code */}
-              <View className="items-center">
+              <View className="items-center mb-2">
                 <View className="flex-row items-center gap-3 px-6 py-4 border-2 border-green-200 bg-green-50 rounded-xl">
                   <Text className="text-4xl font-bold tracking-widest text-green-600">
                     {roomCode}
@@ -787,18 +787,20 @@ export const LobbyDetailScreen = memo(
                 )}
               </View>
 
-              {/* Game Mode */}
-              <View className="flex-row items-center justify-center mt-6 space-x-2">
-                {lobby.gameMode === "singles" ? (
-                  <User size={20} color="#3b82f6" />
-                ) : (
-                  <Users size={20} color="#a855f7" />
-                )}
-                <Text className="text-base font-medium text-gray-900">
-                  {lobby.gameMode === "singles"
-                    ? "Singles (1v1)"
-                    : "Doubles (2v2)"}
-                </Text>
+              {/* Game Mode - Made More Prominent */}
+              <View className="items-center px-4 py-3 mx-8 mb-6 border-2 border-gray-300 rounded-lg bg-gray-50">
+                <View className="flex-row items-center space-x-2">
+                  {lobby.gameMode === "singles" ? (
+                    <User size={24} color="#3b82f6" />
+                  ) : (
+                    <Users size={24} color="#a855f7" />
+                  )}
+                  <Text className="text-xl font-bold text-gray-900">
+                    {lobby.gameMode === "singles"
+                      ? "Singles (1v1)"
+                      : "Doubles (2v2)"}
+                  </Text>
+                </View>
               </View>
 
               {/* Room Full Message */}
@@ -812,10 +814,10 @@ export const LobbyDetailScreen = memo(
               )}
 
               {/* Teams */}
-              <View className="space-y-6">
+              <View className="space-y-4">
                 {/* Team 1 */}
-                <Card className="p-4">
-                  <Text className="mb-3 text-lg font-bold text-gray-900">
+                <Card className="p-4 border-green-200 bg-green-50">
+                  <Text className="mb-3 text-lg font-bold text-green-700">
                     Team 1
                   </Text>
                   <View className="gap-3">
@@ -863,9 +865,18 @@ export const LobbyDetailScreen = memo(
                   </View>
                 </Card>
 
+                {/* VS Divider */}
+                <View className="items-center py-2">
+                  <View className="px-6 py-2 bg-gray-900 border-2 border-gray-900 rounded-full">
+                    <Text className="text-2xl font-black tracking-wider text-white">
+                      VS
+                    </Text>
+                  </View>
+                </View>
+
                 {/* Team 2 */}
-                <Card className="p-4">
-                  <Text className="mb-3 text-lg font-bold text-gray-900">
+                <Card className="p-4 border-blue-200 bg-blue-50">
+                  <Text className="mb-3 text-lg font-bold text-blue-700">
                     Team 2
                   </Text>
                   <View className="gap-3">
