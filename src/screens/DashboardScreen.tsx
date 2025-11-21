@@ -110,34 +110,13 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
         {/* NEW USER VIEW */}
         {!hasPlayedBefore && (
           <>
-            {/* Welcome Card */}
-            <Card variant="outlined" className="p-6 mb-4">
-              <View className="items-center">
-                <View className="items-center justify-center w-16 h-16 mb-4 rounded-full bg-primary-100">
-                  <Sparkles size={32} color="#3b82f6" />
-                </View>
-                <Text className="mb-2 text-xl font-bold text-center text-gray-900">
-                  Welcome to Picklebean! 🎾
-                </Text>
-                <Text className="text-base text-center text-gray-600">
-                  Track your matches, climb the leaderboard, and compete with friends in this pickleball ranking system.
-                </Text>
-              </View>
-            </Card>
-
-            {/* Get Started CTA */}
-            <Pressable
-              onPress={handleCreateGame}
-              className="flex-row items-center justify-center px-6 py-4 mb-4 bg-green-600 rounded-lg"
-            >
-              <Play size={20} color="#fff" fill="#fff" />
-              <Text className="ml-2 text-base font-semibold text-white">
-                Play Your First Game
-              </Text>
-            </Pressable>
+            {/* Value Proposition */}
+            <Text className="mb-6 text-base leading-relaxed text-center text-gray-600">
+              Track your matches, climb the leaderboard, and compete with friends in this pickleball ranking system.
+            </Text>
 
             {/* How It Works */}
-            <Card variant="outlined" className="p-6">
+            <Card variant="outlined" className="p-6 mb-6">
               <Text className="mb-4 text-lg font-bold text-gray-900">
                 How it works
               </Text>
@@ -171,6 +150,17 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
                 </View>
               </View>
             </Card>
+
+            {/* Get Started CTA */}
+            <Pressable
+              onPress={handleCreateGame}
+              className="flex-row items-center justify-center px-6 py-4 bg-green-600 rounded-lg"
+            >
+              <Play size={20} color="#fff" fill="#fff" />
+              <Text className="ml-2 text-base font-semibold text-white">
+                Play Your First Game
+              </Text>
+            </Pressable>
           </>
         )}
 
