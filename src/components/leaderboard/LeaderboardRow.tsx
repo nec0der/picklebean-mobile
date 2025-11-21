@@ -54,13 +54,8 @@ export const LeaderboardRow = memo(({ user, rank, category, isCurrentUser }: Lea
   const displayName = user.displayName || 'Unknown User';
 
   return (
-    <Card variant="outlined" className={`mb-3 py-0 ${isCurrentUser ? 'border-2 border-blue-500' : ''}`}>
+    <Card variant="outlined" className={`mb-3 py-0 px-0 ${isCurrentUser ? 'border-2 border-blue-500' : ''}`}>
       <View className="flex-row items-center p-4">
-        {/* Rank */}
-        <View className="items-center justify-center w-12 mr-4">
-          {getRankDisplay(rank)}
-        </View>
-
         {/* Avatar */}
         <Avatar
           uri={user.profilePictureUrl || user.photoURL}
@@ -68,22 +63,22 @@ export const LeaderboardRow = memo(({ user, rank, category, isCurrentUser }: Lea
           size="md"
         />
 
-        {/* Name */}
-        <View className="flex-1 mx-3">
-          <Text className="text-base font-medium text-gray-900 truncate">
+        {/* Name and Points Column */}
+        <View className="flex-1 ml-3">
+          <Text className="text-base font-semibold text-gray-900">
             {displayName}
             {isCurrentUser && (
-              <Text className="ml-2 text-sm font-normal text-blue-600"> (You)</Text>
+              <Text className="text-sm font-normal text-blue-600"> (You)</Text>
             )}
+          </Text>
+          <Text className="mt-1 text-sm text-gray-500">
+            {points.toLocaleString()} Points
           </Text>
         </View>
 
-        {/* Points */}
-        <View className="items-end">
-          <Text className="text-lg font-bold text-gray-900">
-            {points.toLocaleString()}
-          </Text>
-          <Text className="text-xs text-gray-500">pts</Text>
+        {/* Rank/Medal on Right */}
+        <View className="items-center justify-center ml-4">
+          {getRankDisplay(rank)}
         </View>
       </View>
     </Card>

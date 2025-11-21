@@ -32,8 +32,8 @@ export const MatchCard = memo(({ match, onPress }: MatchCardProps) => {
 
   return (
     <Pressable onPress={handlePress}>
-      <Card variant="outlined" className="py-0 mb-3">
-        <View className="flex-row items-center p-4 space-x-4">
+      <Card variant="outlined" className="px-0 py-0 mb-3">
+        <View className="flex-row items-center gap-4 p-4 space-x-4">
           {/* Win/Loss Icon Box */}
           <View
             className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border ${
