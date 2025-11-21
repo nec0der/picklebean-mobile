@@ -60,6 +60,14 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
   const streak = calculateStreak();
   const hasPlayedBefore = totalMatches > 0;
 
+  // Extract first name from displayName
+  const getFirstName = (): string => {
+    const fullName = user?.displayName || 'there';
+    return fullName.split(' ')[0];
+  };
+
+  const firstName = getFirstName();
+
   // Loading state
   if (loading && !refreshing) {
     return (
@@ -84,10 +92,10 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
         <View className="flex-row items-center justify-between mb-6">
           <View className="flex-1">
             <Text className="text-2xl font-bold text-gray-900">
-              {hasPlayedBefore ? 'Welcome back!' : 'Welcome!'}
+              {hasPlayedBefore ? `Welcome back, ${firstName}!` : `Hi, ${firstName}! 👋`}
             </Text>
             <Text className="mt-1 text-base text-gray-600">
-              {user?.displayName || 'Player'}
+              {hasPlayedBefore ? user?.displayName : 'Welcome to Picklebean'}
             </Text>
           </View>
           <Pressable onPress={handleViewProfile}>
@@ -118,23 +126,15 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
             </Card>
 
             {/* Get Started CTA */}
-            <Card variant="elevated" className="p-6 mb-4 bg-primary-500">
-              <Text className="mb-3 text-lg font-bold text-white">
-                Ready to play?
+            <Pressable
+              onPress={handleCreateGame}
+              className="flex-row items-center justify-center px-6 py-4 mb-4 bg-green-600 rounded-lg"
+            >
+              <Play size={20} color="#fff" fill="#fff" />
+              <Text className="ml-2 text-base font-semibold text-white">
+                Play Your First Game
               </Text>
-              <Text className="mb-4 text-sm text-white opacity-90">
-                Create or join a game to start tracking your matches and building your ranking.
-              </Text>
-              <Pressable
-                onPress={handleCreateGame}
-                className="flex-row items-center justify-center px-6 py-3 bg-white rounded-lg"
-              >
-                <Play size={20} color="#3b82f6" fill="#3b82f6" />
-                <Text className="ml-2 font-semibold text-primary-600">
-                  Play Your First Game
-                </Text>
-              </Pressable>
-            </Card>
+            </Pressable>
 
             {/* How It Works */}
             <Card variant="outlined" className="p-6">
