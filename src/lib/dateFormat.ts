@@ -63,12 +63,19 @@ export const formatDuration = (seconds: number): string => {
 
 /**
  * Groups dates into time categories for match history display
- * @param date - Date to categorize
+ * @param date - Date object or Firestore Timestamp
  * @returns Time group label (Today, Yesterday, Last 7 Days, etc.)
  */
-export const getTimeGroup = (date: Date): string => {
+export const getTimeGroup = (date: Date | any): string => {
+  // Convert Firestore Timestamp to Date if needed
+  const dateObj = date?.toDate ? date.toDate() : date;
+  
+  if (!dateObj || !(dateObj instanceof Date)) {
+    return 'Older';
+  }
+
   const now = new Date();
-  const diffTime = now.getTime() - date.getTime();
+  const diffTime = now.getTime() - dateObj.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return 'Today';
