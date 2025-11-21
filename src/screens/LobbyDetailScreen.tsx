@@ -7,7 +7,7 @@ import {
   Alert,
   Clipboard,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 import { X, Copy, Check, User, Users, Radio } from "lucide-react-native";
@@ -44,6 +44,7 @@ export const LobbyDetailScreen = memo(
     const { lobby, loading, error, exists } = useLobby(roomCode);
     const { joinLobby, leaveLobby, deleteLobby } = useLobbyActions();
     const toast = useToast();
+    const insets = useSafeAreaInsets();
 
       const [isJoining, setIsJoining] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
@@ -736,12 +737,31 @@ export const LobbyDetailScreen = memo(
             />
           )}
           {(!isHost || !isSupported || isRoomFull()) && (
-            <View className="flex-row items-center justify-center px-4 py-3 bg-white border-b border-gray-200">
-              <Text className="text-3xl font-bold tracking-wide text-gray-900">
+            <View className="flex-col items-center justify-center px-4 py-3 bg-white border-b border-gray-200">
+              <Text className="mb-1 text-xs font-medium tracking-wider text-gray-500">
+                ROOM CODE
+              </Text>
+              <Text className="text-3xl font-bold tracking-widest text-gray-900">
                 {roomCode}
               </Text>
             </View>
           )}
+
+          {/* Game Mode Badge - Moved here, right after header */}
+          <View className="items-center py-4 border-b border-gray-200 bg-gray-50">
+            <View className="flex-row items-center gap-2">
+              {lobby.gameMode === "singles" ? (
+                <User size={18} color="#6b7280" />
+              ) : (
+                <Users size={18} color="#6b7280" />
+              )}
+              <Text className="text-sm font-medium text-gray-600">
+                {lobby.gameMode === "singles"
+                  ? "Singles (1v1)"
+                  : "Doubles (2v2)"}
+              </Text>
+            </View>
+          </View>
 
           <ScrollView
             className="flex-1 px-4 py-6"
@@ -756,22 +776,6 @@ export const LobbyDetailScreen = memo(
                   </Text>
                 </View>
               )}
-
-              {/* Game Mode Badge - Subtle */}
-              <View className="items-center py-2">
-                <View className="flex-row items-center gap-2">
-                  {lobby.gameMode === "singles" ? (
-                    <User size={18} color="#6b7280" />
-                  ) : (
-                    <Users size={18} color="#6b7280" />
-                  )}
-                  <Text className="text-sm font-medium text-gray-600">
-                    {lobby.gameMode === "singles"
-                      ? "Singles (1v1)"
-                      : "Doubles (2v2)"}
-                  </Text>
-                </View>
-              </View>
 
               {/* Room Full Message */}
               {isRoomFull() && !isUserInLobby() && (
@@ -899,11 +903,14 @@ export const LobbyDetailScreen = memo(
 
           {/* Fixed Start Game Button (Host Only) */}
           {isHost && (
-            <View className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+            <View 
+              className="absolute bottom-0 left-0 right-0 px-4 pt-4 bg-white border-t border-gray-200"
+              style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            >
               <Pressable
                 onPress={handleStartGame}
                 disabled={!canStartGame()}
-                className={`py-4 rounded-lg items-center ${
+                className={`py-4 rounded-xl items-center ${
                   canStartGame()
                     ? "bg-green-500 active:bg-green-600"
                     : "bg-gray-300"
