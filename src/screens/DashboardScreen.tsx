@@ -1,19 +1,18 @@
 import { memo, useCallback, useState, useMemo } from 'react';
 import { View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Play, Trophy, TrendingUp } from 'lucide-react-native';
+import { Play, Trophy, TrendingUp, Target, Flame } from 'lucide-react-native';
 import type { TabScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMatches } from '@/hooks/firestore/useMatches';
 import { usePendingGame } from '@/hooks/firestore/usePendingGame';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
 import { Avatar } from '@/components/ui/Avatar';
-import { Card } from '@/components/ui/Card';
 import { LoadingSpinner } from '@/components/common';
 import { PendingGameBanner } from '@/components/common/PendingGameBanner';
 import { MatchCard } from '@/components/history/MatchCard';
-import { RankingCard } from '@/components/dashboard/RankingCard';
-import { CompactStatBar } from '@/components/dashboard/CompactStatBar';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { CompactRankingCard } from '@/components/dashboard/CompactRankingCard';
 
 export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>) => {
   const { user, userDocument } = useAuth();
@@ -160,23 +159,23 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
             </Text>
 
             {/* How It Works */}
-            <Card variant="outlined" className="p-6 mb-6">
+            <View className="p-6 mb-6 bg-white border border-gray-200 rounded-xl">
               <Text className="mb-4 text-lg font-bold text-gray-900">
                 How it works
               </Text>
-              <View className="space-y-3">
-                <View className="flex-row">
-                  <View className="items-center justify-center w-8 h-8 mr-3 rounded-full bg-primary-100">
-                    <Text className="font-bold text-primary-600">1</Text>
+              <View className="mb-4">
+                <View className="flex-row mb-4">
+                  <View className="items-center justify-center w-8 h-8 mr-3 bg-green-100 rounded-full">
+                    <Text className="font-bold text-green-700">1</Text>
                   </View>
                   <View className="flex-1">
                     <Text className="font-medium text-gray-900">Create or join a game</Text>
                     <Text className="text-sm text-gray-600">Choose singles or doubles</Text>
                   </View>
                 </View>
-                <View className="flex-row">
-                  <View className="items-center justify-center w-8 h-8 mr-3 rounded-full bg-primary-100">
-                    <Text className="font-bold text-primary-600">2</Text>
+                <View className="flex-row mb-4">
+                  <View className="items-center justify-center w-8 h-8 mr-3 bg-green-100 rounded-full">
+                    <Text className="font-bold text-green-700">2</Text>
                   </View>
                   <View className="flex-1">
                     <Text className="font-medium text-gray-900">Play your match</Text>
@@ -184,8 +183,8 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
                   </View>
                 </View>
                 <View className="flex-row">
-                  <View className="items-center justify-center w-8 h-8 mr-3 rounded-full bg-primary-100">
-                    <Text className="font-bold text-primary-600">3</Text>
+                  <View className="items-center justify-center w-8 h-8 mr-3 bg-green-100 rounded-full">
+                    <Text className="font-bold text-green-700">3</Text>
                   </View>
                   <View className="flex-1">
                     <Text className="font-medium text-gray-900">Submit your score</Text>
@@ -193,12 +192,12 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
                   </View>
                 </View>
               </View>
-            </Card>
+            </View>
 
             {/* Get Started CTA */}
             <Pressable
               onPress={handleCreateGame}
-              className="flex-row items-center justify-center px-6 py-4 bg-green-600 rounded-lg"
+              className="flex-row items-center justify-center px-6 py-4 bg-green-600 shadow-sm rounded-xl active:bg-green-700"
             >
               <Play size={20} color="#fff" fill="#fff" />
               <Text className="ml-2 text-base font-semibold text-white">
@@ -216,47 +215,81 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
               <PendingGameBanner pendingGame={pendingGame} />
             )}
 
-            {/* Ranking Cards */}
-            <RankingCard
-              position={singlesPosition}
-              category="singles"
-              points={singlesPoints}
-              gender={userGender}
-              onPress={handleViewLeaderboard}
-            />
+            {/* Stats Section */}
+            <View className="mb-6">
+              <Text className="mb-3 text-lg font-bold text-gray-900">Your Stats</Text>
+              <View className="flex-row gap-3 mb-3">
+                <StatCard
+                  icon={Trophy}
+                  value={totalMatches}
+                  label="Matches"
+                  iconColor="#f59e0b"
+                  iconBgColor="bg-amber-100"
+                />
+                <StatCard
+                  icon={TrendingUp}
+                  value={`${winRate}%`}
+                  label="Win Rate"
+                  iconColor="#10b981"
+                  iconBgColor="bg-green-100"
+                />
+              </View>
+              <View className="flex-row gap-3">
+                <StatCard
+                  icon={Flame}
+                  value={streak.count}
+                  label={streak.type === 'win' ? 'Win Streak' : streak.type === 'loss' ? 'Loss Streak' : 'No Streak'}
+                  iconColor={streak.type === 'win' ? '#ef4444' : '#6b7280'}
+                  iconBgColor={streak.type === 'win' ? 'bg-red-100' : 'bg-gray-100'}
+                />
+                <StatCard
+                  icon={Target}
+                  value={Math.max(singlesPosition || 999, doublesPosition || 999, mixedPosition || 999) === 999 ? '-' : Math.min(singlesPosition || 999, doublesPosition || 999, mixedPosition || 999)}
+                  label="Highest Rank"
+                  iconColor="#3b82f6"
+                  iconBgColor="bg-blue-100"
+                />
+              </View>
+            </View>
 
-            <RankingCard
-              position={doublesPosition}
-              category="same_gender_doubles"
-              points={doublesPoints}
-              gender={userGender}
-              onPress={handleViewLeaderboard}
-            />
+            {/* Rankings Section */}
+            <View className="mb-6">
+              <Text className="mb-3 text-lg font-bold text-gray-900">Your Rankings</Text>
+              
+              <CompactRankingCard
+                category="singles"
+                position={singlesPosition}
+                points={singlesPoints}
+                gender={userGender}
+                onPress={handleViewLeaderboard}
+              />
 
-            <RankingCard
-              position={mixedPosition}
-              category="mixed_doubles"
-              points={mixedPoints}
-              gender={userGender}
-              onPress={handleViewLeaderboard}
-            />
+              <CompactRankingCard
+                category="same_gender_doubles"
+                position={doublesPosition}
+                points={doublesPoints}
+                gender={userGender}
+                onPress={handleViewLeaderboard}
+              />
 
-            {/* Compact Stats */}
-            <CompactStatBar
-              totalMatches={totalMatches}
-              winRate={winRate}
-              streak={streak}
-            />
+              <CompactRankingCard
+                category="mixed_doubles"
+                position={mixedPosition}
+                points={mixedPoints}
+                gender={userGender}
+                onPress={handleViewLeaderboard}
+              />
+            </View>
 
-            {/* Recent Matches */}
+            {/* Recent Matches Section */}
             {matches.length > 0 && (
-              <View className="mb-4">
+              <View className="mb-6">
                 <View className="flex-row items-center justify-between mb-3">
                   <Text className="text-lg font-bold text-gray-900">
-                    Recent Matches
+                    Recent Activity
                   </Text>
                   <Pressable onPress={handleViewAllMatches}>
-                    <Text className="text-sm font-medium text-primary-600">
+                    <Text className="text-sm font-semibold text-green-600">
                       View All →
                     </Text>
                   </Pressable>
@@ -271,7 +304,7 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
             {/* Create Game CTA */}
             <Pressable
               onPress={handleCreateGame}
-              className="flex-row items-center justify-center px-6 py-4 rounded-lg bg-primary-500 active:bg-primary-600"
+              className="flex-row items-center justify-center px-6 py-4 bg-green-600 shadow-sm rounded-xl active:bg-green-700"
             >
               <Play size={20} color="#fff" fill="#fff" />
               <Text className="ml-2 text-base font-semibold text-white">
