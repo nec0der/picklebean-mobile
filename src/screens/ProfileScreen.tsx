@@ -1,17 +1,51 @@
-import { memo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { memo, useState, useCallback, useMemo } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { LogOut, User, Eye } from 'lucide-react-native';
+import type { TabScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar } from '@/components/ui/Avatar';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { useMatches } from '@/hooks/firestore/useMatches';
+import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import type { TabScreenProps } from '@/types/navigation';
+import { MatchCard } from '@/components/history/MatchCard';
+import { ProfileHeroSection } from '@/components/profile/ProfileHeroSection';
+import { QuickStatsRow } from '@/components/profile/QuickStatsRow';
+import { RankingItem } from '@/components/profile/RankingItem';
+import { SettingsMenuItem } from '@/components/profile/SettingsMenuItem';
 
-export const ProfileScreen = memo(({}: TabScreenProps<'Profile'>) => {
+export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) => {
   const { userDocument, firebaseUser, signOut, loading: authLoading } = useAuth();
+  const { matches, loading: matchesLoading } = useMatches(userDocument?.uid || '', 3);
+  
+  // Get rankings for each category
+  const userGender = userDocument?.gender === 'male' || userDocument?.gender === 'female' 
+    ? userDocument.gender 
+    : undefined;
+  const { rankings: singlesRankings } = useLeaderboard('singles', userGender, 100);
+  const { rankings: doublesRankings } = useLeaderboard('same_gender_doubles', userGender, 100);
+  const { rankings: mixedRankings } = useLeaderboard('mixed_doubles', undefined, 100);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Calculate positions
+  const singlesPosition = useMemo(() => {
+    if (!userDocument?.uid || singlesRankings.length === 0) return null;
+    const pos = singlesRankings.findIndex((u) => u.uid === userDocument.uid);
+    return pos >= 0 ? pos + 1 : null;
+  }, [singlesRankings, userDocument?.uid]);
+
+  const doublesPosition = useMemo(() => {
+    if (!userDocument?.uid || doublesRankings.length === 0) return null;
+    const pos = doublesRankings.findIndex((u) => u.uid === userDocument.uid);
+    return pos >= 0 ? pos + 1 : null;
+  }, [doublesRankings, userDocument?.uid]);
+
+  const mixedPosition = useMemo(() => {
+    if (!userDocument?.uid || mixedRankings.length === 0) return null;
+    const pos = mixedRankings.findIndex((u) => u.uid === userDocument.uid);
+    return pos >= 0 ? pos + 1 : null;
+  }, [mixedRankings, userDocument?.uid]);
 
   const handleLogout = async (): Promise<void> => {
     try {
@@ -26,217 +60,209 @@ export const ProfileScreen = memo(({}: TabScreenProps<'Profile'>) => {
     }
   };
 
-  // Helper function to get the best available profile picture
-  const getProfilePicture = (): string | null => {
-    return userDocument?.profilePictureUrl || firebaseUser?.photoURL || null;
-  };
+  const handleEditProfile = useCallback(() => {
+    // TODO: Navigate to edit profile screen
+    console.log('Edit profile');
+  }, []);
 
-  // Helper function to get the best available full name
-  const getFullName = (): string => {
-    if (userDocument?.firstName && userDocument?.lastName) {
-      return `${userDocument.firstName} ${userDocument.lastName}`;
+  const handleViewAllMatches = useCallback(() => {
+    navigation.navigate('History');
+  }, [navigation]);
+
+  const handleViewLeaderboard = useCallback(() => {
+    navigation.navigate('Leaderboard');
+  }, [navigation]);
+
+  // Get best profile picture
+  const profilePicture = userDocument?.profilePictureUrl || firebaseUser?.photoURL || null;
+  
+  // Get full name
+  const fullName = userDocument?.firstName && userDocument?.lastName
+    ? `${userDocument.firstName} ${userDocument.lastName}`
+    : firebaseUser?.displayName || userDocument?.displayName || 'User';
+
+  // Calculate total points across all categories
+  const totalPoints = (userDocument?.rankings?.singles || 1000) +
+    (userDocument?.rankings?.sameGenderDoubles || 1000) +
+    (userDocument?.rankings?.mixedDoubles || 1000);
+
+  // Calculate stats
+  const totalMatches = userDocument?.matchStats?.totalMatches || 0;
+  const wins = userDocument?.matchStats?.wins || 0;
+  const losses = userDocument?.matchStats?.losses || 0;
+  const winRate = totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(0) : '0';
+
+  // Calculate streak
+  const calculateStreak = (): { type: 'win' | 'loss' | null; count: number } => {
+    if (matches.length === 0) return { type: null, count: 0 };
+    
+    const recentResult = matches[0].result;
+    let streak = 0;
+    
+    for (const match of matches) {
+      if (match.result === recentResult) {
+        streak++;
+      } else {
+        break;
+      }
     }
-    return firebaseUser?.displayName || userDocument?.displayName || 'User';
+    
+    return { type: recentResult, count: streak };
   };
 
-  // Helper function to calculate age from date of birth
-  const getAge = (): number | null => {
-    if (!userDocument?.dateOfBirth) return null;
+  const streak = calculateStreak();
 
-    const birthDate = new Date(userDocument.dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-
-    return age;
-  };
-
-  // Helper function to format gender display
-  const getGenderDisplay = (): string | null => {
-    if (!userDocument?.gender) return null;
-    return userDocument.gender.charAt(0).toUpperCase() + userDocument.gender.slice(1);
-  };
-
-  // Helper function to get gender-based category labels
+  // Get category labels based on gender
   const getCategoryLabels = () => {
-    const userGender = userDocument?.gender;
-
-    if (userGender === 'male') {
+    const gender = userDocument?.gender;
+    if (gender === 'male') {
       return {
         singles: "Men's Singles",
-        sameGenderDoubles: "Men's Doubles",
-        mixedDoubles: 'Mixed Doubles',
+        doubles: "Men's Doubles",
+        mixed: 'Mixed Doubles',
       };
-    } else if (userGender === 'female') {
+    } else if (gender === 'female') {
       return {
         singles: "Women's Singles",
-        sameGenderDoubles: "Women's Doubles",
-        mixedDoubles: 'Mixed Doubles',
+        doubles: "Women's Doubles",
+        mixed: 'Mixed Doubles',
       };
     }
-
     return {
       singles: 'Singles',
-      sameGenderDoubles: 'Same Gender Doubles',
-      mixedDoubles: 'Mixed Doubles',
+      doubles: 'Same Gender Doubles',
+      mixed: 'Mixed Doubles',
     };
   };
 
-  const profilePicture = getProfilePicture();
-  const fullName = getFullName();
-  const age = getAge();
-  const genderDisplay = getGenderDisplay();
   const categoryLabels = getCategoryLabels();
 
   if (authLoading) {
     return (
-      <View className="flex-1 bg-white justify-center items-center">
+      <View className="items-center justify-center flex-1 bg-white">
         <LoadingSpinner size="large" />
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="px-4 py-6">
-        <View className="max-w-md mx-auto w-full">
-          {/* User Profile Section */}
-          <Card className="mb-6">
-            <View className="p-6">
-              <View className="items-center">
-                {/* Profile Picture */}
-                <View className="mb-4">
-                  <Avatar uri={profilePicture} name={fullName} size="xl" />
-                </View>
+    <View className="flex-1 bg-gray-50">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Hero Section */}
+        <ProfileHeroSection
+          profilePicture={profilePicture}
+          fullName={fullName}
+          totalPoints={totalPoints}
+          onEditPress={handleEditProfile}
+        />
 
-                {/* User Name */}
-                <Text className="text-2xl font-bold text-gray-900 mb-2">
-                  {fullName}
-                </Text>
+        {/* Quick Stats Row */}
+        <QuickStatsRow totalMatches={totalMatches} winRate={winRate} streak={streak} />
 
-                {/* User Email */}
-                <View className="flex-row items-center mb-4">
-                  <Text className="text-gray-600">{firebaseUser?.email}</Text>
-                </View>
-
-                {/* Additional Info */}
-                <View className="space-y-2 w-full">
-                  {genderDisplay && (
-                    <View className="flex-row items-center justify-center">
-                      <Text className="text-gray-600">{genderDisplay}</Text>
-                    </View>
-                  )}
-
-                  {age && (
-                    <View className="flex-row items-center justify-center">
-                      <Text className="text-gray-600">{age} years old</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
+        <View className="px-4 mt-6">
+          {/* Rankings Section */}
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-lg font-bold text-gray-900">Your Rankings</Text>
+              <Pressable onPress={handleViewLeaderboard}>
+                <Text className="text-sm font-medium text-primary-600">View Leaderboard →</Text>
+              </Pressable>
             </View>
-          </Card>
 
-          {/* Ranking Information Section */}
-          <Card className="mb-6">
-            <View className="p-6">
-              <View className="flex-row items-center justify-center mb-4">
-                <Text className="text-lg font-semibold text-gray-900">Current Rankings</Text>
+            <RankingItem
+              category={categoryLabels.singles}
+              position={singlesPosition}
+              points={userDocument?.rankings?.singles || 1000}
+              color="bg-blue-500"
+              onPress={handleViewLeaderboard}
+            />
+
+            <RankingItem
+              category={categoryLabels.doubles}
+              position={doublesPosition}
+              points={userDocument?.rankings?.sameGenderDoubles || 1000}
+              color="bg-green-500"
+              onPress={handleViewLeaderboard}
+            />
+
+            <RankingItem
+              category={categoryLabels.mixed}
+              position={mixedPosition}
+              points={userDocument?.rankings?.mixedDoubles || 1000}
+              color="bg-purple-500"
+              onPress={handleViewLeaderboard}
+            />
+          </View>
+
+          {/* Recent Matches */}
+          {matches.length > 0 && (
+            <View className="mb-6">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-lg font-bold text-gray-900">Recent Activity</Text>
+                <Pressable onPress={handleViewAllMatches}>
+                  <Text className="text-sm font-medium text-primary-600">View All →</Text>
+                </Pressable>
               </View>
 
-              <View className="space-y-4">
-                {/* Singles Ranking */}
-                <View className="flex-row items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <View className="flex-1">
-                    <Text className="font-medium text-gray-900">{categoryLabels.singles}</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-lg font-bold text-blue-600">
-                      {userDocument?.rankings?.singles || 1000}
-                    </Text>
-                    <Text className="text-xs text-gray-500">points</Text>
-                  </View>
-                </View>
-
-                {/* Same Gender Doubles Ranking */}
-                <View className="flex-row items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <View className="flex-1">
-                    <Text className="font-medium text-gray-900">{categoryLabels.sameGenderDoubles}</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-lg font-bold text-green-600">
-                      {userDocument?.rankings?.sameGenderDoubles || 1000}
-                    </Text>
-                    <Text className="text-xs text-gray-500">points</Text>
-                  </View>
-                </View>
-
-                {/* Mixed Doubles Ranking */}
-                <View className="flex-row items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <View className="flex-1">
-                    <Text className="font-medium text-gray-900">{categoryLabels.mixedDoubles}</Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-lg font-bold text-purple-600">
-                      {userDocument?.rankings?.mixedDoubles || 1000}
-                    </Text>
-                    <Text className="text-xs text-gray-500">points</Text>
-                  </View>
-                </View>
-              </View>
+              {matches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
             </View>
-          </Card>
+          )}
 
-          {/* Match Statistics Section */}
-          <Card className="mb-6">
-            <View className="p-6">
-              <View className="flex-row items-center justify-center mb-4">
-                <Text className="text-lg font-semibold text-gray-900">Match Statistics</Text>
-              </View>
-
-              <View className="space-y-3">
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-sm text-gray-600">Total # of matches</Text>
-                  <Text className="font-semibold text-gray-900">
-                    {userDocument?.matchStats?.totalMatches || 0}
-                  </Text>
+          {/* Personal Info */}
+          {firebaseUser?.email && (
+            <View className="mb-6">
+              <Text className="mb-3 text-lg font-bold text-gray-900">Personal Information</Text>
+              <View className="p-4 bg-white border border-gray-200 rounded-xl">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-sm text-gray-500">Email</Text>
+                  <Text className="text-sm font-medium text-gray-900">{firebaseUser.email}</Text>
                 </View>
-
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-sm text-gray-600">Wins</Text>
-                  <Text className="font-semibold text-green-600">
-                    {userDocument?.matchStats?.wins || 0}
-                  </Text>
-                </View>
-
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-sm text-gray-600">Losses</Text>
-                  <Text className="font-semibold text-red-600">
-                    {userDocument?.matchStats?.losses || 0}
-                  </Text>
-                </View>
-
-                {/* Win Rate */}
-                {(userDocument?.matchStats?.totalMatches || 0) > 0 && (
-                  <View className="flex-row items-center justify-between pt-3 border-t border-gray-200">
-                    <Text className="text-sm text-gray-600">Win Rate</Text>
-                    <Text className="font-semibold text-blue-600">
-                      {(
-                        ((userDocument?.matchStats?.wins || 0) /
-                          (userDocument?.matchStats?.totalMatches || 1)) *
-                        100
-                      ).toFixed(1)}
-                      %
+                {userDocument?.gender && (
+                  <View className="flex-row items-center justify-between mb-3">
+                    <Text className="text-sm text-gray-500">Gender</Text>
+                    <Text className="text-sm font-medium text-gray-900">
+                      {userDocument.gender.charAt(0).toUpperCase() + userDocument.gender.slice(1)}
+                    </Text>
+                  </View>
+                )}
+                {userDocument?.dateOfBirth && (
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-sm text-gray-500">Age</Text>
+                    <Text className="text-sm font-medium text-gray-900">
+                      {(() => {
+                        const birthDate = new Date(userDocument.dateOfBirth);
+                        const today = new Date();
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const monthDiff = today.getMonth() - birthDate.getMonth();
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                          age--;
+                        }
+                        return age;
+                      })()}{' '}
+                      years
                     </Text>
                   </View>
                 )}
               </View>
             </View>
-          </Card>
+          )}
+
+          {/* Settings */}
+          <View className="mb-6">
+            <Text className="mb-3 text-lg font-bold text-gray-900">Settings</Text>
+            <View className="overflow-hidden bg-white border border-gray-200 rounded-xl">
+              <SettingsMenuItem icon={User} title="Edit Profile" onPress={handleEditProfile} />
+              <SettingsMenuItem icon={Eye} title="Privacy Settings" onPress={() => console.log('Privacy')} />
+              <SettingsMenuItem
+                icon={LogOut}
+                title={loading ? 'Signing out...' : 'Sign Out'}
+                onPress={handleLogout}
+                destructive
+              />
+            </View>
+          </View>
 
           {/* Error Message */}
           {error && (
@@ -244,18 +270,9 @@ export const ProfileScreen = memo(({}: TabScreenProps<'Profile'>) => {
               <ErrorMessage message={error} />
             </View>
           )}
-
-          {/* Logout Button */}
-          <Button
-            title={loading ? 'Signing out...' : 'Sign Out'}
-            onPress={handleLogout}
-            disabled={loading}
-            variant="danger"
-            className="mb-8"
-          />
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 });
 
