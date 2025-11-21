@@ -722,7 +722,7 @@ export const LobbyDetailScreen = memo(
         <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
           {/* Header */}
           <View className="relative flex-row items-center justify-center px-4 py-3 border-b border-gray-200">
-            <Text className="text-xl font-bold text-gray-900">Lobby</Text>
+            <Text className="text-xl font-bold text-gray-900">Game Lobby</Text>
             <Pressable
               onPress={isHost ? handleClose : handleLeave}
               className="absolute p-2 right-4"
@@ -742,14 +742,14 @@ export const LobbyDetailScreen = memo(
                   onPress={handleScanPlayers}
                   className={`flex-row items-center justify-center gap-2 p-4 mb-4 border-2 rounded-lg ${
                     isScanning
-                      ? "bg-blue-100 border-blue-400 active:bg-blue-200"
-                      : "bg-blue-500 border-blue-500 active:bg-blue-600"
+                      ? "bg-green-100 border-green-400 active:bg-green-200"
+                      : "bg-green-500 border-green-500 active:bg-green-600"
                   }`}
                 >
-                  <Radio size={20} color={isScanning ? "#3b82f6" : "#ffffff"} />
+                  <Radio size={20} color={isScanning ? "#22c55e" : "#ffffff"} />
                   <Text
                     className={`text-base font-semibold ${
-                      isScanning ? "text-blue-700" : "text-white"
+                      isScanning ? "text-green-700" : "text-white"
                     }`}
                   >
                     {isScanning
@@ -770,23 +770,20 @@ export const LobbyDetailScreen = memo(
 
               {/* Room Code */}
               <View className="items-center">
-                <Text className="mb-3 text-base font-semibold text-gray-700">
-                  Room Code
-                </Text>
-                <View className="flex-row items-center px-4 py-3 bg-gray-100 rounded-lg">
-                  <Text className="mr-3 text-3xl font-bold tracking-widest text-blue-600">
+                <View className="flex-row items-center gap-3 px-6 py-4 border-2 border-green-200 bg-green-50 rounded-xl">
+                  <Text className="text-4xl font-bold tracking-widest text-green-600">
                     {roomCode}
                   </Text>
                   <Pressable onPress={handleCopyCode} className="p-2">
                     {copied ? (
-                      <Check size={24} color="#22c55e" />
+                      <Check size={28} color="#22c55e" />
                     ) : (
-                      <Copy size={24} color="#6b7280" />
+                      <Copy size={28} color="#16a34a" />
                     )}
                   </Pressable>
                 </View>
                 {copied && (
-                  <Text className="mt-2 text-sm text-green-600">Copied!</Text>
+                  <Text className="mt-2 text-sm font-medium text-green-600">Copied!</Text>
                 )}
               </View>
 
