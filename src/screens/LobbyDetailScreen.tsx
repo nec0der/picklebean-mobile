@@ -718,13 +718,13 @@ export const LobbyDetailScreen = memo(
         <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
           {/* Compact Header */}
           <View className="relative flex-row items-center justify-center px-4 py-3 border-b border-gray-200">
-            <Text className="text-xl font-bold text-gray-900">Game Lobby</Text>
             <Pressable
               onPress={isHost ? handleClose : handleLeave}
-              className="absolute p-2 right-4"
+              className="absolute p-2 left-4"
             >
               <X size={24} color="#ef4444" />
             </Pressable>
+            <Text className="text-xl font-bold text-gray-900">Game Lobby</Text>
           </View>
 
           {/* Lobby Header with Room Code and Actions */}
@@ -748,7 +748,7 @@ export const LobbyDetailScreen = memo(
           )}
 
           {/* Game Mode Badge - Moved here, right after header */}
-          <View className="items-center py-4 border-b border-gray-200 bg-gray-50">
+          <View className="items-center py-3 bg-white border-b border-gray-200">
             <View className="flex-row items-center gap-2">
               {lobby.gameMode === "singles" ? (
                 <User size={18} color="#6b7280" />
