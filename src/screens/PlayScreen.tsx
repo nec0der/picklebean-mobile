@@ -151,7 +151,7 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
         contentContainerClassName="px-4 py-6"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="max-w-md mx-auto w-full">
+        <View className="w-full max-w-md mx-auto">
           {/* Pending Game Banner */}
           {pendingGame && !pendingGameLoading && (
             <PendingGameBanner pendingGame={pendingGame} />
@@ -159,15 +159,15 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
 
           {/* Disabled Overlay Message */}
           {isDisabled && (
-            <View className="mb-4 p-4 bg-gray-100 border border-gray-200 rounded-lg">
-              <Text className="text-gray-600 font-medium text-center">
+            <View className="p-4 mb-4 bg-gray-100 border border-gray-200 rounded-lg">
+              <Text className="font-medium text-center text-gray-600">
                 Complete your pending {pendingGame?.type === 'game' ? 'game' : 'lobby'} to start a new one
               </Text>
             </View>
           )}
 
           {/* Tab Switcher */}
-          <View className="flex-row bg-gray-100 rounded-lg p-1 mb-6">
+          <View className="flex-row p-1 mb-6 bg-gray-100 rounded-lg">
             <Pressable
               onPress={() => setActiveTab('join')}
               className={`flex-1 py-3 rounded-md ${
@@ -204,17 +204,17 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
               <View className="gap-4">
               {/* Join Title */}
               <View>
-                <Text className="text-2xl font-bold text-gray-900 mb-2">
+                <Text className="mb-2 text-3xl font-bold text-gray-900">
                   Join Game
                 </Text>
-                <Text className="text-gray-600">
-                  Enter a 4-character room code to join an existing game
+                <Text className="text-base text-gray-600">
+                  Enter the 4-character room code
                 </Text>
               </View>
 
               {/* Room Code Input */}
               <View>
-                <Text className="text-base font-semibold text-gray-700 mb-3">
+                <Text className="mb-3 text-base font-semibold text-gray-700">
                   Room Code
                 </Text>
                 <View className="relative">
@@ -226,12 +226,12 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                     maxLength={4}
                     autoCapitalize="characters"
                     autoCorrect={false}
-                    className="text-4xl tracking-widest font-bold py-6 px-4 pr-16 border-2 border-gray-300 rounded-lg bg-white"
+                    className="px-4 py-6 pr-16 text-4xl font-bold tracking-widest bg-white border-2 border-gray-300 rounded-lg"
                   />
                   {roomCode.length > 0 && (
                     <Pressable
                       onPress={handleClearCode}
-                      className="absolute right-4 top-0 bottom-0 justify-center"
+                      className="absolute top-0 bottom-0 justify-center right-4"
                     >
                       <X size={32} color="#9ca3af" />
                     </Pressable>
@@ -261,11 +261,11 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
             <View className="gap-4">
               {/* Host Title */}
               <View>
-                <Text className="text-2xl font-bold text-gray-900 mb-2">
+                <Text className="mb-2 text-3xl font-bold text-gray-900">
                   Create Game
                 </Text>
-                <Text className="text-gray-600">
-                  Choose a game mode to start a new match
+                <Text className="text-base text-gray-600">
+                  Choose your game mode
                 </Text>
               </View>
 
@@ -276,7 +276,6 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                   iconColor="#3b82f6"
                   title="Singles (1v1)"
                   description="One-on-one match"
-                  subtitle="Same-gender for ranked—keeps it fair!"
                   selected={selectedMode === 'singles'}
                   onPress={() => handleModeSelect('singles')}
                 />
@@ -284,8 +283,7 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
                   icon={Users}
                   iconColor="#a855f7"
                   title="Doubles (2v2)"
-                  description="Team match"
-                  subtitle="Go mixed or same-gender—both rank up your score."
+                  description="Team match, 2v2"
                   selected={selectedMode === 'doubles'}
                   onPress={() => handleModeSelect('doubles')}
                 />
