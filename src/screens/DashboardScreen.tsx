@@ -1,18 +1,25 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, useMemo } from 'react';
 import { View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Sparkles, Trophy, TrendingUp, Play } from 'lucide-react-native';
+import { Play, Trophy, TrendingUp } from 'lucide-react-native';
 import type { TabScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMatches } from '@/hooks/firestore/useMatches';
+import { usePendingGame } from '@/hooks/firestore/usePendingGame';
+import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { LoadingSpinner } from '@/components/common';
+import { PendingGameBanner } from '@/components/common/PendingGameBanner';
 import { MatchCard } from '@/components/history/MatchCard';
+import { RankingCard } from '@/components/dashboard/RankingCard';
+import { CompactStatBar } from '@/components/dashboard/CompactStatBar';
 
 export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>) => {
   const { user, userDocument } = useAuth();
   const { matches, loading, refetch } = useMatches(userDocument?.uid || '', 5);
+  const { pendingGame, loading: pendingGameLoading } = usePendingGame();
+  const { rankings, loading: leaderboardLoading } = useLeaderboard('mixed_doubles', undefined, 100);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
@@ -67,6 +74,20 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
   };
 
   const firstName = getFirstName();
+
+  // Calculate ranking position
+  const userRankingPosition = useMemo(() => {
+    if (!userDocument?.uid || rankings.length === 0) return null;
+    const position = rankings.findIndex((u) => u.uid === userDocument.uid);
+    return position >= 0 ? position + 1 : null;
+  }, [rankings, userDocument?.uid]);
+
+  // Get user's current points for mixed doubles
+  const userPoints = userDocument?.rankings?.mixedDoubles || 1000;
+
+  const handleViewLeaderboard = useCallback(() => {
+    navigation.navigate('Leaderboard');
+  }, [navigation]);
 
   // Loading state
   if (loading && !refreshing) {
@@ -167,42 +188,25 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
         {/* EXISTING USER VIEW */}
         {hasPlayedBefore && (
           <>
-            {/* Quick Stats */}
-            <View className="flex-row mb-4 space-x-3">
-              <Card variant="outlined" className="flex-1 p-4">
-                <View className="items-center">
-                  <Trophy size={24} color="#3b82f6" />
-                  <Text className="mt-2 text-2xl font-bold text-gray-900">
-                    {totalMatches}
-                  </Text>
-                  <Text className="text-xs text-gray-500">Matches</Text>
-                </View>
-              </Card>
+            {/* Pending Game Banner */}
+            {pendingGame && !pendingGameLoading && (
+              <PendingGameBanner pendingGame={pendingGame} />
+            )}
 
-              <Card variant="outlined" className="flex-1 p-4">
-                <View className="items-center">
-                  <TrendingUp size={24} color="#10b981" />
-                  <Text className="mt-2 text-2xl font-bold text-gray-900">
-                    {winRate}%
-                  </Text>
-                  <Text className="text-xs text-gray-500">Win Rate</Text>
-                </View>
-              </Card>
+            {/* Ranking Card */}
+            <RankingCard
+              position={userRankingPosition}
+              category="mixed_doubles"
+              points={userPoints}
+              onPress={handleViewLeaderboard}
+            />
 
-              <Card variant="outlined" className="flex-1 p-4">
-                <View className="items-center">
-                  <Text className="text-2xl">
-                    {streak.type === 'win' ? '🔥' : streak.type === 'loss' ? '💔' : '➖'}
-                  </Text>
-                  <Text className="mt-2 text-2xl font-bold text-gray-900">
-                    {streak.count}
-                  </Text>
-                  <Text className="text-xs text-gray-500">
-                    {streak.type === 'win' ? 'Win' : streak.type === 'loss' ? 'Loss' : 'No'} Streak
-                  </Text>
-                </View>
-              </Card>
-            </View>
+            {/* Compact Stats */}
+            <CompactStatBar
+              totalMatches={totalMatches}
+              winRate={winRate}
+              streak={streak}
+            />
 
             {/* Recent Matches */}
             {matches.length > 0 && (
@@ -227,7 +231,7 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
             {/* Create Game CTA */}
             <Pressable
               onPress={handleCreateGame}
-              className="flex-row items-center justify-center px-6 py-4 rounded-lg bg-primary-500"
+              className="flex-row items-center justify-center px-6 py-4 rounded-lg bg-primary-500 active:bg-primary-600"
             >
               <Play size={20} color="#fff" fill="#fff" />
               <Text className="ml-2 text-base font-semibold text-white">
