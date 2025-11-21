@@ -132,32 +132,20 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
         }
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between mb-6">
-          <View className="flex-1">
-            <Text className="text-2xl font-bold text-gray-900">
-              {hasPlayedBefore ? `Welcome back, ${firstName}!` : `Hi, ${firstName}! 👋`}
-            </Text>
-            <Text className="mt-1 text-base text-gray-600">
-              {hasPlayedBefore ? user?.displayName : 'Welcome to Picklebean'}
-            </Text>
-          </View>
-          <Pressable onPress={handleViewProfile}>
-            <Avatar
-              uri={userDocument?.profilePictureUrl || user?.photoURL}
-              name={user?.displayName || 'User'}
-              size="lg"
-            />
-          </Pressable>
+        <View className="mb-6">
+          <Text className="text-2xl font-bold text-gray-900">
+            {hasPlayedBefore ? `Welcome back, ${firstName}!` : `Hi, ${firstName}! 👋`}
+          </Text>
+          <Text className="mt-1 text-base text-gray-600">
+            {hasPlayedBefore 
+              ? 'Here\'s your pickleball overview' 
+              : 'Get started by playing your first game'}
+          </Text>
         </View>
 
         {/* NEW USER VIEW */}
         {!hasPlayedBefore && (
           <>
-            {/* Value Proposition */}
-            <Text className="mb-6 text-base leading-relaxed text-center text-gray-600">
-              Track your matches, climb the leaderboard, and compete with friends in this pickleball ranking system.
-            </Text>
-
             {/* How It Works */}
             <View className="p-6 mb-6 bg-white border border-gray-200 rounded-xl">
               <Text className="mb-4 text-lg font-bold text-gray-900">
