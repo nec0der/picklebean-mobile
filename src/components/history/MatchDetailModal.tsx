@@ -15,7 +15,7 @@ export const MatchDetailModal = memo(({ visible, match, onClose }: MatchDetailMo
   if (!match) return null;
 
   const isWin = match.result === 'win';
-  const { score } = match as any;
+  const score = match.score;
 
   return (
     <Modal

@@ -24,6 +24,10 @@ export interface MatchHistoryRecord {
   partnerName?: string;
   status: 'pending' | 'confirmed';
   isExhibition?: boolean;
+  score?: {
+    team1: number;
+    team2: number;
+  };
   createdAt: Date;
 }
 

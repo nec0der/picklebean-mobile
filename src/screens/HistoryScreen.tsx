@@ -1,72 +1,15 @@
-import { memo, useCallback, useState, Fragment } from 'react';
+import { memo, useCallback, useState, Fragment, useMemo } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { History } from 'lucide-react-native';
+import { History, Trophy, TrendingUp } from 'lucide-react-native';
 import type { TabScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMatches } from '@/hooks/firestore/useMatches';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { MatchCard } from '@/components/history/MatchCard';
 import { MatchDetailModal } from '@/components/history/MatchDetailModal';
+import { getTimeGroup } from '@/lib/dateFormat';
 import type { MatchHistoryRecord } from '@/types/user';
-
-/**
- * Helper function to determine time group for a match (from web app)
- */
-const getTimeGroup = (matchDate: Date | unknown): string => {
-  let date: Date;
-  
-  // Convert to Date object
-  if (matchDate instanceof Date) {
-    date = matchDate;
-  } else if (matchDate && typeof matchDate === 'object' && 'toDate' in matchDate) {
-    date = (matchDate as { toDate: () => Date }).toDate();
-  } else {
-    date = new Date(matchDate as string | number);
-  }
-
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  const matchDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const daysDiff = Math.floor((today.getTime() - matchDay.getTime()) / (1000 * 60 * 60 * 24));
-
-  // Today
-  if (matchDay.getTime() === today.getTime()) {
-    return 'Today';
-  }
-  
-  // Yesterday
-  if (matchDay.getTime() === yesterday.getTime()) {
-    return 'Yesterday';
-  }
-  
-  // This Week (2-6 days ago)
-  if (daysDiff >= 2 && daysDiff <= 6) {
-    return 'This Week';
-  }
-  
-  // Last Week (7-13 days ago)
-  if (daysDiff >= 7 && daysDiff <= 13) {
-    return 'Last Week';
-  }
-  
-  // Earlier This Month (14+ days but same month)
-  if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
-    return 'Earlier This Month';
-  }
-  
-  // Last Month
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  if (date.getMonth() === lastMonth.getMonth() && date.getFullYear() === lastMonth.getFullYear()) {
-    return 'Last Month';
-  }
-  
-  // Older
-  return 'Older';
-};
 
 export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
   const { user } = useAuth();
@@ -74,6 +17,31 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<MatchHistoryRecord | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  // Calculate summary stats
+  const stats = useMemo(() => {
+    const totalMatches = matches.length;
+    const wins = matches.filter(m => m.result === 'win').length;
+    const losses = totalMatches - wins;
+    const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+
+    // Calculate current streak
+    let currentStreak = 0;
+    let streakType: 'win' | 'loss' | null = null;
+    
+    for (const match of matches) {
+      if (streakType === null) {
+        streakType = match.result;
+        currentStreak = 1;
+      } else if (match.result === streakType) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    return { totalMatches, wins, losses, winRate, currentStreak, streakType };
+  }, [matches]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -174,6 +142,66 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
             paddingBottom: 16,
             flexGrow: 1,
           }}
+          ListHeaderComponent={
+            matches.length > 0 ? (
+              <View className="flex-row gap-2 mb-6">
+                {/* Total Matches */}
+                <View className="flex-1 p-4 rounded-lg bg-gray-50">
+                  <Text className="mb-1 text-xs font-semibold text-gray-500 uppercase">
+                    Matches
+                  </Text>
+                  <Text className="text-2xl font-bold text-gray-900">
+                    {stats.totalMatches}
+                  </Text>
+                  <Text className="mt-1 text-xs text-gray-600">
+                    {stats.wins}W - {stats.losses}L
+                  </Text>
+                </View>
+
+                {/* Win Rate */}
+                <View className="flex-1 p-4 rounded-lg bg-green-50">
+                  <View className="flex-row items-center mb-1">
+                    <Trophy size={12} color="#16a34a" />
+                    <Text className="ml-1 text-xs font-semibold text-green-700 uppercase">
+                      Win Rate
+                    </Text>
+                  </View>
+                  <Text className="text-2xl font-bold text-green-900">
+                    {stats.winRate}%
+                  </Text>
+                  <Text className="mt-1 text-xs text-green-700">
+                    {stats.wins} wins
+                  </Text>
+                </View>
+
+                {/* Streak */}
+                {stats.currentStreak > 1 && (
+                  <View className={`flex-1 p-4 rounded-lg ${
+                    stats.streakType === 'win' ? 'bg-blue-50' : 'bg-red-50'
+                  }`}>
+                    <View className="flex-row items-center mb-1">
+                      <TrendingUp size={12} color={stats.streakType === 'win' ? '#2563eb' : '#dc2626'} />
+                      <Text className={`ml-1 text-xs font-semibold uppercase ${
+                        stats.streakType === 'win' ? 'text-blue-700' : 'text-red-700'
+                      }`}>
+                        Streak
+                      </Text>
+                    </View>
+                    <Text className={`text-2xl font-bold ${
+                      stats.streakType === 'win' ? 'text-blue-900' : 'text-red-900'
+                    }`}>
+                      {stats.currentStreak}
+                    </Text>
+                    <Text className={`mt-1 text-xs ${
+                      stats.streakType === 'win' ? 'text-blue-700' : 'text-red-700'
+                    }`}>
+                      {stats.streakType === 'win' ? 'wins' : 'losses'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ) : null
+          }
           ListEmptyComponent={renderEmptyState}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />

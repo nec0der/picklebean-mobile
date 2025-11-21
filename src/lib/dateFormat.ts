@@ -60,3 +60,20 @@ export const formatDuration = (seconds: number): string => {
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
+
+/**
+ * Groups dates into time categories for match history display
+ * @param date - Date to categorize
+ * @returns Time group label (Today, Yesterday, Last 7 Days, etc.)
+ */
+export const getTimeGroup = (date: Date): string => {
+  const now = new Date();
+  const diffTime = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return 'Last 7 Days';
+  if (diffDays < 30) return 'Last 30 Days';
+  return 'Older';
+};
