@@ -1,6 +1,5 @@
 import { memo } from 'react';
-import { View, Text, Pressable, ImageBackground } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, Pressable } from 'react-native';
 import { Edit2, Award } from 'lucide-react-native';
 import { Avatar } from '@/components/ui/Avatar';
 
@@ -18,12 +17,7 @@ export const ProfileHeroSection = memo(({
   onEditPress,
 }: ProfileHeroSectionProps) => {
   return (
-    <LinearGradient
-      colors={['#3b82f6', '#8b5cf6', '#6366f1']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ paddingHorizontal: 16, paddingTop: 32, paddingBottom: 24 }}
-    >
+    <View className="px-4 pt-8 pb-6 bg-blue-500">
       <View className="items-center">
         {/* Avatar with Edit Overlay */}
         <View className="relative mb-4">
@@ -51,7 +45,7 @@ export const ProfileHeroSection = memo(({
           </Text>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 });
 
