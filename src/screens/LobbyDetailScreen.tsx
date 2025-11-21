@@ -722,7 +722,7 @@ export const LobbyDetailScreen = memo(
               onPress={isHost ? handleClose : handleLeave}
               className="absolute p-2 left-4"
             >
-              <X size={24} color="#ef4444" />
+              <X size={24} color="#6b7280" />
             </Pressable>
             <Text className="text-xl font-bold text-gray-900">Game Lobby</Text>
           </View>
