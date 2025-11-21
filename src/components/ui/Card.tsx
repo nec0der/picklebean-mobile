@@ -13,6 +13,7 @@ export const Card = memo(({
   children,
   variant = 'elevated',
   padding = 'md',
+  className,
   ...props
 }: CardProps) => {
   const variantClasses = {
@@ -34,6 +35,7 @@ export const Card = memo(({
         rounded-lg
         ${variantClasses[variant]}
         ${paddingClasses[padding]}
+        ${className || ''}
       `}
       {...props}
     >
