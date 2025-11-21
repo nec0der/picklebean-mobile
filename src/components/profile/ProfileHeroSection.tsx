@@ -22,7 +22,7 @@ export const ProfileHeroSection = memo(({
       colors={['#3b82f6', '#8b5cf6', '#6366f1']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      className="px-4 pt-8 pb-6"
+      style={{ paddingHorizontal: 16, paddingTop: 32, paddingBottom: 24 }}
     >
       <View className="items-center">
         {/* Avatar with Edit Overlay */}
