@@ -65,7 +65,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-white"
     >
-      <Box className="flex-1 justify-center px-6">
+      <Box className="justify-center flex-1 px-6">
         <VStack space="xl">
           {/* Header */}
           <VStack space="sm">
@@ -111,10 +111,10 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
           </VStack>
 
           {/* Sign up link */}
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text className="text-center text-gray-600">
               Don't have an account?{' '}
-              <Text className="text-blue-600 font-semibold">Sign Up</Text>
+              <Text className="font-semibold text-blue-600">Sign Up</Text>
             </Text>
           </TouchableOpacity>
         </VStack>
