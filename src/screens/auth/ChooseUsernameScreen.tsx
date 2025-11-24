@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Box, Heading, Button, ButtonText, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { X, Check, AlertCircle } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
@@ -96,67 +96,75 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
   };
 
   return (
-    <Box className="flex-1 bg-white">
-      {/* Close button */}
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Login')}
-        className="absolute z-10 p-4 top-12 left-4"
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
       >
-        <X size={28} color="#000" />
-      </TouchableOpacity>
+        <View className="justify-between flex-1">
+          {/* Main Content */}
+          <View className="px-6">
+            {/* Close button */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Login')}
+              className="self-start p-2 -ml-2"
+            >
+              <X size={28} color="#000" />
+            </TouchableOpacity>
 
-      <Box className="justify-center flex-1 px-6">
-        <VStack space="xl">
-          {/* Header */}
-          <VStack space="sm">
-            <Heading size="3xl" className="text-gray-900">
-              Create a username
-            </Heading>
-            <Text size="lg" className="text-gray-600">
-              Choose a unique username to get started
-            </Text>
-          </VStack>
-
-          {/* Form */}
-          <VStack space="md">
-            <VStack space="xs">
-              <View className="relative">
-                <Input variant="outline" size="lg" className="pr-12">
-                  <InputField
-                    placeholder="username"
-                    value={username}
-                    onChangeText={setUsername}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    autoFocus
-                  />
-                </Input>
-                {/* Inline indicator */}
-                <View className="absolute top-0 bottom-0 justify-center right-4">
-                  {renderInputIndicator()}
-                </View>
-              </View>
-              {error ? (
-                <Text size="sm" className="text-red-600">
-                  {error}
-                </Text>
-              ) : null}
+            {/* Header */}
+            <VStack space="xs" className="mt-6">
+              <Heading size="2xl" className="text-gray-900">
+                Create a username
+              </Heading>
+              <Text size="md" className="text-gray-600">
+                Choose a unique username to get started
+              </Text>
             </VStack>
 
-            <Button size="lg" onPress={handleNext} className="bg-blue-600">
-              <ButtonText>Next</ButtonText>
-            </Button>
-          </VStack>
+            {/* Form */}
+            <VStack space="md" className="mt-8">
+              <VStack space="xs">
+                <View className="relative">
+                  <Input variant="outline" size="lg" className="pr-12">
+                    <InputField
+                      placeholder="username"
+                      value={username}
+                      onChangeText={setUsername}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoFocus
+                    />
+                  </Input>
+                  {/* Inline indicator */}
+                  <View className="absolute top-0 bottom-0 justify-center right-4">
+                    {renderInputIndicator()}
+                  </View>
+                </View>
+                {error ? (
+                  <Text size="sm" className="text-red-600">
+                    {error}
+                  </Text>
+                ) : null}
+              </VStack>
 
-          {/* Login link */}
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text className="text-center text-gray-600">
-              Already have an account?{' '}
-              <Text className="font-semibold text-blue-600">Sign In</Text>
-            </Text>
-          </TouchableOpacity>
-        </VStack>
-      </Box>
-    </Box>
+              <Button size="lg" onPress={handleNext} className="bg-blue-600">
+                <ButtonText>Next</ButtonText>
+              </Button>
+            </VStack>
+          </View>
+
+          {/* Footer */}
+          <View className="px-6 pb-8">
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text className="text-center text-gray-600">
+                Already have an account?{' '}
+                <Text className="font-semibold text-blue-600">Sign In</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };

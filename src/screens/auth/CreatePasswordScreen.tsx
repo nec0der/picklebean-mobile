@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { Box, Heading, Button, ButtonText, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
+import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { Heading, Button, ButtonText, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
 
@@ -32,29 +32,32 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
   };
 
   return (
-    <Box className="flex-1 bg-white">
-      {/* Back button */}
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        className="absolute z-10 p-4 top-12 left-4"
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
       >
-        <ChevronLeft size={28} color="#000" />
-      </TouchableOpacity>
+        <View className="px-6">
+          {/* Back button */}
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="self-start p-2 -ml-2"
+          >
+            <ChevronLeft size={28} color="#000" />
+          </TouchableOpacity>
 
-      <Box className="justify-center flex-1 px-6">
-        <VStack space="xl">
           {/* Header */}
-          <VStack space="sm">
-            <Heading size="3xl" className="text-gray-900">
+          <VStack space="xs" className="mt-6">
+            <Heading size="2xl" className="text-gray-900">
               Create a password
             </Heading>
-            <Text size="lg" className="text-gray-600">
+            <Text size="md" className="text-gray-600">
               Password must be at least 6 characters
             </Text>
           </VStack>
 
           {/* Form */}
-          <VStack space="md">
+          <VStack space="md" className="mt-8">
             <VStack space="xs">
               <View className="relative">
                 <Input variant="outline" size="lg" className="pr-12">
@@ -93,8 +96,8 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
               <ButtonText>Create Account</ButtonText>
             </Button>
           </VStack>
-        </VStack>
-      </Box>
-    </Box>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
