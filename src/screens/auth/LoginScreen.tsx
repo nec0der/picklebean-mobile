@@ -112,7 +112,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
           </VStack>
 
           {/* Sign up link */}
-          <TouchableOpacity onPress={() => navigation.navigate('CreateAccount')}>
+          <TouchableOpacity onPress={() => navigation.navigate('ChooseUsername')}>
             <Text className="text-center text-gray-600">
               Don't have an account?{' '}
               <Text className="font-semibold text-blue-600">Sign Up</Text>
