@@ -1,57 +1,97 @@
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Box, Heading, VStack } from '@gluestack-ui/themed';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Box, Heading, Button, ButtonText, VStack } from '@gluestack-ui/themed';
+import { ChevronLeft, User2 } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
+import { InfoBottomSheet } from '@/components/common/InfoBottomSheet';
 
 type SelectGenderScreenProps = AuthStackScreenProps<'SelectGender'>;
 
 export const SelectGenderScreen = ({ navigation, route }: SelectGenderScreenProps) => {
   const { username, password } = route.params;
+  const [showInfo, setShowInfo] = useState(false);
+
+  const infoContent = [
+    'Organize rankings into Men\'s and Women\'s categories',
+    'Create fair competition',
+    'Required for leaderboard placement',
+    'You can update this later if needed'
+  ];
 
   const handleGenderSelect = (gender: 'male' | 'female') => {
     navigation.navigate('UploadPhoto', {
       username,
       password,
-      gender,
+      gender
     });
   };
 
   return (
-    <Box className="justify-center flex-1 px-6 bg-white">
-      <VStack space="xl">
+    <SafeAreaView className="flex-1 bg-white">
+      <Box className="flex-1 px-6">
+        {/* Back Button */}
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          className="p-2"
+        >
+          <ChevronLeft size={24} color="#374151" />
+        </TouchableOpacity>
+
         {/* Header */}
-        <VStack space="sm" className="items-center">
-          <Heading size="3xl" className="text-center text-gray-900">
+        <VStack space="sm" className="mt-6">
+          <Heading size="2xl" className="text-gray-900">
             Select Gender
           </Heading>
-          <Text className="text-lg text-center text-gray-600">
-            This helps us create the right leaderboards for you
+          <Text className="text-gray-600 text-md">
+            Help us create fair competition
           </Text>
         </VStack>
 
-        {/* Gender Selection Buttons */}
+        {/* Gender Buttons */}
         <VStack space="md" className="mt-8">
-          <TouchableOpacity
+          {/* Male Button */}
+          <Button
+            size="xl"
             onPress={() => handleGenderSelect('male')}
-            className="items-center justify-center h-32 bg-blue-500 rounded-2xl active:bg-blue-600"
+            className="bg-blue-600"
           >
-            <Text className="mb-2 text-4xl">👨</Text>
-            <Text className="text-2xl font-bold text-white">Male</Text>
-          </TouchableOpacity>
+            <View className="flex-row items-center">
+              <User2 size={20} color="#FFFFFF" />
+              <ButtonText className="ml-2">Male</ButtonText>
+            </View>
+          </Button>
 
-          <TouchableOpacity
+          {/* Female Button */}
+          <Button
+            size="xl"
             onPress={() => handleGenderSelect('female')}
-            className="items-center justify-center h-32 bg-pink-500 rounded-2xl active:bg-pink-600"
+            className="bg-pink-600"
           >
-            <Text className="mb-2 text-4xl">👩</Text>
-            <Text className="text-2xl font-bold text-white">Female</Text>
-          </TouchableOpacity>
+            <View className="flex-row items-center">
+              <User2 size={20} color="#FFFFFF" />
+              <ButtonText className="ml-2">Female</ButtonText>
+            </View>
+          </Button>
         </VStack>
 
-        {/* Info Text */}
-        <Text className="mt-4 text-sm text-center text-gray-500">
-          We use this to organize rankings into Men's and Women's categories
-        </Text>
-      </VStack>
-    </Box>
+        {/* Info Link */}
+        <TouchableOpacity 
+          onPress={() => setShowInfo(true)}
+          className="mt-4"
+        >
+          <Text className="text-center text-blue-600 underline">
+            Why do we need this?
+          </Text>
+        </TouchableOpacity>
+      </Box>
+
+      {/* Info Bottom Sheet */}
+      <InfoBottomSheet
+        visible={showInfo}
+        onClose={() => setShowInfo(false)}
+        title="Gender Selection"
+        content={infoContent}
+      />
+    </SafeAreaView>
   );
 };
