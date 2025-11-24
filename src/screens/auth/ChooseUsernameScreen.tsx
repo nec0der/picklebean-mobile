@@ -1,55 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, TouchableOpacity, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Box, Heading, Button, ButtonText, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
-import { X, Check, AlertCircle } from 'lucide-react-native';
+import { useState, useCallback } from 'react';
+import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { Heading, Button, ButtonText, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
+import { X } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
-import { validateUsername, checkUsernameAvailability } from '@/lib/username';
+import { validateUsername } from '@/lib/username';
 
 type ChooseUsernameScreenProps = AuthStackScreenProps<'ChooseUsername'>;
 
 export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) => {
   const [username, setUsername] = useState('');
-  const [checking, setChecking] = useState(false);
-  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState('');
 
-  // Debounced username availability check
-  useEffect(() => {
-    if (!username.trim()) {
-      setIsAvailable(null);
-      setError('');
-      return;
-    }
-
-    const validation = validateUsername(username);
-    if (!validation.valid) {
-      setIsAvailable(false);
-      setError('');
-      return;
-    }
-
-    setError('');
-    setChecking(true);
-    
-    const timer = setTimeout(async () => {
-      try {
-        const available = await checkUsernameAvailability(username);
-        setIsAvailable(available);
-      } catch (err) {
-        console.error('Error checking username:', err);
-        setIsAvailable(null);
-      } finally {
-        setChecking(false);
-      }
-    }, 500);
-
-    return () => {
-      clearTimeout(timer);
-      setChecking(false);
-    };
-  }, [username]);
-
   const handleNext = useCallback(() => {
+    // Clear previous error
+    setError('');
+    
     // Validate username
     if (!username.trim()) {
       setError('Please enter a username');
@@ -62,38 +27,9 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
       return;
     }
 
-    if (isAvailable === false) {
-      setError('This username is already taken');
-      return;
-    }
-
-    if (isAvailable === null || checking) {
-      setError('Checking username availability...');
-      return;
-    }
-
     // Navigate to password screen
     navigation.navigate('CreatePassword', { username });
-  }, [username, isAvailable, checking, navigation]);
-
-  // Render input indicator
-  const renderInputIndicator = () => {
-    if (!username.trim()) return null;
-    
-    if (checking) {
-      return <ActivityIndicator size="small" color="#3B82F6" />;
-    }
-    
-    if (isAvailable === true) {
-      return <Check size={20} color="#10B981" />;
-    }
-    
-    if (isAvailable === false) {
-      return <AlertCircle size={20} color="#EF4444" />;
-    }
-    
-    return null;
-  };
+  }, [username, navigation]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -125,22 +61,16 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
             {/* Form */}
             <VStack space="md" className="mt-8">
               <VStack space="xs">
-                <View className="relative">
-                  <Input variant="outline" size="lg" className="pr-12">
-                    <InputField
-                      placeholder="username"
-                      value={username}
-                      onChangeText={setUsername}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoFocus
-                    />
-                  </Input>
-                  {/* Inline indicator */}
-                  <View className="absolute top-0 bottom-0 justify-center right-4">
-                    {renderInputIndicator()}
-                  </View>
-                </View>
+                <Input variant="outline" size="lg">
+                  <InputField
+                    placeholder="username"
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoFocus
+                  />
+                </Input>
                 {error ? (
                   <Text size="sm" className="text-red-600">
                     {error}

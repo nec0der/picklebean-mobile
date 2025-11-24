@@ -19,7 +19,7 @@ export const getAuthErrorMessage = (error: FirebaseError): string => {
   switch (code) {
     // Sign Up Errors
     case 'auth/email-already-in-use':
-      return 'This email is already registered. Try signing in instead.';
+      return 'This username is already taken. Please choose a different username.';
 
     case 'auth/invalid-email':
       return 'Please enter a valid email address.';

@@ -45,7 +45,22 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
       // Navigation handled by auth state change
     } catch (error: any) {
       console.error('Error creating account:', error);
-      Alert.alert('Sign Up Failed', error.message || 'Failed to create account');
+      
+      // Handle username already taken error
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert(
+          'Username Taken',
+          'This username is already in use. Please go back and choose a different username.',
+          [
+            {
+              text: 'Go Back',
+              onPress: () => navigation.navigate('ChooseUsername'),
+            },
+          ]
+        );
+      } else {
+        Alert.alert('Sign Up Failed', error.message || 'Failed to create account');
+      }
     } finally {
       setLoading(false);
     }

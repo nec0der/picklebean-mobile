@@ -35,26 +35,6 @@ export const validateUsername = (username: string): { valid: boolean; error?: st
   return { valid: true };
 };
 
-/**
- * Check if username is available in Firestore
- * Usernames are stored in lowercase for case-insensitive uniqueness
- */
-export const checkUsernameAvailability = async (username: string): Promise<boolean> => {
-  try {
-    // Remove @ if present and convert to lowercase
-    const cleanUsername = username.startsWith('@') ? username.slice(1) : username;
-    const lowercaseUsername = cleanUsername.toLowerCase();
-
-    const usersRef = collection(firestore, 'users');
-    const q = query(usersRef, where('username', '==', lowercaseUsername));
-    const querySnapshot = await getDocs(q);
-
-    return querySnapshot.empty; // true if available
-  } catch (error) {
-    console.error('Error checking username availability:', error);
-    throw new Error('Failed to check username availability');
-  }
-};
 
 /**
  * Convert username to internal email for Firebase Auth
