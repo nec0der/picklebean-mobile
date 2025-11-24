@@ -46,8 +46,9 @@ export interface User {
 
 export interface UserDocument {
   uid: string;
+  username: string; // Unique username (lowercase, no @)
   email: string;
-  displayName: string;
+  displayName: string; // Formatted with @ for display (@username)
   photoURL: string;
   isVerified: boolean;
   isAdmin?: boolean;
@@ -55,12 +56,13 @@ export interface UserDocument {
   status: 'incomplete' | 'pending' | 'approved' | 'declined' | 'changes_requested' | 'banned';
   createdAt: string;
   updatedAt: string;
-  // Profile data (added during onboarding)
-  firstName?: string;
-  lastName?: string;
-  gender?: string;
-  dateOfBirth?: string;
+  // Required profile data (collected during onboarding)
+  gender: 'male' | 'female';
+  // Optional profile data
   profilePictureUrl?: string;
+  dateOfBirth?: string;
+  bio?: string; // For later
+  links?: string[]; // For later
   adminFeedback?: string;
   // Ranking points (default 1000 each when user is created)
   rankings?: UserRankings;

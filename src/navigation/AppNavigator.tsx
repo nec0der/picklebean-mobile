@@ -2,7 +2,9 @@ import { memo } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoginScreen } from '@/screens/auth/LoginScreen';
-import { SignupScreen } from '@/screens/auth/SignupScreen';
+import { CreateAccountScreen } from '@/screens/auth/CreateAccountScreen';
+import { SelectGenderScreen } from '@/screens/onboarding/SelectGenderScreen';
+import { UploadPhotoScreen } from '@/screens/onboarding/UploadPhotoScreen';
 import { LobbyDetailScreen } from '@/screens/LobbyDetailScreen';
 import { GameScreen } from '@/screens/GameScreen';
 import { TabNavigator } from './TabNavigator';
@@ -17,7 +19,9 @@ const AuthNavigator = memo(() => {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
-      <AuthStack.Screen name="Register" component={SignupScreen} />
+      <AuthStack.Screen name="CreateAccount" component={CreateAccountScreen} />
+      <AuthStack.Screen name="SelectGender" component={SelectGenderScreen} />
+      <AuthStack.Screen name="UploadPhoto" component={UploadPhotoScreen} />
     </AuthStack.Navigator>
   );
 });

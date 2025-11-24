@@ -65,11 +65,8 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
   // Get best profile picture
   const profilePicture = userDocument?.profilePictureUrl || firebaseUser?.photoURL || null;
 
-  // Get full name
-  const fullName =
-    userDocument?.firstName && userDocument?.lastName
-      ? `${userDocument.firstName} ${userDocument.lastName}`
-      : firebaseUser?.displayName || userDocument?.displayName || 'User';
+  // Get display name (username with @)
+  const fullName = userDocument?.displayName || firebaseUser?.displayName || 'User';
 
   // Calculate stats for simple text display
   const totalMatches = userDocument?.matchStats?.totalMatches || 0;

@@ -26,6 +26,7 @@ interface AuthContextValue {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signUpWithUsername: (username: string, password: string, gender: 'male' | 'female', photoUri: string | null) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (updates: { displayName?: string; photoURL?: string }) => Promise<void>;
@@ -148,6 +149,67 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     []
   );
 
+  // Sign up with username (username-based auth)
+  const signUpWithUsername = useCallback(
+    async (username: string, password: string, gender: 'male' | 'female', photoUri: string | null): Promise<void> => {
+      try {
+        // Import username utilities
+        const { usernameToEmail, formatUsername } = await import('@/lib/username');
+        
+        // Convert username to internal email
+        const email = usernameToEmail(username);
+        const displayName = formatUsername(username);
+        const cleanUsername = username.startsWith('@') ? username.slice(1).toLowerCase() : username.toLowerCase();
+
+        // Create Firebase Auth user
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const { user: firebaseUser } = userCredential;
+
+        // Update Firebase Auth profile
+        await updateProfile(firebaseUser, { displayName, photoURL: photoUri });
+
+        // Upload photo to Firebase Storage if provided
+        let profilePictureUrl: string | undefined = undefined;
+        if (photoUri) {
+          // TODO: Implement Firebase Storage upload
+          // For now, we'll use the local URI (not ideal for production)
+          profilePictureUrl = photoUri;
+        }
+
+        // Create complete user document in Firestore
+        const userDocument: Partial<UserDocument> = {
+          uid: firebaseUser.uid,
+          username: cleanUsername,
+          email,
+          displayName,
+          photoURL: photoUri || '',
+          gender,
+          profilePictureUrl,
+          isVerified: false,
+          status: 'pending', // User needs admin approval
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          rankings: {
+            singles: 1000,
+            sameGenderDoubles: 1000,
+            mixedDoubles: 1000,
+          },
+          matchStats: {
+            totalMatches: 0,
+            wins: 0,
+            losses: 0,
+          },
+        };
+
+        await setDoc(doc(firestore, 'users', firebaseUser.uid), userDocument);
+      } catch (error) {
+        console.error('Error signing up with username:', error);
+        throw error;
+      }
+    },
+    []
+  );
+
   // Sign out
   const signOut = useCallback(async (): Promise<void> => {
     try {
@@ -206,6 +268,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     loading,
     signIn,
     signUp,
+    signUpWithUsername,
     signOut,
     resetPassword,
     updateUserProfile,

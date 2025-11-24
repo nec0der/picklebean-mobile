@@ -18,6 +18,7 @@ import {
 } from '@gluestack-ui/themed';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAuthErrorMessage, isValidEmail } from '@/lib/authErrors';
+import { isUsername, usernameToEmail } from '@/lib/username';
 
 interface LoginScreenProps {
   navigation: any;
@@ -32,13 +33,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const handleLogin = async (): Promise<void> => {
     // Field-specific validation
     if (!email.trim()) {
-      Alert.alert('Email Required', 'Please enter your email address');
-      return;
-    }
-
-    // Email format validation
-    if (!isValidEmail(email.trim())) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      Alert.alert('Username Required', 'Please enter your username or email');
       return;
     }
 
@@ -49,7 +44,14 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
 
     try {
       setLoading(true);
-      await signIn(email.trim(), password);
+      
+      // Convert username to email if needed
+      let loginEmail = email.trim();
+      if (isUsername(loginEmail)) {
+        loginEmail = usernameToEmail(loginEmail);
+      }
+      
+      await signIn(loginEmail, password);
       // Navigation handled by auth state change
     } catch (error: any) {
       // Use the error mapper for user-friendly messages
@@ -81,10 +83,9 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
           <VStack space="md">
             <Input variant="outline" size="lg">
               <InputField
-                placeholder="Email"
+                placeholder="@username or email"
                 value={email}
                 onChangeText={setEmail}
-                keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -111,7 +112,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
           </VStack>
 
           {/* Sign up link */}
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <TouchableOpacity onPress={() => navigation.navigate('CreateAccount')}>
             <Text className="text-center text-gray-600">
               Don't have an account?{' '}
               <Text className="font-semibold text-blue-600">Sign Up</Text>
