@@ -54,7 +54,7 @@ export const Button = memo(({
       onPress={onPress}
       disabled={isDisabled}
       className={`
-        rounded-lg
+        rounded-2xl
         items-center
         justify-center
         ${variantClasses[variant]}

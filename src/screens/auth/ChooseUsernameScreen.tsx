@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
 import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Heading, Button, ButtonText, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
+import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { X } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
 import { validateUsername } from '@/lib/username';
+import { Button } from '@/components/ui/Button';
 
 type ChooseUsernameScreenProps = AuthStackScreenProps<'ChooseUsername'>;
 
@@ -78,9 +79,12 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
                 ) : null}
               </VStack>
 
-              <Button size="lg" onPress={handleNext} className="bg-blue-600 rounded-2xl">
-                <ButtonText>Next</ButtonText>
-              </Button>
+              <Button 
+                title="Next"
+                size="lg" 
+                onPress={handleNext}
+                fullWidth
+              />
             </VStack>
           </View>
 
