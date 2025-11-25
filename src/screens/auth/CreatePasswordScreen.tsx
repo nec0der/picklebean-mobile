@@ -53,15 +53,19 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
               Create a password
             </Heading>
             <Text size="md" className="text-gray-600">
-              Password must be at least 6 characters
+              Password must be at least 6 characters. It should be something others can't guess.
             </Text>
           </VStack>
 
           {/* Form */}
-          <VStack space="md" className="mt-8">
+          <VStack space="3xl" className="mt-8">
             <VStack space="xs">
               <View className="relative">
-                <Input variant="outline" size="xl" className="pr-12">
+                <Input 
+                  variant="outline" 
+                  size="xl" 
+                  className={`pr-12 ${error ? 'border-red-500 border-2' : ''}`}
+                >
                   <InputField
                     placeholder="Password"
                     value={password}
@@ -87,7 +91,7 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
                 </TouchableOpacity>
               </View>
               {error ? (
-                <Text size="sm" className="text-red-600">
+                <Text size="sm" className="!text-red-600">
                   {error}
                 </Text>
               ) : null}
@@ -95,9 +99,8 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
 
             <Button 
               title="Create Account"
-              size="lg" 
+              size="md" 
               onPress={handleCreateAccount}
-              variant="primary"
               fullWidth
             />
           </VStack>

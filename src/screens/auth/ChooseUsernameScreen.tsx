@@ -62,7 +62,11 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
             {/* Form */}
             <VStack space="3xl" className="mt-8">
               <VStack space="xs">
-                <Input variant="outline" size="xl" className="rounded-xl">
+                <Input 
+                  variant="outline" 
+                  size="xl" 
+                  className={`rounded-xl ${error ? 'border-red-500 border-2' : ''}`}
+                >
                   <InputField
                     placeholder="username"
                     value={username}
@@ -73,7 +77,7 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
                   />
                 </Input>
                 {error ? (
-                  <Text size="sm" className="text-red-600">
+                  <Text size="sm"  className="!text-red-600">
                     {error}
                   </Text>
                 ) : null}
