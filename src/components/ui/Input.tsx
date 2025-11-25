@@ -62,7 +62,7 @@ export const Input = memo(({
           
           <TextInput
             ref={inputRef}
-            className="flex-1 py-3 text-base text-secondary-900"
+            className="flex-1 py-4 text-lg text-secondary-900"
             placeholderTextColor="#94a3b8"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
