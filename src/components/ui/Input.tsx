@@ -47,7 +47,7 @@ export const Input = memo(({
             flex-row
             items-center
             border
-            rounded-lg
+            rounded-xl
             px-3
             ${isFocused ? 'border-primary-500' : error ? 'border-error' : 'border-secondary-300'}
             ${error ? 'bg-red-50' : 'bg-white'}
