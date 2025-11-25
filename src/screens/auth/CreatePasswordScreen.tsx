@@ -63,8 +63,9 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
               <View className="relative">
                 <Input 
                   variant="outline" 
-                  size="xl" 
-                  className={`pr-12 ${error ? 'border-red-500 border-2' : ''}`}
+                  size="xl"
+                  isInvalid={!!error}
+                  className="pr-12"
                 >
                   <InputField
                     placeholder="Password"

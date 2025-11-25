@@ -65,7 +65,8 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
                 <Input 
                   variant="outline" 
                   size="xl" 
-                  className={`rounded-xl ${error ? 'border-red-500 border-2' : ''}`}
+                  isInvalid={!!error}
+                  className="rounded-xl"
                 >
                   <InputField
                     placeholder="username"
