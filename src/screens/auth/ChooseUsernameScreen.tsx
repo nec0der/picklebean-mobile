@@ -54,14 +54,14 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
                 Create a username
               </Heading>
               <Text size="md" className="text-gray-600">
-                Choose a unique username to get started
+                Choose a unique username to get started. Make it unique and memorable!
               </Text>
             </VStack>
 
             {/* Form */}
             <VStack space="md" className="mt-8">
               <VStack space="xs">
-                <Input variant="outline" size="lg">
+                <Input variant="outline" size="xl">
                   <InputField
                     placeholder="username"
                     value={username}
@@ -78,7 +78,7 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
                 ) : null}
               </VStack>
 
-              <Button size="lg" onPress={handleNext} className="bg-blue-600 rounded-xl">
+              <Button size="lg" onPress={handleNext} className="bg-blue-600 rounded-2xl">
                 <ButtonText>Next</ButtonText>
               </Button>
             </VStack>
