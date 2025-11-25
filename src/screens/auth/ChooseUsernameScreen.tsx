@@ -78,7 +78,7 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
                 ) : null}
               </VStack>
 
-              <Button size="lg" onPress={handleNext} className="bg-blue-600">
+              <Button size="lg" onPress={handleNext} className="bg-blue-600 rounded-xl">
                 <ButtonText>Next</ButtonText>
               </Button>
             </VStack>

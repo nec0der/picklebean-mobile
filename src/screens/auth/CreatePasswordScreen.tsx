@@ -92,7 +92,7 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
               ) : null}
             </VStack>
 
-            <Button size="lg" onPress={handleCreateAccount} className="bg-green-600">
+            <Button size="lg" onPress={handleCreateAccount} className="bg-green-600 rounded-xl">
               <ButtonText>Create Account</ButtonText>
             </Button>
           </VStack>

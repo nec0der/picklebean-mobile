@@ -93,9 +93,9 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
         {/* Back Button */}
         <TouchableOpacity 
           onPress={() => navigation.goBack()}
-          className="p-2"
+          className="self-start p-2 -ml-2"
         >
-          <ChevronLeft size={24} color="#374151" />
+          <ChevronLeft size={28} color="#000" />
         </TouchableOpacity>
 
         {/* Header */}
@@ -131,7 +131,7 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
             size="xl"
             onPress={handleTakePhoto}
             variant="outline"
-            className="border-gray-300"
+            className="border-gray-300 rounded-xl"
             isDisabled={loading}
           >
             <View className="flex-row items-center">
@@ -145,7 +145,7 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
             size="xl"
             onPress={handleChoosePhoto}
             variant="outline"
-            className="border-gray-300"
+            className="border-gray-300 rounded-xl"
             isDisabled={loading}
           >
             <View className="flex-row items-center">
@@ -172,7 +172,7 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
             <Button
               size="xl"
               onPress={handleContinue}
-              className="bg-green-600"
+              className="bg-green-600 rounded-xl"
               isDisabled={loading}
             >
               <ButtonText>Continue</ButtonText>
