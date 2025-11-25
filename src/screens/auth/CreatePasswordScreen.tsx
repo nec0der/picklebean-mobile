@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Heading, Button, ButtonText, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
+import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
+import { Button } from '@/components/ui/Button';
 
 type CreatePasswordScreenProps = AuthStackScreenProps<'CreatePassword'>;
 
@@ -60,7 +61,7 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
           <VStack space="md" className="mt-8">
             <VStack space="xs">
               <View className="relative">
-                <Input variant="outline" size="lg" className="pr-12">
+                <Input variant="outline" size="xl" className="pr-12">
                   <InputField
                     placeholder="Password"
                     value={password}
@@ -92,9 +93,13 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
               ) : null}
             </VStack>
 
-            <Button size="lg" onPress={handleCreateAccount} className="bg-green-600 rounded-xl">
-              <ButtonText>Create Account</ButtonText>
-            </Button>
+            <Button 
+              title="Create Account"
+              size="lg" 
+              onPress={handleCreateAccount}
+              variant="primary"
+              fullWidth
+            />
           </VStack>
         </View>
       </KeyboardAvoidingView>

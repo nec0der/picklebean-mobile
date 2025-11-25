@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
 import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Heading, VStack, Text } from '@gluestack-ui/themed';
+import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { X } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
 import { validateUsername } from '@/lib/username';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 
 type ChooseUsernameScreenProps = AuthStackScreenProps<'ChooseUsername'>;
 
@@ -61,20 +60,28 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
             </VStack>
 
             {/* Form */}
-            <VStack space="md" className="mt-8">
-              <Input
-                placeholder="username"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoFocus
-                error={error}
-              />
+            <VStack space="3xl" className="mt-8">
+              <VStack space="xs">
+                <Input variant="outline" size="xl" className="rounded-xl">
+                  <InputField
+                    placeholder="username"
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoFocus
+                  />
+                </Input>
+                {error ? (
+                  <Text size="sm" className="text-red-600">
+                    {error}
+                  </Text>
+                ) : null}
+              </VStack>
 
               <Button 
                 title="Next"
-                size="lg" 
+                size="md" 
                 onPress={handleNext}
                 fullWidth
               />
