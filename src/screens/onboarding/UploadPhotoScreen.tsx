@@ -148,7 +148,7 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
               <>
                 <Image 
                   source={{ uri: photoUri }}
-                  className="w-32 h-32 rounded-full"
+                  className="w-48 h-48 rounded-full"
                 />
                 {/* Change photo badge */}
                 <View className="absolute bottom-0 right-0 items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
@@ -156,9 +156,9 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
                 </View>
               </>
             ) : (
-              <View className="items-center justify-center w-32 h-32 border-2 border-gray-300 border-dashed rounded-full bg-gray-50">
+              <View className="items-center justify-center w-48 h-48 border-2 border-gray-300 border-dashed rounded-full bg-gray-50">
                 <Camera size={40} color="#9CA3AF" />
-                <Text className="mt-2 text-xs text-gray-500">
+                <Text className="mt-4 text-xs text-gray-500">
                   Tap to upload
                 </Text>
               </View>
@@ -166,8 +166,8 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
           </Pressable>
         </View>
 
-        {/* Action Buttons */}
-        <VStack space="md" className="mt-8">
+        {/* Action Buttons - Grouped */}
+        <VStack space="md" className="pb-8 mt-8">
           <Button
             title="Take Photo"
             variant="secondary"
@@ -176,19 +176,25 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
             disabled={loading}
             fullWidth
           />
-        </VStack>
-
-        {/* Continue Button */}
-        <View className="pb-8 mt-8">
+          
           <Button
-            title="Continue"
+            title="Choose from Library"
+            variant="secondary"
+            size="md"
+            onPress={handleChoosePhoto}
+            disabled={loading}
+            fullWidth
+          />
+          
+          <Button
+            title="Done"
             size="md"
             onPress={handleContinue}
             disabled={!photoUri || loading}
             loading={loading}
             fullWidth
           />
-        </View>
+        </VStack>
       </Box>
 
       {/* Info Actionsheet */}
