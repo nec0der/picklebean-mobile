@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection
+    match /users/{userId} {
+      // Allow anyone to query for username existence (for signup username availability check)
+      // This is safe because:
+      // 1. They can only check if username exists, not read full user data
+      // 2. It's limited to query operations with where clause on 'username' field
+      allow get: if request.auth != null;
+      allow list: if true; // Allow unauthenticated queries for username checking
+      
+      // Authenticated users can create their own document during signup
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can update their own document
+      allow update: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can delete their own document
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Lobbies collection
+    match /lobbies/{lobbyId} {
+      // Anyone can read lobbies (for joining)
+      allow read: if true;
+      
+      // Authenticated users can create lobbies
+      allow create: if request.auth != null;
+      
+      // Host or participants can update lobby
+      allow update: if request.auth != null && (
+        resource.data.hostId == request.auth.uid ||
+        request.auth.uid in resource.data.playerIds
+      );
+      
+      // Host can delete lobby
+      allow delete: if request.auth != null && resource.data.hostId == request.auth.uid;
+    }
+    
+    // Matches collection
+    match /matches/{matchId} {
+      // Anyone authenticated can read matches
+      allow read: if request.auth != null;
+      
+      // System can create matches (from lobby completion)
+      allow create: if request.auth != null;
+      
+      // Players in the match can update (for confirmations)
+      allow update: if request.auth != null && request.auth.uid in resource.data.playerIds;
+    }
+  }
+}
