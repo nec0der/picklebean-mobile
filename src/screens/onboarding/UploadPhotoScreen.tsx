@@ -11,7 +11,7 @@ import {
   ActionsheetDragIndicator,
   ActionsheetDragIndicatorWrapper
 } from '@gluestack-ui/themed';
-import { ChevronLeft, Camera, Pencil } from 'lucide-react-native';
+import { ChevronLeft, Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '@/components/ui/Button';
 import type { AuthStackScreenProps } from '@/types/navigation';
@@ -77,21 +77,6 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
     }
   };
 
-  const handleEditPhoto = async () => {
-    const hasPermission = await requestPermission();
-    if (!hasPermission) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
-    }
-  };
 
   const handleContinue = async () => {
     try {
@@ -154,27 +139,17 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
         </VStack>
 
         {/* Clickable Photo Circle */}
-        <View className="items-center mt-8">
+        <View className="items-center my-12">
           <Pressable 
             onPress={handleChoosePhoto}
             disabled={loading}
             className="relative"
           >
             {photoUri ? (
-              <>
-                <Image 
-                  source={{ uri: photoUri }}
-                  className="w-48 h-48 rounded-full"
-                />
-                {/* Edit photo badge */}
-                <TouchableOpacity 
-                  onPress={handleEditPhoto}
-                  disabled={loading}
-                  className="absolute bottom-0 right-0 items-center justify-center w-10 h-10 bg-blue-600 rounded-full"
-                >
-                  <Pencil size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-              </>
+              <Image 
+                source={{ uri: photoUri }}
+                className="w-48 h-48 rounded-full"
+              />
             ) : (
               <View className="items-center justify-center w-48 h-48 border-2 border-gray-300 border-dashed rounded-full bg-gray-50">
                 <Camera size={40} color="#9CA3AF" />
