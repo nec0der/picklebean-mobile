@@ -70,3 +70,30 @@ export const formatUsername = (username: string): string => {
 export const isUsername = (input: string): boolean => {
   return input.startsWith('@') || !input.includes('@');
 };
+
+/**
+ * Check if username is available in Firestore
+ * @param username - Username to check
+ * @returns Object with availability status and optional error message
+ */
+export const checkUsernameAvailability = async (
+  username: string
+): Promise<{ available: boolean; error?: string }> => {
+  try {
+    const cleanUsername = username.toLowerCase();
+    
+    // Query users collection where username field matches
+    const usersRef = collection(firestore, 'users');
+    const q = query(usersRef, where('username', '==', cleanUsername));
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+      return { available: false, error: 'Username is already taken' };
+    }
+    
+    return { available: true };
+  } catch (error) {
+    console.error('Error checking username availability:', error);
+    return { available: false, error: 'Failed to check availability' };
+  }
+};
