@@ -40,8 +40,19 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   // Check if Apple Sign-In is available
   useEffect(() => {
     const checkAppleSignIn = async () => {
-      const available = await isAppleSignInAvailable();
-      setShowAppleSignIn(available);
+      console.log('🍎 [Apple Sign-In] Starting availability check...');
+      console.log('🍎 [Apple Sign-In] Platform:', Platform.OS);
+      console.log('🍎 [Apple Sign-In] Platform version:', Platform.Version);
+      
+      try {
+        const available = await isAppleSignInAvailable();
+        console.log('🍎 [Apple Sign-In] isAppleSignInAvailable result:', available);
+        setShowAppleSignIn(available);
+        console.log('🍎 [Apple Sign-In] State updated. Should show button:', available);
+      } catch (error) {
+        console.error('🍎 [Apple Sign-In] Error checking availability:', error);
+        setShowAppleSignIn(false);
+      }
     };
     checkAppleSignIn();
   }, []);

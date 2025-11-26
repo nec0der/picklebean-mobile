@@ -150,13 +150,22 @@ export const signOutFromGoogle = async (): Promise<void> => {
  * Check if Apple Sign-In is available
  */
 export const isAppleSignInAvailable = async (): Promise<boolean> => {
+  console.log('🍎 [isAppleSignInAvailable] Function called');
+  console.log('🍎 [isAppleSignInAvailable] Platform.OS:', Platform.OS);
+  
   if (Platform.OS !== 'ios') {
+    console.log('🍎 [isAppleSignInAvailable] Not iOS, returning false');
     return false;
   }
 
+  console.log('🍎 [isAppleSignInAvailable] iOS detected, checking availability...');
+  
   try {
-    return await AppleAuthentication.isAvailableAsync();
-  } catch {
+    const isAvailable = await AppleAuthentication.isAvailableAsync();
+    console.log('🍎 [isAppleSignInAvailable] AppleAuthentication.isAvailableAsync():', isAvailable);
+    return isAvailable;
+  } catch (error) {
+    console.error('🍎 [isAppleSignInAvailable] Error:', error);
     return false;
   }
 };
