@@ -14,7 +14,7 @@ import {
   ActionsheetDragIndicatorWrapper,
   Center,
 } from "@gluestack-ui/themed";
-import { ChevronLeft, User2, Check } from "lucide-react-native";
+import { ChevronLeft, UserCircle, Check } from "lucide-react-native";
 import type { AuthStackScreenProps } from "@/types/navigation";
 
 type SelectGenderScreenProps = AuthStackScreenProps<"SelectGender">;
@@ -87,8 +87,8 @@ export const SelectGenderScreen = ({
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
-                <User2
-                  size={24}
+                <UserCircle
+                  size={32}
                   color={selectedGender === "male" ? "#2563EB" : "#6B7280"}
                 />
                 <Text
@@ -120,8 +120,8 @@ export const SelectGenderScreen = ({
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
-                <User2
-                  size={24}
+                <UserCircle
+                  size={32}
                   color={selectedGender === "female" ? "#DB2777" : "#6B7280"}
                 />
                 <Text
