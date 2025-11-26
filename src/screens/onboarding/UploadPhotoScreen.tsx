@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, TouchableOpacity, SafeAreaView, Image, Alert } from 'react-native';
+import { View, TouchableOpacity, SafeAreaView, Image, Alert, Dimensions } from 'react-native';
 import { 
   Box, 
   Heading, 
@@ -27,6 +27,8 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  
+  const screenHeight = Dimensions.get('window').height;
 
   const infoContent = [
     'Help other players recognize you',
@@ -199,7 +201,10 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
       {/* Info Actionsheet */}
       <Actionsheet isOpen={showInfo} onClose={() => setShowInfo(false)}>
         <ActionsheetBackdrop />
-        <ActionsheetContent className="px-6 pt-4 pb-12 h-[80%]">
+        <ActionsheetContent 
+          className="px-6 pt-4 pb-12"
+          style={{ height: screenHeight * 0.8 }}
+        >
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
