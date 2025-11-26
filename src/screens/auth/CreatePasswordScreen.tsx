@@ -13,7 +13,7 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  const handleCreateAccount = () => {
+  const handleNext = () => {
     // Validate password
     if (!password.trim()) {
       setError('Please enter a password');
@@ -98,9 +98,9 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
             </VStack>
 
             <Button 
-              title="Create Account"
+              title="Next"
               size="md" 
-              onPress={handleCreateAccount}
+              onPress={handleNext}
               fullWidth
             />
           </VStack>
