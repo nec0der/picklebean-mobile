@@ -88,7 +88,7 @@ export const SelectGenderScreen = ({
               <View className="flex-row items-center">
                 <Mars
                   size={24}
-                  color={selectedGender === "male" ? "#2563EB" : "#6B7280"}
+                  color="#2563EB"
                 />
                 <Text
                   className={`ml-3 text-lg font-semibold ${
@@ -121,7 +121,7 @@ export const SelectGenderScreen = ({
               <View className="flex-row items-center">
                 <Venus
                   size={24}
-                  color={selectedGender === "female" ? "#DB2777" : "#6B7280"}
+                  color="#DB2777"
                 />
                 <Text
                   className={`ml-3 text-lg font-semibold ${
