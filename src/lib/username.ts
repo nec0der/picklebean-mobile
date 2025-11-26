@@ -1,5 +1,6 @@
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { firestore } from '@/config/firebase';
+import { fetchSignInMethodsForEmail } from 'firebase/auth';
+import { auth, firestore } from '@/config/firebase';
 
 const USERNAME_DOMAIN = '@picklebean.app';
 
@@ -69,7 +70,7 @@ export const isUsername = (input: string): boolean => {
 };
 
 /**
- * Check if username is available in Firestore
+ * Check if username is available in both Firestore and Firebase Auth
  * @param username - Username to check
  * @returns Object with availability status and optional error message
  */
@@ -79,12 +80,20 @@ export const checkUsernameAvailability = async (
   try {
     const cleanUsername = username.toLowerCase();
     
-    // Query users collection where username field matches
+    // Check 1: Query users collection where username field matches
     const usersRef = collection(firestore, 'users');
     const q = query(usersRef, where('username', '==', cleanUsername));
     const snapshot = await getDocs(q);
     
     if (!snapshot.empty) {
+      return { available: false, error: 'Username is already taken' };
+    }
+    
+    // Check 2: Check if email exists in Firebase Auth
+    const email = usernameToEmail(cleanUsername);
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+    
+    if (methods.length > 0) {
       return { available: false, error: 'Username is already taken' };
     }
     

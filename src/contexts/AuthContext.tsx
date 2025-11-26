@@ -154,12 +154,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     async (username: string, password: string, gender: 'male' | 'female', photoUri: string | null): Promise<void> => {
       try {
         // Import username utilities
-        const { usernameToEmail, formatUsername } = await import('@/lib/username');
+        const { usernameToEmail } = await import('@/lib/username');
         
         // Convert username to internal email
-        const email = usernameToEmail(username);
-        const displayName = formatUsername(username);
         const cleanUsername = username.startsWith('@') ? username.slice(1).toLowerCase() : username.toLowerCase();
+        const email = usernameToEmail(cleanUsername);
+        const displayName = cleanUsername; // Store without "@"
 
         // Create Firebase Auth user
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
