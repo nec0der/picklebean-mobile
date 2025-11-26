@@ -168,14 +168,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Update Firebase Auth profile
         await updateProfile(firebaseUser, { displayName, photoURL: photoUri });
 
-        // Upload photo to Firebase Storage if provided
-        let profilePictureUrl: string | undefined = undefined;
-        if (photoUri) {
-          // TODO: Implement Firebase Storage upload
-          // For now, we'll use the local URI (not ideal for production)
-          profilePictureUrl = photoUri;
-        }
-
         // Create complete user document in Firestore
         const userDocument: Partial<UserDocument> = {
           uid: firebaseUser.uid,
@@ -184,7 +176,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           displayName,
           photoURL: photoUri || '',
           gender,
-          profilePictureUrl,
+          ...(photoUri && { profilePictureUrl: photoUri }), // Only include if photo exists
           isVerified: false,
           status: 'pending', // User needs admin approval
           createdAt: new Date().toISOString(),
