@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, TouchableOpacity, SafeAreaView, Image, Alert } from 'react-native';
+import { View, TouchableOpacity, SafeAreaView, Image, Alert, Pressable } from 'react-native';
 import { 
   Box, 
   Heading, 
@@ -100,13 +100,25 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
   return (
     <SafeAreaView className="flex-1 bg-white">
       <Box className="flex-1 px-6">
-        {/* Back Button */}
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
-          className="self-start p-2 -ml-2"
-        >
-          <ChevronLeft size={28} color="#000" />
-        </TouchableOpacity>
+        {/* Top Bar - Back & Skip */}
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity 
+            onPress={() => navigation.goBack()}
+            className="p-2 -ml-2"
+          >
+            <ChevronLeft size={28} color="#000" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={handleSkip}
+            disabled={loading}
+            className="p-2"
+          >
+            <Text className="text-lg font-semibold text-blue-600">
+              Skip
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Header */}
         <VStack space="sm" className="mt-6">
@@ -125,20 +137,33 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
           </View>
         </VStack>
 
-        {/* Photo Preview */}
+        {/* Clickable Photo Circle */}
         <View className="items-center mt-8">
-          <View className="relative">
+          <Pressable 
+            onPress={handleChoosePhoto}
+            disabled={loading}
+            className="relative"
+          >
             {photoUri ? (
-              <Image 
-                source={{ uri: photoUri }}
-                className="w-32 h-32 rounded-full"
-              />
+              <>
+                <Image 
+                  source={{ uri: photoUri }}
+                  className="w-32 h-32 rounded-full"
+                />
+                {/* Change photo badge */}
+                <View className="absolute bottom-0 right-0 items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <Upload size={20} color="#FFFFFF" />
+                </View>
+              </>
             ) : (
-              <View className="items-center justify-center w-32 h-32 bg-gray-100 rounded-full">
-                <Camera size={48} color="#9CA3AF" />
+              <View className="items-center justify-center w-32 h-32 border-2 border-gray-300 border-dashed rounded-full bg-gray-50">
+                <Camera size={40} color="#9CA3AF" />
+                <Text className="mt-2 text-xs text-gray-500">
+                  Tap to upload
+                </Text>
               </View>
             )}
-          </View>
+          </Pressable>
         </View>
 
         {/* Action Buttons */}
@@ -151,19 +176,10 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
             disabled={loading}
             fullWidth
           />
-          
-          <Button
-            title="Choose from Library"
-            variant="secondary"
-            size="md"
-            onPress={handleChoosePhoto}
-            disabled={loading}
-            fullWidth
-          />
         </VStack>
 
-        {/* Continue/Skip */}
-        <VStack space="sm" className="pb-8 mt-8">
+        {/* Continue Button */}
+        <View className="pb-8 mt-8">
           <Button
             title="Continue"
             size="md"
@@ -172,13 +188,7 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
             loading={loading}
             fullWidth
           />
-          
-          {!photoUri && (
-            <TouchableOpacity onPress={handleSkip} disabled={loading}>
-              <Text className="text-center text-gray-600">Skip for now</Text>
-            </TouchableOpacity>
-          )}
-        </VStack>
+        </View>
       </Box>
 
       {/* Info Actionsheet */}
