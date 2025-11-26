@@ -1,11 +1,22 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Image, Alert } from 'react-native';
-import { Box, Heading, Button, ButtonText, VStack } from '@gluestack-ui/themed';
+import { View, TouchableOpacity, SafeAreaView, Image, Alert } from 'react-native';
+import { 
+  Box, 
+  Heading, 
+  Button, 
+  ButtonText, 
+  VStack,
+  Text,
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper
+} from '@gluestack-ui/themed';
 import { ChevronLeft, Camera, Upload } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import type { AuthStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { InfoBottomSheet } from '@/components/common/InfoBottomSheet';
 
 type UploadPhotoScreenProps = AuthStackScreenProps<'UploadPhoto'>;
 
@@ -185,13 +196,30 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
         </VStack>
       </Box>
 
-      {/* Info Bottom Sheet */}
-      <InfoBottomSheet
-        visible={showInfo}
-        onClose={() => setShowInfo(false)}
-        title="Profile Photo"
-        content={infoContent}
-      />
+      {/* Info Actionsheet */}
+      <Actionsheet isOpen={showInfo} onClose={() => setShowInfo(false)}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent className="px-6 pt-4 pb-12">
+          <ActionsheetDragIndicatorWrapper>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
+          
+          <Heading size="xl" className="mt-4 mb-6 text-gray-900">
+            Profile Photo
+          </Heading>
+
+          <VStack space="md">
+            {infoContent.map((item, index) => (
+              <View key={index} className="flex-row">
+                <Text className="mr-2 text-gray-600">•</Text>
+                <Text className="flex-1 text-base text-gray-600">
+                  {item}
+                </Text>
+              </View>
+            ))}
+          </VStack>
+        </ActionsheetContent>
+      </Actionsheet>
     </SafeAreaView>
   );
 };

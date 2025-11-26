@@ -1,9 +1,20 @@
 import { useState } from 'react';
 import { View, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Box, Heading, Button, ButtonText, VStack, Text } from '@gluestack-ui/themed';
+import { 
+  Box, 
+  Heading, 
+  Button, 
+  ButtonText, 
+  VStack,
+  Text,
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper
+} from '@gluestack-ui/themed';
 import { ChevronLeft, User2, Check } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
-import { InfoBottomSheet } from '@/components/common/InfoBottomSheet';
 
 type SelectGenderScreenProps = AuthStackScreenProps<'SelectGender'>;
 
@@ -134,13 +145,30 @@ export const SelectGenderScreen = ({ navigation, route }: SelectGenderScreenProp
         </View>
       </Box>
 
-      {/* Info Bottom Sheet */}
-      <InfoBottomSheet
-        visible={showInfo}
-        onClose={() => setShowInfo(false)}
-        title="Gender Selection"
-        content={infoContent}
-      />
+      {/* Info Actionsheet */}
+      <Actionsheet isOpen={showInfo} onClose={() => setShowInfo(false)}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent className="px-6 pt-4 pb-12">
+          <ActionsheetDragIndicatorWrapper>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
+          
+          <Heading size="xl" className="mt-4 mb-6 text-gray-900">
+            Gender Selection
+          </Heading>
+
+          <VStack space="md">
+            {infoContent.map((item, index) => (
+              <View key={index} className="flex-row">
+                <Text className="mr-2 text-gray-600">•</Text>
+                <Text className="flex-1 text-base text-gray-600">
+                  {item}
+                </Text>
+              </View>
+            ))}
+          </VStack>
+        </ActionsheetContent>
+      </Actionsheet>
     </SafeAreaView>
   );
 };
