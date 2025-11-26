@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
-import { X, Check } from 'lucide-react-native';
+import { X, Check, AlertCircle } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
 import { validateUsername, checkUsernameAvailability } from '@/lib/username';
 import { Button } from '@/components/ui/Button';
@@ -135,7 +135,7 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
                   <View className="absolute top-0 bottom-0 justify-center right-4">
                     {checking && <ActivityIndicator size="small" color="#6B7280" />}
                     {!checking && isAvailable && !error && <Check size={20} color="#10b981" />}
-                    {!checking && error && <X size={20} color="#ef4444" />}
+                    {!checking && error && <AlertCircle size={20} color="#ef4444" />}
                   </View>
                 </View>
                 
