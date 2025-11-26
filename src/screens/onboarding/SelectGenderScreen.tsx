@@ -159,9 +159,9 @@ export const SelectGenderScreen = ({ navigation, route }: SelectGenderScreenProp
 
           <VStack space="md">
             {infoContent.map((item, index) => (
-              <View key={index} className="flex-row">
-                <Text className="mr-2 text-gray-600">•</Text>
-                <Text className="flex-1 text-base text-gray-600">
+              <View key={index} className="flex-row gap-2">
+                <Text size="md" className="text-gray-600">•</Text>
+                <Text size="md" className="flex-1 text-gray-600">
                   {item}
                 </Text>
               </View>
