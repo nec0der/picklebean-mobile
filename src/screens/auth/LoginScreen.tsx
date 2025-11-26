@@ -91,12 +91,12 @@ export const LoginScreen = ({ navigation }: Props) => {
         <Pressable
           onPress={handleGoogleSignIn}
           disabled={loading}
-          className={`relative items-center justify-center px-6 py-4 border-2 border-gray-300 rounded-2xl bg-white ${
+          className={`relative items-center justify-center px-6 py-4 border-2 border-gray-300 rounded-[2rem] bg-white ${
             loading ? 'opacity-50' : ''
           }`}
         >
-          <View className="absolute left-6">
-            <AntDesign name="google" size={20} color="#4285F4" />
+          <View className="absolute left-4">
+            <AntDesign name="google" size={28} color="#4285F4" />
           </View>
           <Text size="lg" className="font-semibold text-gray-900">
             Continue with Google
@@ -108,12 +108,12 @@ export const LoginScreen = ({ navigation }: Props) => {
           <Pressable
             onPress={handleAppleSignIn}
             disabled={loading}
-            className={`relative items-center justify-center px-6 py-4 border-2 border-gray-300 rounded-2xl bg-white ${
+            className={`relative items-center justify-center  px-6 py-4 border-2 border-gray-300 rounded-[2rem] bg-white ${
               loading ? 'opacity-50' : ''
             }`}
           >
-            <View className="absolute left-6">
-              <AntDesign name="apple" size={20} color="#000000" />
+            <View className="absolute left-4">
+              <AntDesign name="apple" size={28} color="#000000" />
             </View>
           <Text size="lg" className="font-semibold text-gray-900">
             Continue with Apple
@@ -132,12 +132,12 @@ export const LoginScreen = ({ navigation }: Props) => {
         <Pressable
           onPress={handleUsernameSignIn}
           disabled={loading}
-          className={`relative items-center justify-center px-6 py-4 border-2 border-gray-300 rounded-2xl bg-white ${
+          className={`relative items-center justify-center px-6 py-4 border-2 border-gray-300 rounded-[2rem] bg-white ${
             loading ? 'opacity-50' : ''
           }`}
         >
-          <View className="absolute left-6">
-            <AntDesign name="user" size={20} color="#374151" />
+          <View className="absolute left-4">
+            <AntDesign name="user" size={28} color="#374151" />
           </View>
           <Text size="lg" className="font-semibold text-gray-900">
             Sign in with username
@@ -150,7 +150,7 @@ export const LoginScreen = ({ navigation }: Props) => {
         <Pressable onPress={handleSignUp} disabled={loading}>
           <Text size="md" className="text-gray-600">
             Don't have an account?{' '}
-            <Text className="font-semibold text-blue-600">
+            <Text className="font-bold text-blue-600">
               Sign up
             </Text>
           </Text>
