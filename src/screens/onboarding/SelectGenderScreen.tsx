@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Box, Heading, Button, ButtonText, VStack } from '@gluestack-ui/themed';
+import { View, TouchableOpacity, SafeAreaView } from 'react-native';
+import { Box, Heading, Button, ButtonText, VStack, Text } from '@gluestack-ui/themed';
 import { ChevronLeft, User2, Check } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
 import { InfoBottomSheet } from '@/components/common/InfoBottomSheet';
@@ -45,12 +45,12 @@ export const SelectGenderScreen = ({ navigation, route }: SelectGenderScreenProp
           <Heading size="2xl" className="text-gray-900">
             Select Gender
           </Heading>
-          <View className="flex-row flex-wrap items-center">
-            <Text className="text-gray-600 text-md">
+          <View className="flex-row flex-wrap items-center gap-1">
+            <Text size="md" className="text-gray-600">
               This helps us organize fair competition and rankings.{' '}
             </Text>
             <TouchableOpacity onPress={() => setShowInfo(true)}>
-              <Text className="text-blue-600 underline text-md">
+              <Text size="md" className="!text-blue-600">
                 Why is this needed?
               </Text>
             </TouchableOpacity>
