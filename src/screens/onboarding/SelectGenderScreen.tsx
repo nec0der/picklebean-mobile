@@ -47,11 +47,11 @@ export const SelectGenderScreen = ({ navigation, route }: SelectGenderScreenProp
           </Heading>
           <View className="flex-row flex-wrap items-center">
             <Text className="text-gray-600 text-md">
-              Help us create fair competition.{' '}
+              This helps us organize fair competition and rankings.{' '}
             </Text>
             <TouchableOpacity onPress={() => setShowInfo(true)}>
               <Text className="text-blue-600 underline text-md">
-                (Why?)
+                Why is this needed?
               </Text>
             </TouchableOpacity>
           </View>
