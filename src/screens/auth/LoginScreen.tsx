@@ -126,6 +126,13 @@ export const LoginScreen = ({ navigation }: Props) => {
           </Pressable>
         )}
 
+        {/* OR Divider */}
+        <View className="flex-row items-center my-2">
+          <View className="flex-1 h-px bg-gray-300" />
+          <Text className="px-4 text-sm text-gray-500">or</Text>
+          <View className="flex-1 h-px bg-gray-300" />
+        </View>
+
         {/* Username/Password Sign-In */}
         <Pressable
           onPress={handleUsernameSignIn}
