@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { isAppleSignInAvailable } from '@/lib/oauth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '@/hooks/common/useToast';
+import { AntDesign } from '@expo/vector-icons';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -99,6 +100,7 @@ export const LoginScreen = ({ navigation }: Props) => {
             loading ? 'opacity-50' : ''
           }`}
         >
+          <AntDesign name="google" size={20} color="#4285F4" style={{ marginRight: 12 }} />
           <Text className="text-base font-semibold text-gray-900">
             Continue with Google
           </Text>
@@ -113,6 +115,7 @@ export const LoginScreen = ({ navigation }: Props) => {
               loading ? 'opacity-50' : ''
             }`}
           >
+            <AntDesign name="apple" size={20} color="#fff" style={{ marginRight: 12 }} />
             <Text className="text-base font-semibold text-white">
               Continue with Apple
             </Text>
@@ -127,6 +130,7 @@ export const LoginScreen = ({ navigation }: Props) => {
             loading ? 'opacity-50' : ''
           }`}
         >
+          <AntDesign name="user" size={20} color="#374151" style={{ marginRight: 12 }} />
           <Text className="text-base font-semibold text-gray-900">
             Sign in with username
           </Text>
