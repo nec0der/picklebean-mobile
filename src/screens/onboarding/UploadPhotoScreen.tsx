@@ -199,7 +199,7 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
       {/* Info Actionsheet */}
       <Actionsheet isOpen={showInfo} onClose={() => setShowInfo(false)}>
         <ActionsheetBackdrop />
-        <ActionsheetContent className="px-6 pt-4 pb-12">
+        <ActionsheetContent className="px-6 pt-4 pb-12 h-[80%]">
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
