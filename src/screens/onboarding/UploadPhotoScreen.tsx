@@ -186,14 +186,16 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
             fullWidth
           />
           
-          <Button
-            title="Done"
-            size="md"
-            onPress={handleContinue}
-            disabled={!photoUri || loading}
-            loading={loading}
-            fullWidth
-          />
+          {photoUri && (
+            <Button
+              title="Done"
+              size="md"
+              onPress={handleContinue}
+              disabled={loading}
+              loading={loading}
+              fullWidth
+            />
+          )}
         </VStack>
       </Box>
 
