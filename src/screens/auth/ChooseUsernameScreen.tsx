@@ -58,11 +58,25 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
   }, [username]);
 
   const handleNext = useCallback(() => {
-    // Can only proceed if username is available
-    if (!isAvailable || error || checking) {
-      if (!username.trim()) {
-        setError('Please enter a username');
-      }
+    // Check if username is empty first
+    if (!username.trim()) {
+      setError('Username cannot be empty');
+      return;
+    }
+    
+    // Check if username is being validated
+    if (checking) {
+      return;
+    }
+    
+    // Check if there are validation errors
+    if (error) {
+      return;
+    }
+    
+    // Check if username is available
+    if (!isAvailable) {
+      setError('Please wait for username validation');
       return;
     }
     
@@ -144,7 +158,6 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
                 title="Next"
                 size="md" 
                 onPress={handleNext}
-                disabled={!isAvailable || !!error || checking}
                 fullWidth
               />
             </VStack>
