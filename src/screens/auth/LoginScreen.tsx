@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, Linking } from 'react-native';
+import { View, Pressable, Linking, SafeAreaView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Heading, VStack, Text } from '@gluestack-ui/themed';
 import { AuthStackParamList } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { isAppleSignInAvailable } from '@/lib/oauth';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '@/hooks/common/useToast';
 import { AntDesign } from '@expo/vector-icons';
 
@@ -16,7 +16,6 @@ export const LoginScreen = ({ navigation }: Props) => {
   const [loading, setLoading] = useState(false);
   const [showAppleSignIn, setShowAppleSignIn] = useState(false);
   const { signInWithGoogle, signInWithApple } = useAuth();
-  const insets = useSafeAreaInsets();
   const toast = useToast();
 
   // Check if Apple Sign-In is available
@@ -74,21 +73,17 @@ export const LoginScreen = ({ navigation }: Props) => {
   };
 
   return (
-    <View
-      className="flex-1 bg-white"
-      style={{
-        paddingTop: insets.top + 40,
-        paddingBottom: insets.bottom + 20,
-        paddingHorizontal: 24,
-      }}
-    >
-      {/* Header */}
-      <View className="items-center mb-12">
-        <Logo size="lg" />
-        <Text className="mt-6 text-2xl font-bold text-gray-900">
-          Welcome Back
-        </Text>
-      </View>
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 px-6">
+        {/* Header */}
+        <View className="items-center mt-8 mb-12">
+          <Logo size="lg" />
+          <VStack space="sm" className="items-center mt-6">
+            <Heading size="2xl" className="text-gray-900">
+              Welcome Back
+            </Heading>
+          </VStack>
+        </View>
 
       {/* OAuth Buttons */}
       <View className="gap-3 mb-8">
@@ -103,7 +98,7 @@ export const LoginScreen = ({ navigation }: Props) => {
           <View className="absolute left-6">
             <AntDesign name="google" size={20} color="#4285F4" />
           </View>
-          <Text className="text-base font-semibold text-gray-900">
+          <Text size="lg" className="font-semibold text-gray-900">
             Continue with Google
           </Text>
         </Pressable>
@@ -120,16 +115,16 @@ export const LoginScreen = ({ navigation }: Props) => {
             <View className="absolute left-6">
               <AntDesign name="apple" size={20} color="#000000" />
             </View>
-            <Text className="text-base font-semibold text-gray-900">
-              Continue with Apple
-            </Text>
+          <Text size="lg" className="font-semibold text-gray-900">
+            Continue with Apple
+          </Text>
           </Pressable>
         )}
 
         {/* OR Divider */}
         <View className="flex-row items-center my-2">
           <View className="flex-1 h-px bg-gray-300" />
-          <Text className="px-4 text-sm text-gray-500">or</Text>
+          <Text size="md" className="px-4 text-gray-500">or</Text>
           <View className="flex-1 h-px bg-gray-300" />
         </View>
 
@@ -144,7 +139,7 @@ export const LoginScreen = ({ navigation }: Props) => {
           <View className="absolute left-6">
             <AntDesign name="user" size={20} color="#374151" />
           </View>
-          <Text className="text-base font-semibold text-gray-900">
+          <Text size="lg" className="font-semibold text-gray-900">
             Sign in with username
           </Text>
         </Pressable>
@@ -153,7 +148,7 @@ export const LoginScreen = ({ navigation }: Props) => {
       {/* Sign up link */}
       <View className="items-center mb-8">
         <Pressable onPress={handleSignUp} disabled={loading}>
-          <Text className="text-gray-600">
+          <Text size="md" className="text-gray-600">
             Don't have an account?{' '}
             <Text className="font-semibold text-blue-600">
               Sign up
@@ -166,24 +161,25 @@ export const LoginScreen = ({ navigation }: Props) => {
       <View className="flex-1" />
 
       {/* Terms and Privacy */}
-      <View className="items-center">
-        <Text className="mb-2 text-xs text-center text-gray-500">
+      <View className="items-center pb-8">
+        <Text size="sm" className="mb-2 text-center text-gray-500">
           By continuing, you agree to our
         </Text>
         <View className="flex-row items-center gap-2">
           <Pressable onPress={handleTermsPress}>
-            <Text className="text-xs font-medium text-gray-600 underline">
+            <Text size="sm" className="font-medium text-gray-600 underline">
               Terms of Service
             </Text>
           </Pressable>
-          <Text className="text-xs text-gray-400">•</Text>
+          <Text size="sm" className="text-gray-400">•</Text>
           <Pressable onPress={handlePrivacyPress}>
-            <Text className="text-xs font-medium text-gray-600 underline">
+            <Text size="sm" className="font-medium text-gray-600 underline">
               Privacy Policy
             </Text>
           </Pressable>
         </View>
       </View>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
