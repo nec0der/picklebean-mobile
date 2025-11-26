@@ -3,8 +3,6 @@ import { View, TouchableOpacity, SafeAreaView } from "react-native";
 import {
   Box,
   Heading,
-  Button,
-  ButtonText,
   VStack,
   Text,
   Actionsheet,
@@ -15,6 +13,7 @@ import {
   Center,
 } from "@gluestack-ui/themed";
 import { ChevronLeft, Mars, Venus, Check } from "lucide-react-native";
+import { Button } from "@/components/ui/Button";
 import type { AuthStackScreenProps } from "@/types/navigation";
 
 type SelectGenderScreenProps = AuthStackScreenProps<"SelectGender">;
@@ -144,17 +143,14 @@ export const SelectGenderScreen = ({
         </VStack>
 
         {/* Next Button */}
-        <View className="pb-6 mt-8">
+        <View className="pb-8 mt-8">
           <Button
-            size="xl"
+            title="Next"
+            size="md"
             onPress={handleNext}
-            isDisabled={!selectedGender}
-            className={`rounded-xl ${
-              selectedGender ? "bg-green-600" : "bg-gray-300"
-            }`}
-          >
-            <ButtonText>Next</ButtonText>
-          </Button>
+            disabled={!selectedGender}
+            fullWidth
+          />
         </View>
       </Box>
 
