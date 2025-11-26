@@ -26,17 +26,20 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
       return;
     }
     
-    // Format validation first (instant)
-    const validation = validateUsername(username);
-    if (!validation.valid) {
-      setError(validation.error || 'Invalid username');
-      setChecking(false);
-      return;
-    }
-    
-    // Debounce Firebase check (wait 500ms after user stops typing)
+    // Show checking indicator immediately
     setChecking(true);
+    
+    // Debounce both format validation AND Firebase check (wait 500ms after user stops typing)
     const timeoutId = setTimeout(async () => {
+      // Format validation first
+      const validation = validateUsername(username);
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid username');
+        setChecking(false);
+        return;
+      }
+      
+      // Then Firebase availability check
       const result = await checkUsernameAvailability(username);
       setChecking(false);
       

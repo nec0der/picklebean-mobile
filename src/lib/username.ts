@@ -14,10 +14,7 @@ export const validateUsername = (username: string): { valid: boolean; error?: st
   // Remove @ if present
   const cleanUsername = username.startsWith('@') ? username.slice(1) : username;
 
-  if (cleanUsername.length < 3) {
-    return { valid: false, error: 'Username must be at least 3 characters' };
-  }
-
+  // Allow any length from 1-20 characters
   if (cleanUsername.length > 20) {
     return { valid: false, error: 'Username must be 20 characters or less' };
   }
