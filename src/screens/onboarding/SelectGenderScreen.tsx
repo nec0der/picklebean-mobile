@@ -143,11 +143,8 @@ export const SelectGenderScreen = ({
           </TouchableOpacity>
         </VStack>
 
-        {/* Spacer */}
-        <View className="flex-1" />
-
         {/* Next Button */}
-        <View className="pb-6">
+        <View className="pb-6 mt-8">
           <Button
             size="xl"
             onPress={handleNext}
