@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, TouchableOpacity, SafeAreaView, Dimensions } from "react-native";
+import { View, TouchableOpacity, SafeAreaView } from "react-native";
 import {
   Box,
   Heading,
@@ -28,8 +28,6 @@ export const SelectGenderScreen = ({
     "male" | "female" | null
   >(null);
   const [showInfo, setShowInfo] = useState(false);
-  
-  const screenHeight = Dimensions.get('window').height;
 
   const infoContent = [
     "Organize rankings into Men's and Women's categories",
@@ -164,12 +162,13 @@ export const SelectGenderScreen = ({
       </Box>
 
       {/* Info Actionsheet */}
-      <Actionsheet isOpen={showInfo} onClose={() => setShowInfo(false)}>
+      <Actionsheet 
+        isOpen={showInfo} 
+        onClose={() => setShowInfo(false)}
+        snapPoints={[80]}
+      >
         <ActionsheetBackdrop />
-        <ActionsheetContent 
-          className="px-6 pt-4 pb-12"
-          style={{ height: screenHeight * 0.8 }}
-        >
+        <ActionsheetContent className="px-6 pt-4 pb-12">
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
