@@ -3,8 +3,6 @@ import { View, TouchableOpacity, SafeAreaView, Image, Alert } from 'react-native
 import { 
   Box, 
   Heading, 
-  Button, 
-  ButtonText, 
   VStack,
   Text,
   Actionsheet,
@@ -15,6 +13,7 @@ import {
 } from '@gluestack-ui/themed';
 import { ChevronLeft, Camera, Upload } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { Button } from '@/components/ui/Button';
 import type { AuthStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -114,9 +113,16 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
           <Heading size="2xl" className="text-gray-900">
             Add Profile Photo
           </Heading>
-          <Text className="text-gray-600 text-md">
-            Help others recognize you on the court
-          </Text>
+          <View className="flex-row flex-wrap items-center gap-1">
+            <Text size="md" className="text-gray-600">
+              Help others recognize you on the court.{" "}
+            </Text>
+            <TouchableOpacity onPress={() => setShowInfo(true)}>
+              <Text size="md" className="!text-blue-600">
+                Why add a photo?
+              </Text>
+            </TouchableOpacity>
+          </View>
         </VStack>
 
         {/* Photo Preview */}
@@ -137,58 +143,37 @@ export const UploadPhotoScreen = ({ navigation, route }: UploadPhotoScreenProps)
 
         {/* Action Buttons */}
         <VStack space="md" className="mt-8">
-          {/* Take Photo Button */}
           <Button
-            size="xl"
+            title="Take Photo"
+            variant="secondary"
+            size="md"
             onPress={handleTakePhoto}
-            variant="outline"
-            className="border-gray-300 rounded-xl"
-            isDisabled={loading}
-          >
-            <View className="flex-row items-center">
-              <Camera size={20} color="#374151" />
-              <ButtonText className="ml-2 text-gray-900">Take Photo</ButtonText>
-            </View>
-          </Button>
-
-          {/* Choose from Library Button */}
+            disabled={loading}
+            fullWidth
+          />
+          
           <Button
-            size="xl"
+            title="Choose from Library"
+            variant="secondary"
+            size="md"
             onPress={handleChoosePhoto}
-            variant="outline"
-            className="border-gray-300 rounded-xl"
-            isDisabled={loading}
-          >
-            <View className="flex-row items-center">
-              <Upload size={20} color="#374151" />
-              <ButtonText className="ml-2 text-gray-900">Choose from Library</ButtonText>
-            </View>
-          </Button>
+            disabled={loading}
+            fullWidth
+          />
         </VStack>
 
-        {/* Info Link */}
-        <TouchableOpacity 
-          onPress={() => setShowInfo(true)}
-          className="mt-4"
-        >
-          <Text className="text-center text-blue-600 underline">
-            Why add a photo?
-          </Text>
-        </TouchableOpacity>
-
-        {/* Bottom Actions */}
-        <View className="flex-1" />
-        <VStack space="md" className="pb-6">
-          {photoUri ? (
-            <Button
-              size="xl"
-              onPress={handleContinue}
-              className="bg-green-600 rounded-xl"
-              isDisabled={loading}
-            >
-              <ButtonText>Continue</ButtonText>
-            </Button>
-          ) : (
+        {/* Continue/Skip */}
+        <VStack space="sm" className="pb-8 mt-8">
+          <Button
+            title="Continue"
+            size="md"
+            onPress={handleContinue}
+            disabled={!photoUri || loading}
+            loading={loading}
+            fullWidth
+          />
+          
+          {!photoUri && (
             <TouchableOpacity onPress={handleSkip} disabled={loading}>
               <Text className="text-center text-gray-600">Skip for now</Text>
             </TouchableOpacity>
