@@ -25,6 +25,8 @@ interface AuthContextValue {
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signUpWithUsername: (username: string, password: string, gender: 'male' | 'female', photoUri: string | null) => Promise<void>;
   signOut: () => Promise<void>;
@@ -222,6 +224,90 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
+  // Sign in with Google OAuth
+  const signInWithGoogle = useCallback(async (): Promise<void> => {
+    try {
+      const { signInWithGoogle: googleSignIn } = await import('@/lib/oauth');
+      const oauthUserInfo = await googleSignIn();
+
+      // Check if user document exists
+      const userDoc = await getDoc(doc(firestore, 'users', oauthUserInfo.uid));
+
+      if (!userDoc.exists()) {
+        // Create new user document for OAuth user
+        const newUserDocument: Partial<UserDocument> = {
+          uid: oauthUserInfo.uid,
+          email: oauthUserInfo.email || '',
+          displayName: oauthUserInfo.displayName || '',
+          username: oauthUserInfo.email?.split('@')[0] || '',
+          photoURL: oauthUserInfo.photoURL || '',
+          gender: 'male', // Default, can be updated later
+          isVerified: true, // OAuth users are verified
+          status: 'approved',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          rankings: {
+            singles: 1000,
+            sameGenderDoubles: 1000,
+            mixedDoubles: 1000,
+          },
+          matchStats: {
+            totalMatches: 0,
+            wins: 0,
+            losses: 0,
+          },
+        };
+
+        await setDoc(doc(firestore, 'users', oauthUserInfo.uid), newUserDocument);
+      }
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      throw error;
+    }
+  }, []);
+
+  // Sign in with Apple OAuth
+  const signInWithApple = useCallback(async (): Promise<void> => {
+    try {
+      const { signInWithApple: appleSignIn } = await import('@/lib/oauth');
+      const oauthUserInfo = await appleSignIn();
+
+      // Check if user document exists
+      const userDoc = await getDoc(doc(firestore, 'users', oauthUserInfo.uid));
+
+      if (!userDoc.exists()) {
+        // Create new user document for OAuth user
+        const newUserDocument: Partial<UserDocument> = {
+          uid: oauthUserInfo.uid,
+          email: oauthUserInfo.email || '',
+          displayName: oauthUserInfo.displayName || '',
+          username: oauthUserInfo.email?.split('@')[0] || '',
+          photoURL: oauthUserInfo.photoURL || '',
+          gender: 'male', // Default, can be updated later
+          isVerified: true, // OAuth users are verified
+          status: 'approved',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          rankings: {
+            singles: 1000,
+            sameGenderDoubles: 1000,
+            mixedDoubles: 1000,
+          },
+          matchStats: {
+            totalMatches: 0,
+            wins: 0,
+            losses: 0,
+          },
+        };
+
+        await setDoc(doc(firestore, 'users', oauthUserInfo.uid), newUserDocument);
+      }
+    } catch (error) {
+      console.error('Error signing in with Apple:', error);
+      throw error;
+    }
+  }, []);
+
   // Update user profile
   const updateUserProfile = useCallback(
     async (updates: { displayName?: string; photoURL?: string }): Promise<void> => {
@@ -259,6 +345,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     firebaseUser,
     loading,
     signIn,
+    signInWithGoogle,
+    signInWithApple,
     signUp,
     signUpWithUsername,
     signOut,

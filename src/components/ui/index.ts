@@ -10,3 +10,6 @@ export { Input } from './Input';
 export type { InputProps } from './Input';
 
 export { PickleballIcon } from './PickleballIcon';
+
+export { Logo } from './Logo';
+export type { LogoProps } from './Logo';
