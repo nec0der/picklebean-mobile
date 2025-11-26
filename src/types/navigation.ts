@@ -17,6 +17,7 @@ export type TabScreenProps<T extends keyof TabParamList> =
 // Auth Stack
 export type AuthStackParamList = {
   Login: undefined;
+  UsernamePasswordSignIn: undefined;
   ChooseUsername: undefined;
   CreatePassword: { username: string };
   CreateAccount: undefined;

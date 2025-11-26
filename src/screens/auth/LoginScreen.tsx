@@ -1,238 +1,172 @@
-import { useState, useEffect } from 'react';
-import {
-  View,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
-} from 'react-native';
-import {
-  Box,
-  Heading,
-  Button,
-  ButtonText,
-  Input,
-  InputField,
-  VStack,
-  Text,
-  HStack,
-} from '@gluestack-ui/themed';
-import { ChevronLeft } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Pressable, Linking } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { AuthStackParamList } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { getAuthErrorMessage } from '@/lib/authErrors';
-import { isUsername, usernameToEmail } from '@/lib/username';
 import { Logo } from '@/components/ui/Logo';
+import { Button } from '@/components/ui/Button';
 import { isAppleSignInAvailable } from '@/lib/oauth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useToast } from '@/hooks/common/useToast';
 
-interface LoginScreenProps {
-  navigation: any;
-}
+type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
-export const LoginScreen = ({ navigation }: LoginScreenProps) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export const LoginScreen = ({ navigation }: Props) => {
   const [loading, setLoading] = useState(false);
   const [showAppleSignIn, setShowAppleSignIn] = useState(false);
-  const { signIn, signInWithGoogle, signInWithApple } = useAuth();
+  const { signInWithGoogle, signInWithApple } = useAuth();
+  const insets = useSafeAreaInsets();
+  const toast = useToast();
 
   // Check if Apple Sign-In is available
   useEffect(() => {
     const checkAppleSignIn = async () => {
-      console.log('🍎 [Apple Sign-In] Starting availability check...');
-      console.log('🍎 [Apple Sign-In] Platform:', Platform.OS);
-      console.log('🍎 [Apple Sign-In] Platform version:', Platform.Version);
-      
       try {
         const available = await isAppleSignInAvailable();
-        console.log('🍎 [Apple Sign-In] isAppleSignInAvailable result:', available);
         setShowAppleSignIn(available);
-        console.log('🍎 [Apple Sign-In] State updated. Should show button:', available);
       } catch (error) {
-        console.error('🍎 [Apple Sign-In] Error checking availability:', error);
+        console.error('Error checking Apple Sign-In availability:', error);
         setShowAppleSignIn(false);
       }
     };
     checkAppleSignIn();
   }, []);
 
-  const handleEmailLogin = async (): Promise<void> => {
-    if (!email.trim()) {
-      Alert.alert('Username Required', 'Please enter your username or email');
-      return;
-    }
-
-    if (!password.trim()) {
-      Alert.alert('Password Required', 'Please enter your password');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      // Convert username to email if needed
-      let loginEmail = email.trim();
-      if (isUsername(loginEmail)) {
-        loginEmail = usernameToEmail(loginEmail);
-      }
-      
-      await signIn(loginEmail, password);
-    } catch (error: any) {
-      const errorMessage = getAuthErrorMessage(error);
-      Alert.alert('Sign In Failed', errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async (): Promise<void> => {
+  const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
       await signInWithGoogle();
     } catch (error: any) {
-      Alert.alert('Google Sign-In Failed', error.message || 'Unable to sign in with Google');
+      toast.error(error.message || 'Unable to sign in with Google');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAppleSignIn = async (): Promise<void> => {
+  const handleAppleSignIn = async () => {
     try {
       setLoading(true);
       await signInWithApple();
     } catch (error: any) {
-      Alert.alert('Apple Sign-In Failed', error.message || 'Unable to sign in with Apple');
+      toast.error(error.message || 'Unable to sign in with Apple');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleUsernameSignIn = () => {
+    navigation.navigate('UsernamePasswordSignIn');
+  };
+
+  const handleSignUp = () => {
+    navigation.navigate('ChooseUsername');
+  };
+
+  const handleTermsPress = () => {
+    // TODO: Replace with actual terms URL
+    Linking.openURL('https://picklebean.com/terms');
+  };
+
+  const handlePrivacyPress = () => {
+    // TODO: Replace with actual privacy URL
+    Linking.openURL('https://picklebean.com/privacy');
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView 
-        className="flex-1" 
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
+    <View
+      className="flex-1 bg-white"
+      style={{
+        paddingTop: insets.top + 40,
+        paddingBottom: insets.bottom + 20,
+        paddingHorizontal: 24,
+      }}
+    >
+      {/* Header */}
+      <View className="items-center mb-12">
+        <Logo size="lg" />
+        <Text className="mt-6 text-2xl font-bold text-gray-900">
+          Welcome Back
+        </Text>
+      </View>
+
+      {/* OAuth Buttons */}
+      <View className="gap-3 mb-8">
+        {/* Google Sign-In */}
+        <Pressable
+          onPress={handleGoogleSignIn}
+          disabled={loading}
+          className={`flex-row items-center justify-center px-6 py-4 border-2 border-gray-300 rounded-xl bg-white ${
+            loading ? 'opacity-50' : ''
+          }`}
         >
-          <Box className="flex-1 px-6">
-            {/* Back Button */}
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              className="self-start p-2 mt-2 -ml-2"
-            >
-              <ChevronLeft size={28} color="#000" />
-            </TouchableOpacity>
+          <Text className="text-base font-semibold text-gray-900">
+            Continue with Google
+          </Text>
+        </Pressable>
 
-            {/* Logo */}
-            <View className="items-center mt-8 mb-6">
-              <Logo size="lg" />
-            </View>
+        {/* Apple Sign-In */}
+        {showAppleSignIn && (
+          <Pressable
+            onPress={handleAppleSignIn}
+            disabled={loading}
+            className={`flex-row items-center justify-center px-6 py-4 border-2 border-gray-900 rounded-xl bg-black ${
+              loading ? 'opacity-50' : ''
+            }`}
+          >
+            <Text className="text-base font-semibold text-white">
+              Continue with Apple
+            </Text>
+          </Pressable>
+        )}
 
-            {/* Header */}
-            <VStack space="sm" className="mb-8">
-              <Heading size="2xl" className="text-center text-gray-900">
-                Welcome Back
-              </Heading>
-              <Text size="md" className="text-center text-gray-600">
-                Sign in to continue playing
-              </Text>
-            </VStack>
+        {/* Username/Password Sign-In */}
+        <Pressable
+          onPress={handleUsernameSignIn}
+          disabled={loading}
+          className={`flex-row items-center justify-center px-6 py-4 border-2 border-gray-300 rounded-xl bg-white ${
+            loading ? 'opacity-50' : ''
+          }`}
+        >
+          <Text className="text-base font-semibold text-gray-900">
+            Sign in with username
+          </Text>
+        </Pressable>
+      </View>
 
-            {/* OAuth Buttons */}
-            <VStack space="md" className="mb-6">
-              {/* Google Sign-In */}
-              <TouchableOpacity
-                onPress={handleGoogleSignIn}
-                disabled={loading}
-                className={`rounded-xl border-2 border-gray-300 p-4 ${
-                  loading ? 'opacity-50' : 'bg-white'
-                }`}
-              >
-                <HStack space="md" className="items-center justify-center">
-                  <Text className="text-lg font-semibold text-gray-900">
-                    Continue with Google
-                  </Text>
-                </HStack>
-              </TouchableOpacity>
+      {/* Sign up link */}
+      <View className="items-center mb-8">
+        <Pressable onPress={handleSignUp} disabled={loading}>
+          <Text className="text-gray-600">
+            Don't have an account?{' '}
+            <Text className="font-semibold text-blue-600">
+              Sign up
+            </Text>
+          </Text>
+        </Pressable>
+      </View>
 
-              {/* Apple Sign-In (iOS only) */}
-              {showAppleSignIn && (
-                <TouchableOpacity
-                  onPress={handleAppleSignIn}
-                  disabled={loading}
-                  className={`rounded-xl border-2 border-gray-900 bg-black p-4 ${
-                    loading ? 'opacity-50' : ''
-                  }`}
-                >
-                  <HStack space="md" className="items-center justify-center">
-                    <Text className="text-lg font-semibold text-white">
-                      Continue with Apple
-                    </Text>
-                  </HStack>
-                </TouchableOpacity>
-              )}
-            </VStack>
+      {/* Spacer */}
+      <View className="flex-1" />
 
-            {/* Divider */}
-            <HStack space="md" className="items-center mb-6">
-              <View className="flex-1 h-px bg-gray-300" />
-              <Text className="text-gray-500">or</Text>
-              <View className="flex-1 h-px bg-gray-300" />
-            </HStack>
-
-            {/* Email/Password Form */}
-            <VStack space="md" className="mb-6">
-              <Input variant="outline" size="lg">
-                <InputField
-                  placeholder="@username or email"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!loading}
-                />
-              </Input>
-
-              <Input variant="outline" size="lg">
-                <InputField
-                  placeholder="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  editable={!loading}
-                />
-              </Input>
-
-              <Button
-                size="lg"
-                onPress={handleEmailLogin}
-                isDisabled={loading}
-                className="bg-green-600"
-              >
-                <ButtonText>
-                  {loading ? 'Signing in...' : 'Sign In'}
-                </ButtonText>
-              </Button>
-            </VStack>
-
-            {/* Sign up link */}
-            <View className="items-center mt-4 mb-8">
-              <TouchableOpacity onPress={() => navigation.navigate('ChooseUsername')}>
-                <Text className="text-center text-gray-600">
-                  Don't have an account?{' '}
-                  <Text className="font-semibold text-blue-600">Sign Up</Text>
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </Box>
-        </KeyboardAvoidingView>
-      </ScrollView>
-    </SafeAreaView>
+      {/* Terms and Privacy */}
+      <View className="items-center">
+        <Text className="mb-2 text-xs text-center text-gray-500">
+          By continuing, you agree to our
+        </Text>
+        <View className="flex-row items-center gap-2">
+          <Pressable onPress={handleTermsPress}>
+            <Text className="text-xs font-medium text-gray-600 underline">
+              Terms of Service
+            </Text>
+          </Pressable>
+          <Text className="text-xs text-gray-400">•</Text>
+          <Pressable onPress={handlePrivacyPress}>
+            <Text className="text-xs font-medium text-gray-600 underline">
+              Privacy Policy
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 };
