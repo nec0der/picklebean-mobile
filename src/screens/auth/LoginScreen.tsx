@@ -98,7 +98,7 @@ export const LoginScreen = ({ navigation }: Props) => {
           <View className="absolute left-4">
             <AntDesign name="google" size={28} color="#4285F4" />
           </View>
-          <Text size="lg" className="font-semibold text-gray-900">
+          <Text size="lg" className="!font-semibold text-gray-900">
             Continue with Google
           </Text>
         </Pressable>
@@ -115,7 +115,7 @@ export const LoginScreen = ({ navigation }: Props) => {
             <View className="absolute left-4">
               <AntDesign name="apple" size={28} color="#000000" />
             </View>
-          <Text size="lg" className="font-semibold text-gray-900">
+          <Text size="lg" className="!font-bold text-gray-900 ">
             Continue with Apple
           </Text>
           </Pressable>
@@ -139,7 +139,7 @@ export const LoginScreen = ({ navigation }: Props) => {
           <View className="absolute left-4">
             <AntDesign name="user" size={28} color="#374151" />
           </View>
-          <Text size="lg" className="font-semibold text-gray-900">
+          <Text size="lg" className="!font-semibold text-gray-900">
             Sign in with username
           </Text>
         </Pressable>
@@ -150,7 +150,7 @@ export const LoginScreen = ({ navigation }: Props) => {
         <Pressable onPress={handleSignUp} disabled={loading}>
           <Text size="md" className="text-gray-600">
             Don't have an account?{' '}
-            <Text className="font-bold text-blue-600">
+            <Text className="!font-bold !text-blue-600">
               Sign up
             </Text>
           </Text>
