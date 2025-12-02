@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { 
+  Box, 
+  Heading, 
+  VStack, 
+  Text,
+  Input,
+  InputField,
+} from '@gluestack-ui/themed';
+import { ChevronLeft, Check } from 'lucide-react-native';
 import { AuthStackParamList } from '@/types/navigation';
-import { Logo } from '@/components/ui/Logo';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
@@ -13,7 +19,6 @@ export const ForgotPasswordScreen = ({ navigation }: Props) => {
   const [username, setUsername] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const insets = useSafeAreaInsets();
 
   const handleSubmit = async () => {
     if (!username.trim()) {
@@ -31,100 +36,106 @@ export const ForgotPasswordScreen = ({ navigation }: Props) => {
 
   if (submitted) {
     return (
-      <View
-        className="flex-1 bg-white"
-        style={{
-          paddingTop: insets.top + 40,
-          paddingBottom: insets.bottom + 20,
-          paddingHorizontal: 24,
-        }}
-      >
-        <View className="items-center justify-center flex-1">
+      <SafeAreaView className="flex-1 bg-white">
+        <Box className="items-center justify-center flex-1 px-6">
           <View className="items-center mb-8">
-            <View className="items-center justify-center w-16 h-16 mb-4 bg-green-100 rounded-full">
-              <Text className="text-3xl">✓</Text>
+            <View className="items-center justify-center w-16 h-16 mb-6 bg-green-100 rounded-full">
+              <Check size={32} color="#166534" />
             </View>
-            <Text className="mb-2 text-2xl font-bold text-center text-gray-900">
+            <Heading size="xl" className="text-center mb-3 !text-gray-900">
               Check your email
-            </Text>
-            <Text className="text-base text-center text-gray-600">
-              If an account exists for {username}, you will receive password reset instructions.
+            </Heading>
+            <Text size="md" className="text-center !text-gray-600">
+              If an account exists for <Text className="font-bold !text-gray-900">{username}</Text>, you will receive password reset instructions.
             </Text>
           </View>
 
-          <Button
-            title="Back to Sign In"
-            onPress={() => navigation.navigate('Login')}
-          />
-        </View>
-      </View>
+          <View className="w-full max-w-sm">
+            <Button
+              title="Back to Sign In"
+              size="md"
+              onPress={() => navigation.navigate('UsernamePasswordSignIn')}
+              fullWidth
+            />
+          </View>
+        </Box>
+      </SafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-white"
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingTop: insets.top + 20,
-          paddingBottom: insets.bottom + 20,
-          paddingHorizontal: 24,
-        }}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
       >
-        {/* Header */}
-        <View className="items-center mb-8">
-          <Logo size="lg" />
-          <Text className="mt-6 text-2xl font-bold text-gray-900">
-            Reset Password
-          </Text>
-          <Text className="mt-2 text-base text-center text-gray-600">
-            Enter your username and we'll send you instructions to reset your password
-          </Text>
-        </View>
+        <Box className="justify-between flex-1 px-6">
+          <View>
+            {/* Back Button */}
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              className="self-start p-2 -ml-2"
+            >
+              <ChevronLeft size={28} color="#000" />
+            </TouchableOpacity>
 
-        {/* Form */}
-        <View className="flex-1">
-          <View className="mb-6">
-            <Text className="mb-2 text-sm font-medium text-gray-700">
-              Username
-            </Text>
-            <Input
-              value={username}
-              onChangeText={(text) => setUsername(text.toLowerCase())}
-              placeholder="Enter username"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
+            {/* Header */}
+            <VStack space="sm" className="mt-6">
+              <Heading size="2xl" className="!text-gray-900">
+                Reset Password
+              </Heading>
+              <Text size="md" className="!text-gray-600">
+                Enter your username and we'll send you instructions to reset your password.
+              </Text>
+            </VStack>
+
+            {/* Form */}
+            <VStack space="3xl" className="mt-8">
+              <VStack space="md">
+                <View>
+                  <Input 
+                    variant="outline" 
+                    size="xl" 
+                    className="rounded-xl"
+                  >
+                    <InputField
+                      value={username}
+                      onChangeText={(text) => setUsername(text.toLowerCase())}
+                      placeholder="Username"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoFocus
+                      editable={!loading}
+                    />
+                  </Input>
+                </View>
+              </VStack>
+
+              <Button
+                title="Send Instructions"
+                size="md"
+                onPress={handleSubmit}
+                disabled={loading || !username.trim()}
+                loading={loading}
+                fullWidth
+              />
+            </VStack>
           </View>
 
-          <Button
-            title="Send Reset Instructions"
-            onPress={handleSubmit}
-            disabled={loading || !username.trim()}
-            loading={loading}
-          />
-        </View>
-
-        {/* Back to sign in */}
-        <View className="items-center mt-6">
-          <Pressable
-            onPress={() => navigation.goBack()}
-            disabled={loading}
-          >
-            <Text className="text-gray-600">
-              Remember your password?{' '}
-              <Text className="font-semibold text-blue-600">
-                Sign in
+          {/* Footer - Back to Sign In */}
+          <View className="pb-4">
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              disabled={loading}
+              className="items-center py-4"
+            >
+              <Text size="sm" className="font-medium !text-blue-600">
+                Back to Sign In
               </Text>
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            </TouchableOpacity>
+          </View>
+        </Box>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };

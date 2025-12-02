@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Pressable, Linking, SafeAreaView } from "react-native";
+import { View, Pressable, Linking, SafeAreaView, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Heading, VStack, Text } from "@gluestack-ui/themed";
+import { VStack, Text } from "@gluestack-ui/themed";
 import { AuthStackParamList } from "@/types/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/ui/Logo";
-import { Button } from "@/components/ui/Button";
+import { GoogleLogo } from "@/components/ui/GoogleLogo";
 import { isAppleSignInAvailable } from "@/lib/oauth";
 import { useToast } from "@/hooks/common/useToast";
 import { AntDesign } from "@expo/vector-icons";
@@ -13,7 +13,7 @@ import { AntDesign } from "@expo/vector-icons";
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 export const LoginScreen = ({ navigation }: Props) => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
   const [showAppleSignIn, setShowAppleSignIn] = useState(false);
   const { signInWithGoogle, signInWithApple } = useAuth();
   const toast = useToast();
@@ -34,23 +34,21 @@ export const LoginScreen = ({ navigation }: Props) => {
 
   const handleGoogleSignIn = async () => {
     try {
-      setLoading(true);
+      setLoading('google');
       await signInWithGoogle();
     } catch (error: any) {
       toast.error(error.message || "Unable to sign in with Google");
-    } finally {
-      setLoading(false);
+      setLoading(null);
     }
   };
 
   const handleAppleSignIn = async () => {
     try {
-      setLoading(true);
+      setLoading('apple');
       await signInWithApple();
     } catch (error: any) {
       toast.error(error.message || "Unable to sign in with Apple");
-    } finally {
-      setLoading(false);
+      setLoading(null);
     }
   };
 
@@ -58,127 +56,113 @@ export const LoginScreen = ({ navigation }: Props) => {
     navigation.navigate("UsernamePasswordSignIn");
   };
 
-  const handleSignUp = () => {
+  const handleCreateAccount = () => {
     navigation.navigate("ChooseUsername");
   };
 
   const handleTermsPress = () => {
-    // TODO: Replace with actual terms URL
     Linking.openURL("https://picklebean.com/terms");
   };
 
   const handlePrivacyPress = () => {
-    // TODO: Replace with actual privacy URL
     Linking.openURL("https://picklebean.com/privacy");
   };
 
+  const isLoading = loading !== null;
+
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1 px-6">
-        {/* Header */}
-        <View className="items-center flex-1 mt-8 mb-12">
-          <Logo size="lg" />
-          <VStack space="sm" className="items-center mt-6">
-            <Heading size="2xl" className="text-gray-900">
-              Welcome Back
-            </Heading>
-          </VStack>
+      <View className="justify-between flex-1 px-6 pt-12 pb-10">
+        
+        {/* Header - Minimal & Clean */}
+        <View className="items-center flex-1 justify-center max-h-[30%]">
+          <Logo size="xl" />
+          {/* Removed tagline for cleaner look, or keep it very subtle */}
+          <Text size="md" className="mt-6 font-medium tracking-wide text-center !text-gray-500">
+            Track matches. Rise up.
+          </Text>
         </View>
 
-        {/* OAuth Buttons */}
-        <View className="gap-3 mb-8">
-          {/* Google Sign-In */}
+        {/* Action Area */}
+        <VStack space="md" className="w-full max-w-sm mx-auto">
+          {/* Google */}
           <Pressable
             onPress={handleGoogleSignIn}
-            disabled={loading}
-            className={`relative items-center justify-center px-6 py-4 border border-gray-300 rounded-2xl bg-white ${
-              loading ? "opacity-50" : ""
+            disabled={isLoading}
+            className={`flex-row items-center justify-center px-6 py-4 rounded-xl border border-gray-200 bg-white active:bg-gray-50 ${
+              isLoading ? "opacity-50" : ""
             }`}
           >
-            <View className="absolute left-4">
-              <AntDesign name="google" size={24} color="#4285F4" />
-            </View>
-            <Text size="lg" className="!font-semibold text-gray-900">
-              Continue with Google
-            </Text>
+            {loading === 'google' ? (
+              <ActivityIndicator color="#4B5563" />
+            ) : (
+              <>
+                <View style={{ marginRight: 12 }}>
+                  <GoogleLogo size={20} />
+                </View>
+                <Text className="text-base font-semibold !text-gray-900">
+                  Continue with Google
+                </Text>
+              </>
+            )}
           </Pressable>
 
-          {/* Apple Sign-In */}
+          {/* Apple */}
           {showAppleSignIn && (
             <Pressable
               onPress={handleAppleSignIn}
-              disabled={loading}
-              className={`relative items-center justify-center  px-6 py-4 border border-gray-300 rounded-2xl bg-white ${
-                loading ? "opacity-50" : ""
+              disabled={isLoading}
+              className={`flex-row items-center justify-center px-6 py-4 rounded-xl bg-black active:bg-gray-900 ${
+                isLoading ? "opacity-50" : ""
               }`}
             >
-              <View className="absolute left-4">
-                <AntDesign name="apple" size={24} color="#000000" />
-              </View>
-              <Text size="lg" className="!font-semibold text-gray-900 ">
-                Continue with Apple
-              </Text>
+              {loading === 'apple' ? (
+                <ActivityIndicator color="white" />
+              ) : (
+              <>
+                <AntDesign name="apple" size={20} color="white" style={{ marginRight: 12 }} />
+                <Text className="text-base font-semibold !text-white">
+                  Continue with Apple
+                </Text>
+              </>
+              )}
             </Pressable>
           )}
 
-          {/* OR Divider */}
-          <View className="flex-row items-center my-2">
-            <View className="flex-1 h-px bg-gray-300" />
-            <Text size="md" className="px-4 text-gray-500">
-              or
-            </Text>
-            <View className="flex-1 h-px bg-gray-300" />
-          </View>
-
-          {/* Username/Password Sign-In */}
+          {/* Username (Subtle) */}
           <Pressable
             onPress={handleUsernameSignIn}
-            disabled={loading}
-            className={`relative items-center justify-center px-6 py-4 border border-gray-300 rounded-2xl bg-white ${
-              loading ? "opacity-50" : ""
-            }`}
+            disabled={isLoading}
+            className="items-center justify-center py-3 mt-2"
           >
-            <View className="absolute left-4">
-              <AntDesign name="user" size={24} color="#374151" />
-            </View>
-            <Text size="lg" className="!font-semibold text-gray-900">
+            <Text className="text-sm font-medium !text-gray-500">
               Sign in with username
             </Text>
           </Pressable>
-        </View>
+        </VStack>
 
-        {/* Sign up link */}
-        <View className="items-center mb-8">
-          <Pressable onPress={handleSignUp} disabled={loading}>
-            <Text size="md" className="text-gray-600">
-              Don't have an account?{" "}
-              <Text className="!font-bold !text-blue-600">Sign up</Text>
+        {/* Footer - Bare essentials */}
+        <View className="items-center">
+          <Pressable 
+            onPress={handleCreateAccount} 
+            disabled={isLoading}
+            className="mb-8"
+          >
+            <Text className="text-base font-medium !text-gray-900">
+              New here? <Text className="font-bold !text-blue-600">Create account</Text>
             </Text>
           </Pressable>
+
+          <View className="flex-row gap-4 opacity-60">
+            <Pressable onPress={handleTermsPress}>
+              <Text className="text-sm !text-gray-400">Terms</Text>
+            </Pressable>
+            <Pressable onPress={handlePrivacyPress}>
+              <Text className="text-sm !text-gray-400">Privacy</Text>
+            </Pressable>
+          </View>
         </View>
 
-        {/* Spacer */}
-        {/* <View className="flex-1" /> */}
-
-        {/* Terms and Privacy */}
-        {/* <View className="items-center pb-8">
-        <Text size="sm" className="mb-2 text-center text-gray-500">
-          By continuing, you agree to our
-        </Text>
-        <View className="flex-row items-center gap-2">
-          <Pressable onPress={handleTermsPress}>
-            <Text size="sm" className="font-medium text-gray-600 underline">
-              Terms of Service
-            </Text>
-          </Pressable>
-          <Text size="sm" className="text-gray-400">•</Text>
-          <Pressable onPress={handlePrivacyPress}>
-            <Text size="sm" className="font-medium text-gray-600 underline">
-              Privacy Policy
-            </Text>
-          </Pressable>
-        </View>
-      </View> */}
       </View>
     </SafeAreaView>
   );

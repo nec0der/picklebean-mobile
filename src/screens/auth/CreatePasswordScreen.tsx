@@ -49,10 +49,10 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
 
           {/* Header */}
           <VStack space="xs" className="mt-6">
-            <Heading size="2xl" className="text-gray-900">
+            <Heading size="2xl" className="!text-gray-900">
               Create a password
             </Heading>
-            <Text size="md" className="text-gray-600">
+            <Text size="md" className="!text-gray-600">
               Password must be at least 6 characters. It should be something others can't guess.
             </Text>
           </VStack>

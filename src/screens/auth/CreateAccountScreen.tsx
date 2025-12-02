@@ -106,10 +106,10 @@ export const CreateAccountScreen = ({ navigation }: CreateAccountScreenProps) =>
           <VStack space="xl">
             {/* Header */}
             <VStack space="sm">
-              <Heading size="3xl" className="text-gray-900">
+              <Heading size="3xl" className="!text-gray-900">
                 Create Account
               </Heading>
-              <Text size="lg" className="text-gray-600">
+              <Text size="lg" className="!text-gray-600">
                 Choose your unique username
               </Text>
             </VStack>
@@ -126,7 +126,7 @@ export const CreateAccountScreen = ({ navigation }: CreateAccountScreenProps) =>
                     autoCorrect={false}
                   />
                 </Input>
-                <Text size="sm" className="text-gray-500">
+                <Text size="sm" className="!text-gray-500">
                   3-20 characters, letters, numbers, and underscores only
                 </Text>
               </VStack>
@@ -163,9 +163,9 @@ export const CreateAccountScreen = ({ navigation }: CreateAccountScreenProps) =>
 
             {/* Login link */}
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text className="text-center text-gray-600">
+              <Text className="text-center !text-gray-600">
                 Already have an account?{' '}
-                <Text className="font-semibold text-blue-600">Sign In</Text>
+                <Text className="font-semibold !text-blue-600">Sign In</Text>
               </Text>
             </TouchableOpacity>
           </VStack>

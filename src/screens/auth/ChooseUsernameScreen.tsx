@@ -103,10 +103,10 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
 
             {/* Header */}
             <VStack space="xs" className="mt-6">
-              <Heading size="2xl" className="text-gray-900">
+              <Heading size="2xl" className="!text-gray-900">
                 Create a username
               </Heading>
-              <Text size="md" className="text-gray-600">
+              <Text size="md" className="!text-gray-600">
                 Choose a unique username to get started. Make it unique and memorable!
               </Text>
             </VStack>
@@ -166,9 +166,9 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
           {/* Footer */}
           <View className="px-6 pb-8">
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text className="text-center text-gray-600">
+              <Text className="text-center !text-gray-600">
                 Already have an account?{' '}
-                <Text className="font-semibold text-blue-600">Sign In</Text>
+                <Text className="font-semibold !text-blue-600">Sign In</Text>
               </Text>
             </TouchableOpacity>
           </View>

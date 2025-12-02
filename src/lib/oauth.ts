@@ -32,23 +32,39 @@ export interface OAuthUserInfo {
  */
 export const signInWithGoogle = async (): Promise<OAuthUserInfo> => {
   try {
+    console.log('🔵 [Google Sign-In] Starting sign-in process...');
+    console.log('🔵 [Google Sign-In] Web Client ID:', process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID);
+    
     // Check if Google Play Services are available (Android)
+    console.log('🔵 [Google Sign-In] Checking Play Services...');
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    console.log('🔵 [Google Sign-In] Play Services available');
 
     // Get user info from Google
+    console.log('🔵 [Google Sign-In] Requesting sign in...');
     const response = await GoogleSignin.signIn();
+    console.log('🔵 [Google Sign-In] Response received:', {
+      hasData: !!response.data,
+      hasIdToken: !!response.data?.idToken,
+    });
+    
     const idToken = response.data?.idToken;
 
     if (!idToken) {
+      console.error('🔴 [Google Sign-In] No ID token in response');
       throw new Error('No ID token received from Google');
     }
 
+    console.log('🔵 [Google Sign-In] Creating Firebase credential...');
     // Create Firebase credential
     const googleCredential = GoogleAuthProvider.credential(idToken);
 
     // Sign in to Firebase
+    console.log('🔵 [Google Sign-In] Signing in to Firebase...');
     const userCredential = await signInWithCredential(auth, googleCredential);
     const user = userCredential.user;
+    
+    console.log('✅ [Google Sign-In] Success! User:', user.uid);
 
     return {
       uid: user.uid,
@@ -58,7 +74,11 @@ export const signInWithGoogle = async (): Promise<OAuthUserInfo> => {
       providerId: 'google.com',
     };
   } catch (error: any) {
-    console.error('Google Sign-In Error:', error);
+    console.error('🔴 [Google Sign-In] Error:', {
+      message: error.message,
+      code: error.code,
+      error: error,
+    });
     
     // Handle specific Google Sign-In errors
     if (error.code === 'SIGN_IN_CANCELLED') {
@@ -69,7 +89,8 @@ export const signInWithGoogle = async (): Promise<OAuthUserInfo> => {
       throw new Error('Google Play Services not available');
     }
     
-    throw new Error('Failed to sign in with Google');
+    // Include original error message for debugging
+    throw new Error(`Failed to sign in with Google: ${error.message}`);
   }
 };
 

@@ -58,11 +58,11 @@ export const SelectGenderScreen = ({
 
         {/* Header */}
         <VStack space="sm" className="mt-6">
-          <Heading size="2xl" className="text-gray-900">
+          <Heading size="2xl" className="!text-gray-900">
             Select Gender
           </Heading>
           <View className="flex-row flex-wrap items-center gap-1">
-            <Text size="md" className="text-gray-600">
+            <Text size="md" className="!text-gray-600">
               This helps us organize fair competition and rankings.{" "}
             </Text>
             <TouchableOpacity onPress={() => setShowInfo(true)}>
@@ -93,8 +93,8 @@ export const SelectGenderScreen = ({
                 <Text
                   className={`ml-3 text-lg font-semibold ${
                     selectedGender === "male"
-                      ? "text-blue-600"
-                      : "text-gray-900"
+                      ? "!text-blue-600"
+                      : "!text-gray-900"
                   }`}
                 >
                   Male
@@ -126,8 +126,8 @@ export const SelectGenderScreen = ({
                 <Text
                   className={`ml-3 text-lg font-semibold ${
                     selectedGender === "female"
-                      ? "text-pink-600"
-                      : "text-gray-900"
+                      ? "!text-pink-600"
+                      : "!text-gray-900"
                   }`}
                 >
                   Female
@@ -166,17 +166,17 @@ export const SelectGenderScreen = ({
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
 
-          <Heading size="xl" className="mt-4 mb-6 text-gray-900">
+          <Heading size="xl" className="mt-4 mb-6 !text-gray-900">
             Gender Selection
           </Heading>
 
           <VStack space="md">
               {infoContent.map((item, index) => (
                 <View key={index} className="flex-row gap-2 px-2">
-                  <Text size="md" className="text-gray-600">
+                  <Text size="md" className="!text-gray-600">
                     •
                   </Text>
-                  <Text size="md" className="text-gray-600">
+                  <Text size="md" className="!text-gray-600">
                     {item}
                   </Text>
                 </View>

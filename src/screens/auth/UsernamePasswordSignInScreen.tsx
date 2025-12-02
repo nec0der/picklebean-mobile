@@ -1,23 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { 
+  Box, 
+  Heading, 
+  VStack, 
+  Text,
+  Input,
+  InputField,
+} from '@gluestack-ui/themed';
+import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import { AuthStackParamList } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Logo } from '@/components/ui/Logo';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { getAuthErrorMessage } from '@/lib/authErrors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'UsernamePasswordSignIn'>;
 
 export const UsernamePasswordSignInScreen = ({ navigation }: Props) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
-  const insets = useSafeAreaInsets();
 
   const handleSignIn = async () => {
     if (!username.trim() || !password.trim()) {
@@ -29,7 +35,7 @@ export const UsernamePasswordSignInScreen = ({ navigation }: Props) => {
       setLoading(true);
       setError('');
       await signIn(username, password);
-    } catch (err) {
+    } catch (err: any) {
       setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
@@ -37,106 +43,124 @@ export const UsernamePasswordSignInScreen = ({ navigation }: Props) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-white"
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingTop: insets.top + 20,
-          paddingBottom: insets.bottom + 20,
-          paddingHorizontal: 24,
-        }}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
       >
-        {/* Header */}
-        <View className="items-center mb-8">
-          <Logo size="lg" />
-          <Text className="mt-6 text-2xl font-bold text-gray-900">
-            Sign In
-          </Text>
-          <Text className="mt-2 text-base text-center text-gray-600">
-            Enter your username and password
-          </Text>
-        </View>
+        <Box className="justify-between flex-1 px-6">
+          <View>
+            {/* Back Button */}
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              className="self-start p-2 -ml-2"
+            >
+              <ChevronLeft size={28} color="#000" />
+            </TouchableOpacity>
 
-        {/* Form */}
-        <View className="flex-1">
-          <View className="mb-4">
-            <Text className="mb-2 text-sm font-medium text-gray-700">
-              Username
-            </Text>
-            <Input
-              value={username}
-              onChangeText={(text) => {
-                setUsername(text.toLowerCase());
-                setError('');
-              }}
-              placeholder="Enter username"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
-          </View>
-
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-sm font-medium text-gray-700">
-                Password
+            {/* Header */}
+            <VStack space="sm" className="mt-6">
+              <Heading size="2xl" className="!text-gray-900">
+                Welcome back
+              </Heading>
+              <Text size="md" className="!text-gray-600">
+                Enter your credentials to continue.
               </Text>
-              <Pressable
-                onPress={() => navigation.navigate('ForgotPassword')}
+            </VStack>
+
+            {/* Form */}
+            <VStack space="3xl" className="mt-8">
+              <VStack space="md">
+                {/* Username Input */}
+                <View>
+                  <Input 
+                    variant="outline" 
+                    size="xl" 
+                    className={`rounded-xl ${error ? '!border-red-500 border-2' : ''}`}
+                  >
+                    <InputField
+                      value={username}
+                      onChangeText={(text) => {
+                        setUsername(text.toLowerCase());
+                        setError('');
+                      }}
+                      placeholder="Username"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoFocus
+                      editable={!loading}
+                    />
+                  </Input>
+                </View>
+
+                {/* Password Input */}
+                <View>
+                  <View className="relative">
+                    <Input 
+                      variant="outline" 
+                      size="xl" 
+                      className={`rounded-xl pr-12 ${error ? '!border-red-500 border-2' : ''}`}
+                    >
+                      <InputField
+                        value={password}
+                        onChangeText={(text) => {
+                          setPassword(text);
+                          setError('');
+                        }}
+                        placeholder="Password"
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        editable={!loading}
+                      />
+                    </Input>
+                    {/* Eye toggle button */}
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      className="absolute top-0 bottom-0 justify-center right-4"
+                    >
+                      {showPassword ? (
+                        <Eye size={20} color="#6B7280" />
+                      ) : (
+                        <EyeOff size={20} color="#6B7280" />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {error ? (
+                  <Text size="sm" className="!text-red-600">
+                    {error}
+                  </Text>
+                ) : null}
+              </VStack>
+
+              {/* Sign In Button */}
+              <Button
+                title="Sign In"
+                size="md"
+                onPress={handleSignIn}
                 disabled={loading}
-              >
-                <Text className="text-sm font-medium text-blue-600">
-                  Forgot?
-                </Text>
-              </Pressable>
-            </View>
-            <Input
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                setError('');
-              }}
-              placeholder="Enter password"
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
+                loading={loading}
+                fullWidth
+              />
+            </VStack>
           </View>
 
-          {error ? (
-            <View className="p-3 mb-4 border border-red-200 rounded-lg bg-red-50">
-              <Text className="text-sm text-red-800">{error}</Text>
-            </View>
-          ) : null}
-
-          <Button
-            title="Sign In"
-            onPress={handleSignIn}
-            disabled={loading || !username.trim() || !password.trim()}
-            loading={loading}
-          />
-        </View>
-
-        {/* Back to options */}
-        <View className="items-center mt-6">
-          <Pressable
-            onPress={() => navigation.goBack()}
-            disabled={loading}
-          >
-            <Text className="text-gray-600">
-              Back to{' '}
-              <Text className="font-semibold text-blue-600">
-                other options
+          {/* Footer - Forgot Password Link */}
+          <View className="pb-4">
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword')}
+              disabled={loading}
+              className="items-center py-4"
+            >
+              <Text size="sm" className="font-medium !text-blue-600">
+                Forgot password?
               </Text>
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            </TouchableOpacity>
+          </View>
+        </Box>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
