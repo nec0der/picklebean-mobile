@@ -10,10 +10,11 @@ import {
 import { auth } from '@/config/firebase';
 
 // Configure Google Sign-In
-// Note: webClientId should come from Firebase Console
+// Note: webClientId and iosClientId should come from Firebase Console
 export const configureGoogleSignIn = (): void => {
   GoogleSignin.configure({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '',
     offlineAccess: true,
   });
 };
