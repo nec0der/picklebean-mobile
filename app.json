@@ -14,7 +14,16 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.niiazemil.picklebeanmobile"
+      "bundleIdentifier": "com.niiazemil.picklebeanmobile",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.814786041248-t2j1ml926rc7ddmif2mvpqg37m7llrfo"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
