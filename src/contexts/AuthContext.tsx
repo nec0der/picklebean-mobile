@@ -180,7 +180,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           gender,
           ...(photoUri && { profilePictureUrl: photoUri }), // Only include if photo exists
           isVerified: false,
-          status: 'pending', // User needs admin approval
+          status: 'approved', // No admin approval needed
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           rankings: {
@@ -234,16 +234,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const userDoc = await getDoc(doc(firestore, 'users', oauthUserInfo.uid));
 
       if (!userDoc.exists()) {
-        // Create new user document for OAuth user
+        // Create incomplete user document for OAuth user
+        // User will complete onboarding to set username and gender
         const newUserDocument: Partial<UserDocument> = {
           uid: oauthUserInfo.uid,
           email: oauthUserInfo.email || '',
-          displayName: oauthUserInfo.displayName || '',
-          username: oauthUserInfo.email?.split('@')[0] || '',
-          photoURL: oauthUserInfo.photoURL || '',
-          gender: 'male', // Default, can be updated later
+          displayName: '', // Will be set from username during onboarding
+          username: '', // Will be set during onboarding
+          photoURL: oauthUserInfo.photoURL || '', // Keep OAuth photo as default
           isVerified: true, // OAuth users are verified
-          status: 'approved',
+          status: 'incomplete', // User needs to complete onboarding
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           rankings: {
@@ -276,16 +276,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const userDoc = await getDoc(doc(firestore, 'users', oauthUserInfo.uid));
 
       if (!userDoc.exists()) {
-        // Create new user document for OAuth user
+        // Create incomplete user document for OAuth user
+        // User will complete onboarding to set username and gender
         const newUserDocument: Partial<UserDocument> = {
           uid: oauthUserInfo.uid,
           email: oauthUserInfo.email || '',
-          displayName: oauthUserInfo.displayName || '',
-          username: oauthUserInfo.email?.split('@')[0] || '',
-          photoURL: oauthUserInfo.photoURL || '',
-          gender: 'male', // Default, can be updated later
+          displayName: '', // Will be set from username during onboarding
+          username: '', // Will be set during onboarding
+          photoURL: oauthUserInfo.photoURL || '', // Keep OAuth photo as default
           isVerified: true, // OAuth users are verified
-          status: 'approved',
+          status: 'incomplete', // User needs to complete onboarding
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           rankings: {

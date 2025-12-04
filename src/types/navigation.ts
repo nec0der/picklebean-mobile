@@ -29,9 +29,20 @@ export type AuthStackParamList = {
 export type AuthStackScreenProps<T extends keyof AuthStackParamList> =
   NativeStackScreenProps<AuthStackParamList, T>;
 
+// Onboarding Stack (for OAuth users)
+export type OnboardingStackParamList = {
+  ChooseUsername: { oauthPhotoURL?: string };
+  SelectGender: { username: string; oauthPhotoURL?: string };
+  UploadPhoto: { username: string; gender: 'male' | 'female'; oauthPhotoURL?: string };
+};
+
+export type OnboardingStackScreenProps<T extends keyof OnboardingStackParamList> =
+  NativeStackScreenProps<OnboardingStackParamList, T>;
+
 // Root Stack (wraps everything)
 export type RootStackParamList = {
   Auth: undefined;
+  Onboarding: undefined;
   Tabs: undefined;
   LobbyDetail: { roomCode: string };
   Game: { roomCode: string };

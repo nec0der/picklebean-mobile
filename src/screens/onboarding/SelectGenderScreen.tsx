@@ -14,15 +14,20 @@ import {
 } from "@gluestack-ui/themed";
 import { ChevronLeft, Mars, Venus, Check } from "lucide-react-native";
 import { Button } from "@/components/ui/Button";
-import type { AuthStackScreenProps } from "@/types/navigation";
+import type { AuthStackScreenProps, OnboardingStackScreenProps } from "@/types/navigation";
 
-type SelectGenderScreenProps = AuthStackScreenProps<"SelectGender">;
+type SelectGenderScreenProps = 
+  | AuthStackScreenProps<"SelectGender">
+  | OnboardingStackScreenProps<"SelectGender">;
 
 export const SelectGenderScreen = ({
   navigation,
   route,
 }: SelectGenderScreenProps) => {
-  const { username, password } = route.params;
+  const { username } = route.params;
+  const password = (route.params as any).password; // Optional for OAuth flow
+  const oauthPhotoURL = (route.params as any).oauthPhotoURL; // Optional for OAuth flow
+  const isOAuthFlow = !!oauthPhotoURL;
   const [selectedGender, setSelectedGender] = useState<
     "male" | "female" | null
   >(null);
@@ -37,11 +42,21 @@ export const SelectGenderScreen = ({
 
   const handleNext = () => {
     if (selectedGender) {
-      navigation.navigate("UploadPhoto", {
-        username,
-        password,
-        gender: selectedGender,
-      });
+      if (isOAuthFlow) {
+        // OAuth flow
+        (navigation as any).navigate("UploadPhoto", {
+          username,
+          gender: selectedGender,
+          oauthPhotoURL,
+        });
+      } else {
+        // Username/password flow
+        (navigation as any).navigate("UploadPhoto", {
+          username,
+          password,
+          gender: selectedGender,
+        });
+      }
     }
   };
 

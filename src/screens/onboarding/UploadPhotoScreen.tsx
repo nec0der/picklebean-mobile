@@ -31,19 +31,27 @@ import {
 } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Button } from "@/components/ui/Button";
-import type { AuthStackScreenProps } from "@/types/navigation";
+import type { AuthStackScreenProps, OnboardingStackScreenProps } from "@/types/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { doc, updateDoc } from "firebase/firestore";
+import { firestore } from "@/config/firebase";
 
-type UploadPhotoScreenProps = AuthStackScreenProps<"UploadPhoto">;
+type UploadPhotoScreenProps = 
+  | AuthStackScreenProps<"UploadPhoto">
+  | OnboardingStackScreenProps<"UploadPhoto">;
 
 export const UploadPhotoScreen = ({
   navigation,
   route,
 }: UploadPhotoScreenProps) => {
-  const { username, password, gender } = route.params;
-  const { signUpWithUsername } = useAuth();
+  const { username, gender } = route.params;
+  const password = (route.params as any).password; // Optional for OAuth flow
+  const oauthPhotoURL = (route.params as any).oauthPhotoURL; // Optional for OAuth flow
+  const isOAuthFlow = !!oauthPhotoURL;
+  
+  const { signUpWithUsername, firebaseUser } = useAuth();
 
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoUri, setPhotoUri] = useState<string | null>(oauthPhotoURL || null);
   const [loading, setLoading] = useState(false);
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
@@ -114,9 +122,30 @@ export const UploadPhotoScreen = ({
   const handleContinue = async () => {
     try {
       setLoading(true);
-      await signUpWithUsername(username, password, gender, photoUri);
+      
+      if (isOAuthFlow && firebaseUser) {
+        // OAuth flow: Update existing user document
+        const cleanUsername = username.startsWith('@') 
+          ? username.slice(1).toLowerCase() 
+          : username.toLowerCase();
+        
+        await updateDoc(doc(firestore, 'users', firebaseUser.uid), {
+          username: cleanUsername,
+          displayName: cleanUsername,
+          gender,
+          photoURL: photoUri || oauthPhotoURL || '',
+          status: 'approved', // Complete onboarding
+          updatedAt: new Date().toISOString(),
+        });
+        
+        // Navigation will happen automatically when status changes to 'approved'
+      } else if (password) {
+        // Username/password flow: Create new account
+        await signUpWithUsername(username, password, gender, photoUri);
+      }
     } catch (error) {
-      Alert.alert("Error", "Failed to create account. Please try again.");
+      console.error('Error completing onboarding:', error);
+      Alert.alert("Error", "Failed to complete setup. Please try again.");
       setLoading(false);
     }
   };
@@ -124,9 +153,28 @@ export const UploadPhotoScreen = ({
   const handleSkip = async () => {
     try {
       setLoading(true);
-      await signUpWithUsername(username, password, gender, null);
+      
+      if (isOAuthFlow && firebaseUser) {
+        // OAuth flow: Complete onboarding with OAuth photo
+        const cleanUsername = username.startsWith('@') 
+          ? username.slice(1).toLowerCase() 
+          : username.toLowerCase();
+        
+        await updateDoc(doc(firestore, 'users', firebaseUser.uid), {
+          username: cleanUsername,
+          displayName: cleanUsername,
+          gender,
+          photoURL: oauthPhotoURL || '',
+          status: 'approved', // Complete onboarding
+          updatedAt: new Date().toISOString(),
+        });
+      } else if (password) {
+        // Username/password flow: Create account without photo
+        await signUpWithUsername(username, password, gender, null);
+      }
     } catch (error) {
-      Alert.alert("Error", "Failed to create account. Please try again.");
+      console.error('Error completing onboarding:', error);
+      Alert.alert("Error", "Failed to complete setup. Please try again.");
       setLoading(false);
     }
   };
@@ -202,24 +250,26 @@ export const UploadPhotoScreen = ({
               size="sm"
               className="mt-4 !text-gray-500 text-center font-medium"
             >
-              {photoUri ? "Tap to change photo" : "Tap to upload a photo"}
+              {photoUri 
+                ? isOAuthFlow && photoUri === oauthPhotoURL
+                  ? "Tap to update your photo"
+                  : "Tap to change photo"
+                : "Tap to upload a photo"}
             </Text>
           </View>
         </View>
 
         {/* Bottom Button */}
-        {photoUri && (
-          <View className="pb-8 mt-8">
-            <Button
-              title="Complete"
-              size="md"
-              onPress={handleContinue}
-              disabled={loading}
-              loading={loading}
-              fullWidth
-            />
-          </View>
-        )}
+        <View className="pb-8 mt-8">
+          <Button
+            title={isOAuthFlow ? "Complete Setup" : "Complete"}
+            size="md"
+            onPress={handleContinue}
+            disabled={loading}
+            loading={loading}
+            fullWidth
+          />
+        </View>
       </Box>
 
       {/* Selection ActionSheet */}

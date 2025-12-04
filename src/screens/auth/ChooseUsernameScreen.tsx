@@ -2,13 +2,20 @@ import { useState, useCallback, useEffect } from 'react';
 import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { X, Check, AlertCircle } from 'lucide-react-native';
-import type { AuthStackScreenProps } from '@/types/navigation';
+import type { AuthStackScreenProps, OnboardingStackScreenProps } from '@/types/navigation';
 import { validateUsername, checkUsernameAvailability } from '@/lib/username';
 import { Button } from '@/components/ui/Button';
+import { useRoute } from '@react-navigation/native';
 
-type ChooseUsernameScreenProps = AuthStackScreenProps<'ChooseUsername'>;
+type ChooseUsernameScreenProps = 
+  | AuthStackScreenProps<'ChooseUsername'> 
+  | OnboardingStackScreenProps<'ChooseUsername'>;
 
 export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) => {
+  const route = useRoute();
+  const oauthPhotoURL = (route.params as any)?.oauthPhotoURL;
+  const isOAuthFlow = !!oauthPhotoURL;
+  
   const [username, setUsername] = useState('');
   const [checking, setChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -80,9 +87,15 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
       return;
     }
     
-    // Navigate to password screen
-    navigation.navigate('CreatePassword', { username });
-  }, [username, isAvailable, error, checking, navigation]);
+    // Navigate based on flow type
+    if (isOAuthFlow) {
+      // OAuth flow: go to gender selection
+      (navigation as any).navigate('SelectGender', { username, oauthPhotoURL });
+    } else {
+      // Username/password flow: go to create password
+      (navigation as any).navigate('CreatePassword', { username });
+    }
+  }, [username, isAvailable, error, checking, navigation, isOAuthFlow, oauthPhotoURL]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -93,13 +106,15 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
         <View className="justify-between flex-1">
           {/* Main Content */}
           <View className="px-6">
-            {/* Close button */}
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Login')}
-              className="self-start p-2 -ml-2"
-            >
-              <X size={28} color="#000" />
-            </TouchableOpacity>
+            {/* Close button - only show if not OAuth flow */}
+            {!isOAuthFlow && (
+              <TouchableOpacity
+                onPress={() => (navigation as any).navigate('Login')}
+                className="self-start p-2 -ml-2"
+              >
+                <X size={28} color="#000" />
+              </TouchableOpacity>
+            )}
 
             {/* Header */}
             <VStack space="xs" className="mt-6">
@@ -163,15 +178,17 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
             </VStack>
           </View>
 
-          {/* Footer */}
-          <View className="px-6 pb-8">
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text className="text-center !text-gray-600">
-                Already have an account?{' '}
-                <Text className="font-semibold !text-blue-600">Sign In</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {/* Footer - only show if not OAuth flow */}
+          {!isOAuthFlow && (
+            <View className="px-6 pb-8">
+              <TouchableOpacity onPress={() => (navigation as any).navigate('Login')}>
+                <Text className="text-center !text-gray-600">
+                  Already have an account?{' '}
+                  <Text className="font-semibold !text-blue-600">Sign In</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
