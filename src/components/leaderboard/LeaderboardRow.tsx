@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Trophy, Medal } from 'lucide-react-native';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
@@ -11,6 +11,7 @@ interface LeaderboardRowProps {
   rank: number;
   category: GameCategory;
   isCurrentUser?: boolean;
+  onPress?: () => void;
 }
 
 /**
@@ -49,38 +50,40 @@ const getRankDisplay = (rank: number) => {
   }
 };
 
-export const LeaderboardRow = memo(({ user, rank, category, isCurrentUser }: LeaderboardRowProps) => {
+export const LeaderboardRow = memo(({ user, rank, category, isCurrentUser, onPress }: LeaderboardRowProps) => {
   const points = getUserPoints(user, category);
   const displayName = user.displayName || 'Unknown User';
 
   return (
     <Card variant="outlined" className={`mb-3 py-0 px-0 ${isCurrentUser ? 'border-2 border-blue-500' : ''}`}>
-      <View className="flex-row items-center p-4">
-        {/* Avatar */}
-        <Avatar
-          uri={user.profilePictureUrl || user.photoURL}
-          name={displayName}
-          size="md"
-        />
+      <Pressable onPress={onPress} className="active:bg-gray-50">
+        <View className="flex-row items-center p-4">
+          {/* Avatar */}
+          <Avatar
+            uri={user.profilePictureUrl || user.photoURL}
+            name={displayName}
+            size="md"
+          />
 
-        {/* Name and Points Column */}
-        <View className="flex-1 ml-3">
-          <Text className="text-base font-semibold text-gray-900">
-            {displayName}
-            {isCurrentUser && (
-              <Text className="text-sm font-normal text-blue-600"> (You)</Text>
-            )}
-          </Text>
-          <Text className="mt-1 text-sm text-gray-500">
-            {points.toLocaleString()} Points
-          </Text>
-        </View>
+          {/* Name and Points Column */}
+          <View className="flex-1 ml-3">
+            <Text className="text-base font-semibold text-gray-900">
+              {displayName}
+              {isCurrentUser && (
+                <Text className="text-sm font-normal text-blue-600"> (You)</Text>
+              )}
+            </Text>
+            <Text className="mt-1 text-sm text-gray-500">
+              {points.toLocaleString()} Points
+            </Text>
+          </View>
 
-        {/* Rank/Medal on Right */}
-        <View className="items-center justify-center ml-4">
-          {getRankDisplay(rank)}
+          {/* Rank/Medal on Right */}
+          <View className="items-center justify-center ml-4">
+            {getRankDisplay(rank)}
+          </View>
         </View>
-      </View>
+      </Pressable>
     </Card>
   );
 });

@@ -68,6 +68,8 @@ export interface UserDocument {
   rankings?: UserRankings;
   // Match statistics (updated when matches are confirmed)
   matchStats?: MatchStats;
+  // Profile visibility (default: 'public')
+  profileVisibility?: 'public' | 'private';
 }
 
 export type UserId = string;

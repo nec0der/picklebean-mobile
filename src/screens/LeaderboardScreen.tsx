@@ -2,7 +2,10 @@ import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Trophy } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import type { TabScreenProps } from '@/types/navigation';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
@@ -11,6 +14,7 @@ import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
 import type { UserDocument } from '@/types/user';
 
 export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user: currentUser } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('mens_doubles');
   const [refreshing, setRefreshing] = useState(false);
@@ -36,6 +40,10 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
     setTimeout(() => setRefreshing(false), 500);
   }, [refetch]);
 
+  const handleUserPress = useCallback((userId: string) => {
+    navigation.navigate('UserProfile', { userId });
+  }, [navigation]);
+
   const renderItem = useCallback(
     ({ item, index }: { item: UserDocument; index: number }) => {
       const rank = index + 1;
@@ -47,10 +55,11 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
           rank={rank}
           category={category}
           isCurrentUser={isCurrentUser}
+          onPress={() => handleUserPress(item.uid)}
         />
       );
     },
-    [category, currentUser?.id]
+    [category, currentUser?.id, handleUserPress]
   );
 
   const keyExtractor = useCallback((item: UserDocument) => item.uid, []);

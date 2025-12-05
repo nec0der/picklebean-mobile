@@ -1,6 +1,8 @@
 import { memo, useState, useMemo } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Switch } from 'react-native';
 import { LogOut, User, Eye, Users, UsersRound } from 'lucide-react-native';
+import { doc, updateDoc } from 'firebase/firestore';
+import { firestore } from '@/config/firebase';
 import type { TabScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
@@ -60,6 +62,20 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
   const handleEditProfile = () => {
     // TODO: Navigate to edit profile screen
     console.log('Edit profile');
+  };
+
+  const handlePrivacyToggle = async (isPublic: boolean): Promise<void> => {
+    if (!userDocument?.uid) return;
+
+    try {
+      const userRef = doc(firestore, 'users', userDocument.uid);
+      await updateDoc(userRef, {
+        profileVisibility: isPublic ? 'public' : 'private',
+      });
+    } catch (err) {
+      console.error('Error updating privacy settings:', err);
+      setError('Failed to update privacy settings');
+    }
   };
 
   // Get best profile picture
@@ -156,11 +172,30 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
             <Text className="mb-3 text-lg font-bold text-gray-900">Settings</Text>
             <View className="overflow-hidden bg-white border border-gray-200 rounded-xl">
               <SettingsMenuItem icon={User} title="Edit Profile" onPress={handleEditProfile} />
-              <SettingsMenuItem
-                icon={Eye}
-                title="Privacy Settings"
-                onPress={() => console.log('Privacy')}
-              />
+              
+              {/* Profile Visibility Toggle */}
+              <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
+                <View className="flex-row items-center flex-1">
+                  <Eye size={20} color="#6B7280" />
+                  <View className="flex-1 ml-3">
+                    <Text className="text-base font-medium !text-gray-900">
+                      Public Profile
+                    </Text>
+                    <Text className="mt-0.5 text-sm !text-gray-500">
+                      {(userDocument?.profileVisibility || 'public') === 'public'
+                        ? 'Others can view your profile'
+                        : 'Only you can view your profile'}
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={(userDocument?.profileVisibility || 'public') === 'public'}
+                  onValueChange={handlePrivacyToggle}
+                  trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
               <SettingsMenuItem
                 icon={LogOut}
                 title={loading ? 'Signing out...' : 'Sign Out'}
