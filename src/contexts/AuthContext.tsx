@@ -15,7 +15,7 @@ import {
   updateProfile,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, firestore } from '@/config/firebase';
 import type { User, UserDocument } from '@/types/user';
 
@@ -108,6 +108,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     return () => unsubscribe();
   }, [fetchUserData, fetchUserDocument]);
+
+  // Real-time listener for user document changes
+  // This enables automatic navigation when status changes (e.g., incomplete -> approved)
+  useEffect(() => {
+    if (!firebaseUser) return;
+
+    const unsubscribe = onSnapshot(
+      doc(firestore, 'users', firebaseUser.uid),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const updatedUserDoc = { uid: snapshot.id, ...snapshot.data() } as UserDocument;
+          setUserDocument(updatedUserDoc);
+          
+          // Also update user state for consistency
+          const updatedUser = { id: snapshot.id, ...snapshot.data() } as User;
+          setUser(updatedUser);
+        }
+      },
+      (error) => {
+        console.error('Error listening to user document:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [firebaseUser]);
 
   // Sign in with email and password
   const signIn = useCallback(async (email: string, password: string): Promise<void> => {

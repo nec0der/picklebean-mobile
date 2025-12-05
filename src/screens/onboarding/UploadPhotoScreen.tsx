@@ -260,7 +260,7 @@ export const UploadPhotoScreen = ({
         {/* Bottom Button */}
         <View className="pb-8 mt-8">
           <Button
-            title={isOAuthFlow ? "Complete Setup" : "Complete"}
+            title="Complete Setup"
             size="md"
             onPress={handleContinue}
             disabled={loading}
