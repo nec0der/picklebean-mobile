@@ -57,7 +57,7 @@ export const LoginScreen = ({ navigation }: Props) => {
   };
 
   const handleCreateAccount = () => {
-    navigation.navigate("ChooseUsername");
+    navigation.navigate("ChooseUsername", { isSignupFlow: true });
   };
 
   const handleTermsPress = () => {

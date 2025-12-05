@@ -14,9 +14,13 @@ export type TabParamList = {
 export type TabScreenProps<T extends keyof TabParamList> =
   BottomTabScreenProps<TabParamList, T>;
 
-// Auth Stack
+// Auth Stack (includes signup flow screens)
 export type AuthStackParamList = {
   Login: undefined;
+  ChooseUsername: { isSignupFlow: boolean };
+  CreatePassword: { username: string };
+  SelectGender: { username: string; password?: string; oauthPhotoURL?: string };
+  UploadPhoto: { username: string; password?: string; gender: 'male' | 'female'; oauthPhotoURL?: string };
   UsernamePasswordSignIn: undefined;
   ForgotPassword: undefined;
 };
@@ -26,8 +30,7 @@ export type AuthStackScreenProps<T extends keyof AuthStackParamList> =
 
 // Onboarding Stack (for OAuth users)
 export type OnboardingStackParamList = {
-  ChooseUsername: { oauthPhotoURL?: string };
-  CreatePassword: { username: string };
+  ChooseUsername: { isSignupFlow: boolean; oauthPhotoURL?: string };
   SelectGender: { username: string; password?: string; oauthPhotoURL?: string };
   UploadPhoto: { username: string; password?: string; gender: 'male' | 'female'; oauthPhotoURL?: string };
 };

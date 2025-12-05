@@ -5,16 +5,21 @@ import { ChevronLeft, Check, AlertCircle } from 'lucide-react-native';
 import type { AuthStackScreenProps, OnboardingStackScreenProps } from '@/types/navigation';
 import { validateUsername, checkUsernameAvailability } from '@/lib/username';
 import { Button } from '@/components/ui/Button';
-import { useRoute } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 
-type ChooseUsernameScreenProps = OnboardingStackScreenProps<'ChooseUsername'>;
+type ChooseUsernameScreenProps = 
+  | AuthStackScreenProps<'ChooseUsername'> 
+  | OnboardingStackScreenProps<'ChooseUsername'>;
 
-export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) => {
-  const route = useRoute();
-  const oauthPhotoURL = (route.params as any)?.oauthPhotoURL;
-  const isOAuthFlow = !!oauthPhotoURL;
-  const { signOut } = useAuth();
+export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreenProps) => {
+  const params = route.params as { isSignupFlow: boolean; oauthPhotoURL?: string };
+  const { isSignupFlow, oauthPhotoURL: routeOauthPhoto } = params;
+  const { signOut, userDocument } = useAuth();
+  
+  // OAuth flow: User is authenticated with incomplete status
+  // Signup flow: User is not authenticated, isSignupFlow = true
+  const isOAuthFlow = !isSignupFlow && userDocument?.status === 'incomplete';
+  const oauthPhotoURL = routeOauthPhoto || userDocument?.photoURL;
   
   const [username, setUsername] = useState('');
   const [checking, setChecking] = useState(false);
@@ -66,7 +71,7 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
 
   const handleBack = useCallback(async () => {
     if (isOAuthFlow) {
-      // Show confirmation for OAuth users
+      // OAuth users: Show confirmation before signing out
       Alert.alert(
         'Sign Out',
         'Are you sure you want to sign out and return to login?',
@@ -83,10 +88,10 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
         ]
       );
     } else {
-      // Non-OAuth users: just sign out (no confirmation)
-      await signOut();
+      // Signup flow: Just navigate back to Login (no confirmation needed)
+      (navigation as any).navigate('Login');
     }
-  }, [isOAuthFlow, signOut]);
+  }, [isOAuthFlow, signOut, navigation]);
 
   const handleNext = useCallback(() => {
     // Check if username is empty first
@@ -111,15 +116,9 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
       return;
     }
     
-    // Navigate based on flow type
-    if (isOAuthFlow) {
-      // OAuth flow: go to gender selection
-      (navigation as any).navigate('SelectGender', { username, oauthPhotoURL });
-    } else {
-      // Username/password flow: go to create password
-      (navigation as any).navigate('CreatePassword', { username });
-    }
-  }, [username, isAvailable, error, checking, navigation, isOAuthFlow, oauthPhotoURL]);
+    // Navigate to SelectGender (works in both stacks)
+    (navigation as any).navigate('SelectGender', { username, oauthPhotoURL });
+  }, [username, isAvailable, error, checking, navigation, isOAuthFlow]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -200,6 +199,17 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
             </VStack>
           </View>
 
+          {/* Show "Already have account" link for signup flow */}
+          {!isOAuthFlow && (
+            <View className="px-6 pb-8">
+              <TouchableOpacity onPress={handleBack}>
+                <Text className="text-center !text-gray-600">
+                  Already have an account?{' '}
+                  <Text className="font-semibold !text-blue-600">Sign In</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

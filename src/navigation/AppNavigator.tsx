@@ -18,11 +18,15 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const OnboardingStack = createNativeStackNavigator<OnboardingStackParamList>();
 
-// Auth Stack Component
+// Auth Stack Component (includes signup flow)
 const AuthNavigator = memo(() => {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="ChooseUsername" component={ChooseUsernameScreen} />
+      <AuthStack.Screen name="CreatePassword" component={CreatePasswordScreen} />
+      <AuthStack.Screen name="SelectGender" component={SelectGenderScreen} />
+      <AuthStack.Screen name="UploadPhoto" component={UploadPhotoScreen} />
       <AuthStack.Screen name="UsernamePasswordSignIn" component={UsernamePasswordSignInScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </AuthStack.Navigator>
@@ -36,13 +40,15 @@ const OnboardingNavigator = memo(() => {
   const { userDocument } = useAuth();
   
   return (
-    <OnboardingStack.Navigator screenOptions={{ headerShown: false }}>
+    <OnboardingStack.Navigator 
+      screenOptions={{ headerShown: false }}
+      initialRouteName="ChooseUsername"
+    >
       <OnboardingStack.Screen 
         name="ChooseUsername" 
         component={ChooseUsernameScreen}
-        initialParams={{ oauthPhotoURL: userDocument?.photoURL }}
+        initialParams={{ isSignupFlow: false, oauthPhotoURL: userDocument?.photoURL }}
       />
-      <OnboardingStack.Screen name="CreatePassword" component={CreatePasswordScreen} />
       <OnboardingStack.Screen name="SelectGender" component={SelectGenderScreen} />
       <OnboardingStack.Screen name="UploadPhoto" component={UploadPhotoScreen} />
     </OnboardingStack.Navigator>
