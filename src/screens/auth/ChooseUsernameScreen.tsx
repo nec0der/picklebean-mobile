@@ -83,10 +83,10 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
         ]
       );
     } else {
-      // Non-OAuth users can just go back
-      (navigation as any).navigate('Login');
+      // Non-OAuth users: just sign out (no confirmation)
+      await signOut();
     }
-  }, [isOAuthFlow, signOut, navigation]);
+  }, [isOAuthFlow, signOut]);
 
   const handleNext = useCallback(() => {
     // Check if username is empty first
@@ -200,17 +200,6 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
             </VStack>
           </View>
 
-          {/* Footer - only show if not OAuth flow */}
-          {!isOAuthFlow && (
-            <View className="px-6 pb-8">
-              <TouchableOpacity onPress={handleBack}>
-                <Text className="text-center !text-gray-600">
-                  Already have an account?{' '}
-                  <Text className="font-semibold !text-blue-600">Sign In</Text>
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
