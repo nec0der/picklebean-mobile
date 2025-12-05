@@ -1,17 +1,19 @@
 import { memo, useState, useMemo } from 'react';
 import { View, Text, ScrollView, Switch } from 'react-native';
-import { LogOut, User, Eye, Users, UsersRound } from 'lucide-react-native';
+import { LogOut, User, Eye, Users, UsersRound, Zap } from 'lucide-react-native';
 import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
 import type { TabScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
+import { useNFCWriter } from '@/hooks/common/useNFCWriter';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { ProfileHeroSection } from '@/components/profile/ProfileHeroSection';
 import { RankingItem } from '@/components/profile/RankingItem';
 import { SettingsMenuItem } from '@/components/profile/SettingsMenuItem';
 import { ShareProfileButton } from '@/components/profile/ShareProfileButton';
+import { WriteNFCCard } from '@/components/profile/WriteNFCCard';
 
 export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) => {
   const { userDocument, firebaseUser, signOut, loading: authLoading } = useAuth();
@@ -27,6 +29,10 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showNFCModal, setShowNFCModal] = useState(false);
+
+  // NFC Writer hook
+  const { isWriting, writeProfileUrl } = useNFCWriter();
 
   // Calculate positions
   const singlesPosition = useMemo(() => {
@@ -76,6 +82,25 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
     } catch (err) {
       console.error('Error updating privacy settings:', err);
       setError('Failed to update privacy settings');
+    }
+  };
+
+  const handleProgramPaddle = () => {
+    setShowNFCModal(true);
+  };
+
+  const handleCloseNFCModal = () => {
+    setShowNFCModal(false);
+  };
+
+  const handleWriteNFC = async () => {
+    if (!userDocument?.username) return;
+
+    const profileUrl = `https://picklebean-ranking-app.web.app/profile/${userDocument.username}`;
+    const success = await writeProfileUrl(profileUrl);
+
+    if (success) {
+      setShowNFCModal(false);
     }
   };
 
@@ -180,6 +205,13 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
             <Text className="mb-3 text-lg font-bold text-gray-900">Settings</Text>
             <View className="overflow-hidden bg-white border border-gray-200 rounded-xl">
               <SettingsMenuItem icon={User} title="Edit Profile" onPress={handleEditProfile} />
+
+              {/* Program Paddle (NFC Write) */}
+              <SettingsMenuItem
+                icon={Zap}
+                title="Program Paddle"
+                onPress={handleProgramPaddle}
+              />
               
               {/* Profile Visibility Toggle */}
               <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
@@ -221,6 +253,14 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
           )}
         </View>
       </ScrollView>
+
+      {/* NFC Write Modal */}
+      <WriteNFCCard
+        visible={showNFCModal}
+        isWriting={isWriting}
+        onClose={handleCloseNFCModal}
+        onWrite={handleWriteNFC}
+      />
     </View>
   );
 });
