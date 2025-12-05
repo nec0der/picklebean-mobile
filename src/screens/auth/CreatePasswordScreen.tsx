@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
-import type { AuthStackScreenProps } from '@/types/navigation';
+import type { OnboardingStackScreenProps } from '@/types/navigation';
 import { Button } from '@/components/ui/Button';
 
-type CreatePasswordScreenProps = AuthStackScreenProps<'CreatePassword'>;
+type CreatePasswordScreenProps = OnboardingStackScreenProps<'CreatePassword'>;
 
 export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreenProps) => {
   const { username } = route.params;

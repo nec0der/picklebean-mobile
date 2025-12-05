@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/expo-icons/splash-icon.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -31,10 +31,12 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
+        "android.permission.NFC",
         "android.permission.NFC"
       ],
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.niiazemil.picklebeanmobile"
     },
     "web": {
       "favicon": "./assets/expo-icons/favicon.png"

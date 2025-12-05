@@ -16,9 +16,7 @@ import { ChevronLeft, Mars, Venus, Check } from "lucide-react-native";
 import { Button } from "@/components/ui/Button";
 import type { AuthStackScreenProps, OnboardingStackScreenProps } from "@/types/navigation";
 
-type SelectGenderScreenProps = 
-  | AuthStackScreenProps<"SelectGender">
-  | OnboardingStackScreenProps<"SelectGender">;
+type SelectGenderScreenProps = OnboardingStackScreenProps<"SelectGender">;
 
 export const SelectGenderScreen = ({
   navigation,

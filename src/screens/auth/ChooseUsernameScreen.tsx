@@ -1,16 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
-import { X, Check, AlertCircle } from 'lucide-react-native';
+import { ChevronLeft, Check, AlertCircle } from 'lucide-react-native';
 import type { AuthStackScreenProps, OnboardingStackScreenProps } from '@/types/navigation';
 import { validateUsername, checkUsernameAvailability } from '@/lib/username';
 import { Button } from '@/components/ui/Button';
 import { useRoute } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 
-type ChooseUsernameScreenProps = 
-  | AuthStackScreenProps<'ChooseUsername'> 
-  | OnboardingStackScreenProps<'ChooseUsername'>;
+type ChooseUsernameScreenProps = OnboardingStackScreenProps<'ChooseUsername'>;
 
 export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) => {
   const route = useRoute();
@@ -137,7 +135,7 @@ export const ChooseUsernameScreen = ({ navigation }: ChooseUsernameScreenProps) 
               onPress={handleBack}
               className="self-start p-2 -ml-2"
             >
-              <X size={28} color="#000" />
+              <ChevronLeft size={28} color="#000" />
             </TouchableOpacity>
 
             {/* Header */}

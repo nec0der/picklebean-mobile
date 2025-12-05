@@ -36,9 +36,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { doc, updateDoc } from "firebase/firestore";
 import { firestore } from "@/config/firebase";
 
-type UploadPhotoScreenProps = 
-  | AuthStackScreenProps<"UploadPhoto">
-  | OnboardingStackScreenProps<"UploadPhoto">;
+type UploadPhotoScreenProps = OnboardingStackScreenProps<"UploadPhoto">;
 
 export const UploadPhotoScreen = ({
   navigation,

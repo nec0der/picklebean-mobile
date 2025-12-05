@@ -25,10 +25,6 @@ const AuthNavigator = memo(() => {
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="UsernamePasswordSignIn" component={UsernamePasswordSignInScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <AuthStack.Screen name="ChooseUsername" component={ChooseUsernameScreen} />
-      <AuthStack.Screen name="CreatePassword" component={CreatePasswordScreen} />
-      <AuthStack.Screen name="SelectGender" component={SelectGenderScreen} />
-      <AuthStack.Screen name="UploadPhoto" component={UploadPhotoScreen} />
     </AuthStack.Navigator>
   );
 });
@@ -46,6 +42,7 @@ const OnboardingNavigator = memo(() => {
         component={ChooseUsernameScreen}
         initialParams={{ oauthPhotoURL: userDocument?.photoURL }}
       />
+      <OnboardingStack.Screen name="CreatePassword" component={CreatePasswordScreen} />
       <OnboardingStack.Screen name="SelectGender" component={SelectGenderScreen} />
       <OnboardingStack.Screen name="UploadPhoto" component={UploadPhotoScreen} />
     </OnboardingStack.Navigator>
