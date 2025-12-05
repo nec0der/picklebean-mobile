@@ -15,6 +15,7 @@ import {
 import { ChevronLeft, Mars, Venus, Check } from "lucide-react-native";
 import { Button } from "@/components/ui/Button";
 import type { AuthStackScreenProps, OnboardingStackScreenProps } from "@/types/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 type SelectGenderScreenProps = OnboardingStackScreenProps<"SelectGender">;
 
@@ -24,8 +25,11 @@ export const SelectGenderScreen = ({
 }: SelectGenderScreenProps) => {
   const { username } = route.params;
   const password = (route.params as any).password; // Optional for OAuth flow
-  const oauthPhotoURL = (route.params as any).oauthPhotoURL; // Optional for OAuth flow
-  const isOAuthFlow = !!oauthPhotoURL;
+  
+  // Check if user is OAuth user by email domain
+  const { firebaseUser } = useAuth();
+  const { isOAuthUser } = require('@/lib/oauth');
+  const isOAuthFlow = isOAuthUser(firebaseUser?.email);
   const [selectedGender, setSelectedGender] = useState<
     "male" | "female" | null
   >(null);
@@ -40,21 +44,13 @@ export const SelectGenderScreen = ({
 
   const handleNext = () => {
     if (selectedGender) {
-      if (isOAuthFlow) {
-        // OAuth flow
-        (navigation as any).navigate("UploadPhoto", {
-          username,
-          gender: selectedGender,
-          oauthPhotoURL,
-        });
-      } else {
-        // Username/password flow
-        (navigation as any).navigate("UploadPhoto", {
-          username,
-          password,
-          gender: selectedGender,
-        });
-      }
+      // Both flows navigate to UploadPhoto with same params
+      // OAuth detection happens in UploadPhoto via email
+      (navigation as any).navigate("UploadPhoto", {
+        username,
+        password, // undefined for OAuth
+        gender: selectedGender,
+      });
     }
   };
 

@@ -44,10 +44,12 @@ export const UploadPhotoScreen = ({
 }: UploadPhotoScreenProps) => {
   const { username, gender } = route.params;
   const password = (route.params as any).password; // Optional for OAuth flow
-  const oauthPhotoURL = (route.params as any).oauthPhotoURL; // Optional for OAuth flow
-  const isOAuthFlow = !!oauthPhotoURL;
   
-  const { signUpWithUsername, firebaseUser } = useAuth();
+  // Check if user is OAuth user by email domain
+  const { signUpWithUsername, firebaseUser, userDocument } = useAuth();
+  const { isOAuthUser } = require('@/lib/oauth');
+  const isOAuthFlow = isOAuthUser(firebaseUser?.email);
+  const oauthPhotoURL = userDocument?.photoURL || ''; // Get OAuth photo from user document
 
   const [photoUri, setPhotoUri] = useState<string | null>(oauthPhotoURL || null);
   const [loading, setLoading] = useState(false);

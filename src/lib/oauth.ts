@@ -191,3 +191,16 @@ export const isAppleSignInAvailable = async (): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Check if user is OAuth user based on email domain
+ * @param email - User's email address
+ * @returns true if user signed in with Google or Apple OAuth
+ */
+export const isOAuthUser = (email: string | null | undefined): boolean => {
+  if (!email) return false;
+  
+  // Google OAuth users have @gmail.com emails
+  // Apple OAuth users have @privaterelay.appleid.com or similar appleid.com domains
+  return email.endsWith('@gmail.com') || email.includes('appleid.com');
+};

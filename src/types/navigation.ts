@@ -19,8 +19,8 @@ export type AuthStackParamList = {
   Login: undefined;
   ChooseUsername: { isSignupFlow: boolean };
   CreatePassword: { username: string };
-  SelectGender: { username: string; password?: string; oauthPhotoURL?: string };
-  UploadPhoto: { username: string; password?: string; gender: 'male' | 'female'; oauthPhotoURL?: string };
+  SelectGender: { username: string; password?: string };
+  UploadPhoto: { username: string; password?: string; gender: 'male' | 'female' };
   UsernamePasswordSignIn: undefined;
   ForgotPassword: undefined;
 };
@@ -30,9 +30,9 @@ export type AuthStackScreenProps<T extends keyof AuthStackParamList> =
 
 // Onboarding Stack (for OAuth users)
 export type OnboardingStackParamList = {
-  ChooseUsername: { isSignupFlow: boolean; oauthPhotoURL?: string };
-  SelectGender: { username: string; password?: string; oauthPhotoURL?: string };
-  UploadPhoto: { username: string; password?: string; gender: 'male' | 'female'; oauthPhotoURL?: string };
+  ChooseUsername: { isSignupFlow: boolean };
+  SelectGender: { username: string; password?: string };
+  UploadPhoto: { username: string; password?: string; gender: 'male' | 'female' };
 };
 
 export type OnboardingStackScreenProps<T extends keyof OnboardingStackParamList> =

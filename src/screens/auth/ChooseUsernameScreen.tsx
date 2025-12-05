@@ -13,13 +13,12 @@ type ChooseUsernameScreenProps =
 
 export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreenProps) => {
   const params = route.params as { isSignupFlow: boolean; oauthPhotoURL?: string };
-  const { isSignupFlow, oauthPhotoURL: routeOauthPhoto } = params;
-  const { signOut, userDocument } = useAuth();
+  const { isSignupFlow } = params;
+  const { signOut, firebaseUser } = useAuth();
   
-  // OAuth flow: User is authenticated with incomplete status
-  // Signup flow: User is not authenticated, isSignupFlow = true
-  const isOAuthFlow = !isSignupFlow && userDocument?.status === 'incomplete';
-  const oauthPhotoURL = routeOauthPhoto || userDocument?.photoURL;
+  // Check if user is OAuth user by email domain
+  const { isOAuthUser } = require('@/lib/oauth');
+  const isOAuthFlow = !isSignupFlow && isOAuthUser(firebaseUser?.email);
   
   const [username, setUsername] = useState('');
   const [checking, setChecking] = useState(false);
@@ -117,8 +116,8 @@ export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreen
     }
     
     // Navigate to SelectGender (works in both stacks)
-    (navigation as any).navigate('SelectGender', { username, oauthPhotoURL });
-  }, [username, isAvailable, error, checking, navigation, isOAuthFlow]);
+    (navigation as any).navigate('SelectGender', { username });
+  }, [username, isAvailable, error, checking, navigation]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">

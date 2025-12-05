@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchUserData = useCallback(async (uid: string): Promise<User | null> => {
     try {
       const userDoc = await getDoc(doc(firestore, 'users', uid));
-
+      console.log('userDoc.data()', userDoc.data())
       if (userDoc.exists()) {
         return { id: userDoc.id, ...userDoc.data() } as User;
       }

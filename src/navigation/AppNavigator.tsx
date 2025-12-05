@@ -37,8 +37,6 @@ AuthNavigator.displayName = 'AuthNavigator';
 
 // Onboarding Stack Component (for OAuth users)
 const OnboardingNavigator = memo(() => {
-  const { userDocument } = useAuth();
-  
   return (
     <OnboardingStack.Navigator 
       screenOptions={{ headerShown: false }}
@@ -47,7 +45,7 @@ const OnboardingNavigator = memo(() => {
       <OnboardingStack.Screen 
         name="ChooseUsername" 
         component={ChooseUsernameScreen}
-        initialParams={{ isSignupFlow: false, oauthPhotoURL: userDocument?.photoURL }}
+        initialParams={{ isSignupFlow: false }}
       />
       <OnboardingStack.Screen name="SelectGender" component={SelectGenderScreen} />
       <OnboardingStack.Screen name="UploadPhoto" component={UploadPhotoScreen} />
