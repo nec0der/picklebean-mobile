@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Lock, User, Users, UsersRound } from 'lucide-react-native';
 import type { RootStackScreenProps } from '@/types/navigation';
 import { usePublicProfile } from '@/hooks/firestore/usePublicProfile';
@@ -159,7 +160,7 @@ export const UserProfileScreen = memo(
 
     // Main content
     return (
-      <View className="flex-1 bg-white">
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
         {/* Header with back button */}
         <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
           <Pressable onPress={handleBack} className="mr-3">
@@ -236,7 +237,7 @@ export const UserProfileScreen = memo(
             )}
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     );
   }
 );
