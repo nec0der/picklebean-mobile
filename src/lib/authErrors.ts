@@ -22,23 +22,23 @@ export const getAuthErrorMessage = (error: FirebaseError): string => {
       return 'This username is already taken. Please choose a different username.';
 
     case 'auth/invalid-email':
-      return 'Please enter a valid email address.';
+      return 'Invalid username format.';
 
     case 'auth/weak-password':
       return 'Password is too weak. Please use at least 6 characters.';
 
     case 'auth/operation-not-allowed':
-      return 'Email sign-up is currently disabled. Please contact support.';
+      return 'Sign-up is currently disabled. Please contact support.';
 
     // Sign In Errors
     case 'auth/user-not-found':
-      return 'No account found with this email. Please sign up first.';
+      return 'Username not found. Please check your username or sign up.';
 
     case 'auth/wrong-password':
       return 'Incorrect password. Please try again.';
 
     case 'auth/invalid-credential':
-      return 'Invalid email or password. Please check and try again.';
+      return 'Invalid username or password. Please try again.';
 
     case 'auth/user-disabled':
       return 'This account has been disabled. Please contact support.';

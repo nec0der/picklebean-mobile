@@ -134,9 +134,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => unsubscribe();
   }, [firebaseUser]);
 
-  // Sign in with email and password
-  const signIn = useCallback(async (email: string, password: string): Promise<void> => {
+  // Sign in with username and password (converts username to internal email)
+  const signIn = useCallback(async (usernameOrEmail: string, password: string): Promise<void> => {
     try {
+      const { usernameToEmail } = await import('@/lib/username');
+      
+      // Convert username to email if needed
+      // If input already looks like an email (contains @ but not our domain), use as-is
+      // Otherwise, treat as username and convert to @picklebean.app
+      const email = usernameOrEmail.includes('@') && !usernameOrEmail.includes('@picklebean.app')
+        ? usernameOrEmail  // Already an email (OAuth users)
+        : usernameToEmail(usernameOrEmail); // Username → username@picklebean.app
+      
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       console.error('Error signing in:', error);
