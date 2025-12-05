@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert, Linking } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { 
   Box, 
@@ -40,6 +40,25 @@ export const UsernamePasswordSignInScreen = ({ navigation }: Props) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    Alert.alert(
+      'Password Reset Unavailable',
+      'Password reset is not currently available. Please contact our support team for assistance with your account.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Contact Support',
+          onPress: () => {
+            Linking.openURL('mailto:pickleball.sn@gmail.com?subject=Password Reset Request');
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -150,7 +169,7 @@ export const UsernamePasswordSignInScreen = ({ navigation }: Props) => {
           {/* Footer - Forgot Password Link */}
           <View className="pb-4">
             <TouchableOpacity
-              onPress={() => navigation.navigate('ForgotPassword')}
+              onPress={handleForgotPassword}
               disabled={loading}
               className="items-center py-4"
             >
