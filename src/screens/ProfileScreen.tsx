@@ -11,6 +11,7 @@ import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { ProfileHeroSection } from '@/components/profile/ProfileHeroSection';
 import { RankingItem } from '@/components/profile/RankingItem';
 import { SettingsMenuItem } from '@/components/profile/SettingsMenuItem';
+import { ShareProfileButton } from '@/components/profile/ShareProfileButton';
 
 export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) => {
   const { userDocument, firebaseUser, signOut, loading: authLoading } = useAuth();
@@ -133,8 +134,15 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
         />
 
         <View className="px-4">
+          {/* Share Profile Button */}
+          {userDocument?.uid && (
+            <View className="mt-6 mb-4">
+              <ShareProfileButton userId={userDocument.uid} displayName={fullName} />
+            </View>
+          )}
+
           {/* Minimalistic Stats - Single Line */}
-          <Text className="mt-6 mb-6 text-sm text-center text-gray-600">
+          <Text className="mb-6 text-sm text-center text-gray-600">
             {totalMatches} matches • {winRate}% win rate
           </Text>
 
