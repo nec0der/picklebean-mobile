@@ -135,9 +135,9 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
 
         <View className="px-4">
           {/* Share Profile Button */}
-          {userDocument?.uid && (
+          {userDocument?.username && (
             <View className="mt-6 mb-4">
-              <ShareProfileButton userId={userDocument.uid} displayName={fullName} />
+              <ShareProfileButton username={userDocument.username} displayName={fullName} />
             </View>
           )}
 

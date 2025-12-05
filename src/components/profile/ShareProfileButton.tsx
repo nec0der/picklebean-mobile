@@ -4,7 +4,7 @@ import { Share2 } from 'lucide-react-native';
 import { Button, ButtonText } from '@gluestack-ui/themed';
 
 interface ShareProfileButtonProps {
-  userId: string;
+  username: string;
   displayName: string;
 }
 
@@ -13,9 +13,9 @@ const PROFILE_BASE_URL = 'https://picklebean-ranking-app.web.app/profile';
 /**
  * Button to share user's profile via native share sheet
  */
-export const ShareProfileButton = memo(({ userId, displayName }: ShareProfileButtonProps) => {
+export const ShareProfileButton = memo(({ username, displayName }: ShareProfileButtonProps) => {
   const handleShare = async (): Promise<void> => {
-    const profileUrl = `${PROFILE_BASE_URL}/${userId}`;
+    const profileUrl = `${PROFILE_BASE_URL}/${username}`;
     const message = `Check out ${displayName}'s Picklebean profile!`;
 
     try {

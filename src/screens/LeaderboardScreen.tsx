@@ -40,8 +40,8 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
     setTimeout(() => setRefreshing(false), 500);
   }, [refetch]);
 
-  const handleUserPress = useCallback((userId: string) => {
-    navigation.navigate('UserProfile', { userId });
+  const handleUserPress = useCallback((username: string) => {
+    navigation.navigate('UserProfile', { username });
   }, [navigation]);
 
   const renderItem = useCallback(
@@ -55,7 +55,7 @@ export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
           rank={rank}
           category={category}
           isCurrentUser={isCurrentUser}
-          onPress={() => handleUserPress(item.uid)}
+          onPress={() => handleUserPress(item.username)}
         />
       );
     },

@@ -14,8 +14,8 @@ import { MatchCard } from '@/components/history/MatchCard';
 
 export const UserProfileScreen = memo(
   ({ navigation, route }: RootStackScreenProps<'UserProfile'>) => {
-    const { userId } = route.params;
-    const { user, loading, error, isPrivate, isOwn } = usePublicProfile(userId);
+    const { username } = route.params;
+    const { user, loading, error, isPrivate, isOwn } = usePublicProfile(username);
 
     // Get rankings for position calculation
     const userGender =
@@ -25,7 +25,7 @@ export const UserProfileScreen = memo(
     const { rankings: mixedRankings } = useLeaderboard('mixed_doubles', undefined, 100);
 
     // Get recent matches
-    const { matches, loading: matchesLoading } = useMatches(userId, 5);
+    const { matches, loading: matchesLoading } = useMatches(user?.uid || '', 5);
 
     // Calculate positions
     const singlesPosition = useMemo(() => {
