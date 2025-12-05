@@ -115,9 +115,15 @@ export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreen
       return;
     }
     
-    // Navigate to SelectGender (works in both stacks)
-    (navigation as any).navigate('SelectGender', { username });
-  }, [username, isAvailable, error, checking, navigation]);
+    // Route based on flow type
+    if (isSignupFlow) {
+      // Signup flow: Username → Password → Gender → Photo
+      (navigation as any).navigate('CreatePassword', { username });
+    } else {
+      // OAuth flow: Username → Gender → Photo (no password needed)
+      (navigation as any).navigate('SelectGender', { username });
+    }
+  }, [username, isAvailable, error, checking, navigation, isSignupFlow]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
