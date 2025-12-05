@@ -123,6 +123,8 @@ export const UploadPhotoScreen = ({
     try {
       setLoading(true);
       
+      console.log('isOAuthFlow: ', isOAuthFlow);
+      console.log('firebaseUser: ', firebaseUser);
       if (isOAuthFlow && firebaseUser) {
         // OAuth flow: Update existing user document
         const cleanUsername = username.startsWith('@') 
