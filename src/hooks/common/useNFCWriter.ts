@@ -125,16 +125,33 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
       return true;
     } catch (error) {
       console.error('❌ [NFC Write] Error occurred:', error);
+      console.error('❌ [NFC Write] Error type:', typeof error);
       console.error('❌ [NFC Write] Error details:', JSON.stringify(error, null, 2));
 
-      // Handle specific errors
-      if (error instanceof Error) {
-        if (error.message.includes('cancelled') || error.message.includes('Session invalidated')) {
-          // User cancelled - no alert needed
-          return false;
-        }
+      // Check if error is from user cancellation
+      // iOS NFC cancellation often throws empty object or null
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorString = JSON.stringify(error);
+      
+      // Detect cancellation scenarios
+      const isCancellation = 
+        !error || // Null/undefined error
+        errorString === '{}' || // Empty object
+        errorString === 'null' || // Null
+        errorMessage.includes('cancelled') ||
+        errorMessage.includes('Cancel') ||
+        errorMessage.includes('Session invalidated') ||
+        errorMessage.includes('user') ||
+        errorMessage.toLowerCase().includes('abort');
 
-        if (error.message.includes('not writable') || error.message.includes('readonly')) {
+      if (isCancellation) {
+        console.log('ℹ️ [NFC Write] User cancelled scan - returning silently');
+        return false;
+      }
+
+      // Handle specific error types
+      if (error instanceof Error) {
+        if (errorMessage.includes('not writable') || errorMessage.includes('readonly')) {
           Alert.alert(
             'Tag Not Writable',
             'This NFC tag is read-only and cannot be programmed. Please use a blank or rewritable NFC tag.'
@@ -142,16 +159,25 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
           return false;
         }
 
-        if (error.message.includes('Tag connection lost')) {
+        if (errorMessage.includes('Tag connection lost') || errorMessage.includes('connection')) {
           Alert.alert(
             'Connection Lost',
             'Lost connection to the NFC tag. Please try again and keep your phone steady against the tag.'
           );
           return false;
         }
+        
+        if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
+          Alert.alert(
+            'Scan Timed Out',
+            'No tag detected. Make sure to hold the top of your phone against the NFC tag for 2-3 seconds.'
+          );
+          return false;
+        }
       }
 
-      // Generic error
+      // Only show generic error for actual errors (not cancellation)
+      console.error('❌ [NFC Write] Showing error alert for:', error);
       Alert.alert(
         'Write Failed',
         'Failed to write to NFC tag. Please try again and ensure the tag is writable.'
