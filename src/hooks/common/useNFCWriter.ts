@@ -3,6 +3,8 @@ import { Platform, Alert } from 'react-native';
 import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
 
 interface UseNFCWriterReturn {
+  isInitialized: boolean;
+  isSupported: boolean;
   isWriting: boolean;
   writeProfileUrl: (url: string) => Promise<boolean>;
   cancelWrite: () => Promise<void>;
@@ -13,6 +15,8 @@ interface UseNFCWriterReturn {
  * Handles both iOS and Android differences
  */
 export const useNFCWriter = (): UseNFCWriterReturn => {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
   const [isWriting, setIsWriting] = useState(false);
 
   // Initialize NFC manager on mount
@@ -24,13 +28,22 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
         // Check if NFC is supported
         const supported = await NfcManager.isSupported();
         
-        if (isMounted && supported) {
-          // Start NFC manager
-          await NfcManager.start();
-          console.log('✅ NFC Writer initialized');
+        if (isMounted) {
+          setIsSupported(supported);
+          
+          if (supported) {
+            // Start NFC manager
+            await NfcManager.start();
+            console.log('✅ NFC Writer initialized');
+          }
+          
+          setIsInitialized(true);
         }
       } catch (err) {
         console.error('NFC Writer initialization error:', err);
+        if (isMounted) {
+          setIsInitialized(true); // Mark as initialized even on error
+        }
       }
     };
 
@@ -155,6 +168,8 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
   }, []);
 
   return {
+    isInitialized,
+    isSupported,
     isWriting,
     writeProfileUrl,
     cancelWrite,
