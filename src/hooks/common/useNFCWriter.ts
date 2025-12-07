@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Platform, Alert } from 'react-native';
 import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
 
@@ -14,6 +14,32 @@ interface UseNFCWriterReturn {
  */
 export const useNFCWriter = (): UseNFCWriterReturn => {
   const [isWriting, setIsWriting] = useState(false);
+
+  // Initialize NFC manager on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    const initNFC = async (): Promise<void> => {
+      try {
+        // Check if NFC is supported
+        const supported = await NfcManager.isSupported();
+        
+        if (isMounted && supported) {
+          // Start NFC manager
+          await NfcManager.start();
+          console.log('✅ NFC Writer initialized');
+        }
+      } catch (err) {
+        console.error('NFC Writer initialization error:', err);
+      }
+    };
+
+    initNFC();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const writeProfileUrl = useCallback(async (url: string): Promise<boolean> => {
     try {

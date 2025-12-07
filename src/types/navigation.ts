@@ -47,6 +47,7 @@ export type RootStackParamList = {
   Game: { roomCode: string };
   GamePlay: { gameId: string };
   UserProfile: { username: string };
+  ProgramPaddle: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

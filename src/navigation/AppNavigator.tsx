@@ -11,6 +11,7 @@ import { UploadPhotoScreen } from '@/screens/onboarding/UploadPhotoScreen';
 import { LobbyDetailScreen } from '@/screens/LobbyDetailScreen';
 import { GameScreen } from '@/screens/GameScreen';
 import { UserProfileScreen } from '@/screens/UserProfileScreen';
+import { ProgramPaddleScreen } from '@/screens/ProgramPaddleScreen';
 import { TabNavigator } from './TabNavigator';
 import { Box, Spinner } from '@gluestack-ui/themed';
 import type { RootStackParamList, AuthStackParamList, OnboardingStackParamList } from '@/types/navigation';
@@ -84,6 +85,7 @@ export const AppNavigator = memo(() => {
           <RootStack.Screen name="LobbyDetail" component={LobbyDetailScreen} />
           <RootStack.Screen name="Game" component={GameScreen} />
           <RootStack.Screen name="UserProfile" component={UserProfileScreen} />
+          <RootStack.Screen name="ProgramPaddle" component={ProgramPaddleScreen} />
         </>
       )}
     </RootStack.Navigator>

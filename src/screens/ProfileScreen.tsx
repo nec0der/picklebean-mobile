@@ -1,21 +1,22 @@
 import { memo, useState, useMemo } from 'react';
 import { View, Text, ScrollView, Switch } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { LogOut, User, Eye, Users, UsersRound, Zap } from 'lucide-react-native';
 import { doc, updateDoc } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
-import type { TabScreenProps } from '@/types/navigation';
+import type { TabScreenProps, RootStackParamList } from '@/types/navigation';
+import type { NavigationProp } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
-import { useNFCWriter } from '@/hooks/common/useNFCWriter';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { ProfileHeroSection } from '@/components/profile/ProfileHeroSection';
 import { RankingItem } from '@/components/profile/RankingItem';
 import { SettingsMenuItem } from '@/components/profile/SettingsMenuItem';
 import { ShareProfileButton } from '@/components/profile/ShareProfileButton';
-import { WriteNFCCard } from '@/components/profile/WriteNFCCard';
 
-export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) => {
+export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
+  const rootNavigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { userDocument, firebaseUser, signOut, loading: authLoading } = useAuth();
   
   // Get rankings for each category
@@ -29,10 +30,6 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showNFCModal, setShowNFCModal] = useState(false);
-
-  // NFC Writer hook
-  const { isWriting, writeProfileUrl } = useNFCWriter();
 
   // Calculate positions
   const singlesPosition = useMemo(() => {
@@ -86,22 +83,7 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
   };
 
   const handleProgramPaddle = () => {
-    setShowNFCModal(true);
-  };
-
-  const handleCloseNFCModal = () => {
-    setShowNFCModal(false);
-  };
-
-  const handleWriteNFC = async () => {
-    if (!userDocument?.username) return;
-
-    const profileUrl = `https://picklebean-ranking-app.web.app/profile/${userDocument.username}`;
-    const success = await writeProfileUrl(profileUrl);
-
-    if (success) {
-      setShowNFCModal(false);
-    }
+    rootNavigation.navigate('ProgramPaddle');
   };
 
   // Get best profile picture
@@ -253,14 +235,6 @@ export const ProfileScreen = memo(({ navigation }: TabScreenProps<'Profile'>) =>
           )}
         </View>
       </ScrollView>
-
-      {/* NFC Write Modal */}
-      <WriteNFCCard
-        visible={showNFCModal}
-        isWriting={isWriting}
-        onClose={handleCloseNFCModal}
-        onWrite={handleWriteNFC}
-      />
     </View>
   );
 });
