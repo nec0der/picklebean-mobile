@@ -3,8 +3,6 @@ import { Platform, Alert } from 'react-native';
 import NfcManager, { Ndef, NfcTech } from 'react-native-nfc-manager';
 
 interface UseNFCWriterReturn {
-  isInitialized: boolean;
-  isSupported: boolean;
   isWriting: boolean;
   writeProfileUrl: (url: string) => Promise<boolean>;
   cancelWrite: () => Promise<void>;
@@ -15,8 +13,6 @@ interface UseNFCWriterReturn {
  * Handles both iOS and Android differences
  */
 export const useNFCWriter = (): UseNFCWriterReturn => {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
   const [isWriting, setIsWriting] = useState(false);
 
   // Initialize NFC manager on mount
@@ -24,43 +20,48 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
     let isMounted = true;
 
     const initNFC = async (): Promise<void> => {
+      console.log('🔷 [NFC Writer] Starting initialization...');
       try {
         // Check if NFC is supported
+        console.log('🔷 [NFC Writer] Checking isSupported...');
         const supported = await NfcManager.isSupported();
+        console.log('🔷 [NFC Writer] isSupported result:', supported);
         
-        if (isMounted) {
-          setIsSupported(supported);
-          
-          if (supported) {
-            // Start NFC manager
-            await NfcManager.start();
-            console.log('✅ NFC Writer initialized');
-          }
-          
-          setIsInitialized(true);
+        if (isMounted && supported) {
+          // Start NFC manager
+          console.log('🔷 [NFC Writer] Calling NfcManager.start()...');
+          await NfcManager.start();
+          console.log('✅ [NFC Writer] Initialization complete - NFC Manager started');
+        } else if (!supported) {
+          console.warn('⚠️ [NFC Writer] Device does not support NFC');
+        } else {
+          console.log('🔷 [NFC Writer] Component unmounted before start');
         }
       } catch (err) {
-        console.error('NFC Writer initialization error:', err);
-        if (isMounted) {
-          setIsInitialized(true); // Mark as initialized even on error
-        }
+        console.error('❌ [NFC Writer] Initialization error:', err);
       }
     };
 
     initNFC();
 
     return () => {
+      console.log('🔷 [NFC Writer] Cleanup - unmounting');
       isMounted = false;
     };
   }, []);
 
   const writeProfileUrl = useCallback(async (url: string): Promise<boolean> => {
+    console.log('🟢 [NFC Write] Starting write process for URL:', url);
     try {
       setIsWriting(true);
 
       // Check if NFC is supported
+      console.log('🟢 [NFC Write] Checking if NFC is supported...');
       const isSupported = await NfcManager.isSupported();
+      console.log('🟢 [NFC Write] isSupported result:', isSupported);
+      
       if (!isSupported) {
+        console.warn('⚠️ [NFC Write] Device does not support NFC - showing alert');
         Alert.alert(
           'NFC Not Supported',
           'Your device does not support NFC functionality.'
@@ -69,8 +70,12 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
       }
 
       // Check if NFC is enabled
+      console.log('🟢 [NFC Write] Checking if NFC is enabled...');
       const isEnabled = await NfcManager.isEnabled();
+      console.log('🟢 [NFC Write] isEnabled result:', isEnabled);
+      
       if (!isEnabled) {
+        console.warn('⚠️ [NFC Write] NFC is disabled - showing alert');
         Alert.alert(
           'NFC Disabled',
           'Please enable NFC in your device settings to program your paddle.',
@@ -92,17 +97,23 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
       }
 
       // Request NFC technology
+      console.log('🟢 [NFC Write] Requesting NFC technology...');
       await NfcManager.requestTechnology(NfcTech.Ndef);
+      console.log('🟢 [NFC Write] NFC technology acquired successfully');
 
       // Create NDEF message with URL
+      console.log('🟢 [NFC Write] Encoding NDEF message...');
       const bytes = Ndef.encodeMessage([Ndef.uriRecord(url)]);
+      console.log('🟢 [NFC Write] NDEF message encoded, bytes:', bytes?.length || 0);
 
       if (!bytes) {
         throw new Error('Failed to encode NFC message');
       }
 
       // Write to tag
+      console.log('🟢 [NFC Write] Writing to NFC tag...');
       await NfcManager.ndefHandler.writeNdefMessage(bytes);
+      console.log('✅ [NFC Write] Successfully wrote to NFC tag!');
 
       // Success!
       Alert.alert(
@@ -113,7 +124,8 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
 
       return true;
     } catch (error) {
-      console.error('NFC Write Error:', error);
+      console.error('❌ [NFC Write] Error occurred:', error);
+      console.error('❌ [NFC Write] Error details:', JSON.stringify(error, null, 2));
 
       // Handle specific errors
       if (error instanceof Error) {
@@ -168,8 +180,6 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
   }, []);
 
   return {
-    isInitialized,
-    isSupported,
     isWriting,
     writeProfileUrl,
     cancelWrite,

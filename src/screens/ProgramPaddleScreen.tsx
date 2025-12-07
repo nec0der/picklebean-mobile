@@ -10,7 +10,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 export const ProgramPaddleScreen = memo(
   ({ navigation }: RootStackScreenProps<'ProgramPaddle'>) => {
     const { userDocument } = useAuth();
-    const { isInitialized, isSupported, isWriting, writeProfileUrl } = useNFCWriter();
+    const { isWriting, writeProfileUrl } = useNFCWriter();
     const [hasStarted, setHasStarted] = useState(false);
 
     const handleBack = () => {
@@ -56,31 +56,7 @@ export const ProgramPaddleScreen = memo(
           showsVerticalScrollIndicator={false}
           contentContainerClassName="p-6"
         >
-          {!isInitialized ? (
-            /* Loading State */
-            <View className="items-center justify-center py-12">
-              <LoadingSpinner size="large" />
-              <Text className="mt-4 text-base !text-gray-600">
-                Initializing NFC...
-              </Text>
-            </View>
-          ) : !isSupported ? (
-            /* Not Supported State */
-            <View className="items-center py-12">
-              <Text className="mb-4 text-xl font-bold text-center !text-gray-900">
-                NFC Not Available
-              </Text>
-              <Text className="mb-6 text-center !text-gray-600">
-                Your device does not support NFC functionality. You'll need a device with NFC to program your paddle.
-              </Text>
-              <Pressable
-                onPress={handleBack}
-                className="px-6 py-3 bg-gray-200 rounded-lg"
-              >
-                <Text className="font-semibold !text-gray-800">Go Back</Text>
-              </Pressable>
-            </View>
-          ) : !hasStarted ? (
+          {!hasStarted ? (
             <>
               {/* Introduction */}
               <Text className="mb-6 text-base !text-gray-700">
