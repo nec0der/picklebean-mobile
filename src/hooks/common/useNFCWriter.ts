@@ -126,14 +126,20 @@ export const useNFCWriter = (): UseNFCWriterReturn => {
     } catch (error) {
       console.error('❌ [NFC Write] Error occurred:', error);
       console.error('❌ [NFC Write] Error type:', typeof error);
-      console.error('❌ [NFC Write] Error details:', JSON.stringify(error, null, 2));
+      console.error('❌ [NFC Write] Error constructor:', error?.constructor?.name);
+
+      // Check for UserCancel error from NFC library (top priority)
+      if (error?.constructor?.name === 'UserCancel') {
+        console.log('ℹ️ [NFC Write] UserCancel detected - returning silently');
+        return false;
+      }
 
       // Check if error is from user cancellation
-      // iOS NFC cancellation often throws empty object or null
+      // iOS NFC cancellation can also throw other patterns
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorString = JSON.stringify(error);
       
-      // Detect cancellation scenarios
+      // Detect other cancellation scenarios
       const isCancellation = 
         !error || // Null/undefined error
         errorString === '{}' || // Empty object
