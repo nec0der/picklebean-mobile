@@ -188,10 +188,10 @@ export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
             <View className="overflow-hidden bg-white border border-gray-200 rounded-xl">
               <SettingsMenuItem icon={User} title="Edit Profile" onPress={handleEditProfile} />
 
-              {/* Program Paddle (NFC Write) */}
+              {/* Tap to Play (NFC Write) */}
               <SettingsMenuItem
                 icon={Zap}
-                title="Program Paddle"
+                title="Tap to Play"
                 onPress={handleProgramPaddle}
               />
               
