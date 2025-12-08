@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Smartphone, Zap, CheckCircle } from 'lucide-react-native';
@@ -13,14 +13,17 @@ type ScreenState = 'intro' | 'writing' | 'success';
 export const TapToPlayScreen = memo(
   ({ navigation }: RootStackScreenProps<'ProgramPaddle'>) => {
     const { userDocument } = useAuth();
-    const { isWriting, writeProfileUrl } = useNFCWriter();
+    const { isWriting, writeProfileUrl, cancelWrite } = useNFCWriter();
     const [screenState, setScreenState] = useState<ScreenState>('intro');
 
-    const handleBack = () => {
-      if (!isWriting) {
-        navigation.goBack();
+    const handleBack = useCallback(async () => {
+      if (isWriting) {
+        // Cancel NFC scan in progress
+        await cancelWrite();
+        setScreenState('intro');
       }
-    };
+      navigation.goBack();
+    }, [isWriting, cancelWrite, navigation]);
 
     const handleStartWriting = async () => {
       if (!userDocument?.username) return;
@@ -40,10 +43,15 @@ export const TapToPlayScreen = memo(
         }
         setScreenState('success');
       } else {
-        // Reset on failure so user can try again
+        // Reset on failure or cancellation
         setScreenState('intro');
       }
     };
+
+    const handleCancelScan = useCallback(async () => {
+      await cancelWrite();
+      setScreenState('intro');
+    }, [cancelWrite]);
 
     const handleDone = () => {
       navigation.goBack();
@@ -55,108 +63,111 @@ export const TapToPlayScreen = memo(
 
     return (
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        {/* Header with back button */}
-        <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
+        {/* iOS-style Navigation Bar */}
+        <View className="flex-row items-center justify-between px-5 py-3 border-b border-gray-200">
           <Pressable
             onPress={handleBack}
-            className="mr-3"
-            disabled={isWriting}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            className="flex-row items-center"
           >
-            <ArrowLeft size={24} color={isWriting ? '#9CA3AF' : '#000'} />
+            <ArrowLeft size={22} color="#007AFF" />
+            <Text className="ml-1 text-base !text-[#007AFF]">Back</Text>
           </Pressable>
-          <Text className="text-lg font-semibold !text-gray-900">
+          <Text className="text-base font-semibold !text-gray-900">
             Tap to Play
           </Text>
+          <View className="w-16" />
         </View>
 
         <ScrollView
           className="flex-1"
           showsVerticalScrollIndicator={false}
-          contentContainerClassName="p-6"
+          contentContainerClassName="px-5 py-6"
         >
           {screenState === 'intro' && (
             <>
-              {/* Hero Section */}
-              <Text className="mb-2 text-3xl font-bold !text-gray-900">
+              {/* Large Title - HIG 34pt */}
+              <Text className="mb-2 text-4xl font-bold !text-gray-900">
                 Stop Asking. Start Playing.
               </Text>
-              <Text className="mb-8 text-lg !text-gray-700">
+              
+              {/* Body Text - HIG 17pt */}
+              <Text className="mb-8 text-lg leading-6 !text-gray-600">
                 Make your paddle tap-enabled. Walk up to any game. Tap in.
                 Your stats do the talking.
               </Text>
 
-              {/* Why This Matters Section */}
-              <Text className="mb-4 text-xl font-bold !text-gray-900">
+              {/* Section Header - HIG 22pt */}
+              <Text className="mb-5 text-2xl font-bold !text-gray-900">
                 Why This Matters
               </Text>
 
-              {/* Benefit 1 */}
-              <View className="mb-6">
-                <Text className="mb-1 text-lg font-semibold !text-gray-900">
+              {/* Benefit Cards with HIG spacing */}
+              <View className="mb-5">
+                <Text className="mb-2 text-lg font-semibold !text-gray-900">
                   No More Skill Checks
                 </Text>
-                <Text className="!text-gray-700">
+                <Text className="text-base leading-6 !text-gray-600">
                   "What's your rating?" answered before you say a word. Your
                   record is visible instantly.
                 </Text>
               </View>
 
-              {/* Benefit 2 */}
-              <View className="mb-6">
-                <Text className="mb-1 text-lg font-semibold !text-gray-900">
+              <View className="mb-5">
+                <Text className="mb-2 text-lg font-semibold !text-gray-900">
                   Phone Stays in Your Bag
                 </Text>
-                <Text className="!text-gray-700">
+                <Text className="text-base leading-6 !text-gray-600">
                   Play 5 games back-to-back without touching your phone. Paddle
                   tap = you're in.
                 </Text>
               </View>
 
-              {/* Benefit 3 */}
               <View className="mb-8">
-                <Text className="mb-1 text-lg font-semibold !text-gray-900">
+                <Text className="mb-2 text-lg font-semibold !text-gray-900">
                   Walk Up to Any Court
                 </Text>
-                <Text className="!text-gray-700">
+                <Text className="text-base leading-6 !text-gray-600">
                   New city? No problem. Your reputation travels with you. Tap
                   and play anywhere.
                 </Text>
               </View>
 
-              {/* How It Works Section */}
-              <Text className="mb-4 text-xl font-bold !text-gray-900">
+              {/* Section Header */}
+              <Text className="mb-5 text-2xl font-bold !text-gray-900">
                 How It Works
               </Text>
-              <Text className="mb-6 !text-gray-700">
+              
+              <Text className="mb-5 text-base leading-6 !text-gray-600">
                 Get a blank NFC tag (sticker or keychain). Program it once. Use
                 it forever.
               </Text>
 
-              {/* Platform-specific note */}
-              <View className="p-4 mb-8 rounded-lg bg-blue-50">
+              {/* Info Card - HIG rounded style */}
+              <View className="p-4 mb-8 rounded-2xl bg-[#F2F2F7]">
                 <View className="flex-row items-start">
                   <Smartphone
                     size={20}
-                    color="#3B82F6"
+                    color="#007AFF"
                     className="mt-0.5 mr-3"
                   />
                   <View className="flex-1">
-                    <Text className="mb-1 text-sm font-semibold !text-blue-900">
+                    <Text className="mb-1 text-base font-semibold !text-gray-900">
                       {Platform.OS === 'ios'
                         ? 'iPhone: NFC at top edge'
                         : 'Android: NFC at center back'}
                     </Text>
-                    <Text className="text-sm !text-blue-800">
+                    <Text className="text-sm leading-5 !text-gray-600">
                       Hold your phone near the NFC tag for 2-3 seconds
                     </Text>
                   </View>
                 </View>
               </View>
 
-              {/* CTA Button */}
+              {/* Primary Button - HIG style */}
               <Pressable
                 onPress={handleStartWriting}
-                className="items-center justify-center px-6 py-4 bg-blue-600 rounded-xl active:bg-blue-700"
+                className="items-center justify-center py-4 rounded-2xl bg-[#007AFF] active:bg-[#0051D5]"
               >
                 <View className="flex-row items-center">
                   <Zap size={20} color="#FFFFFF" className="mr-2" />
@@ -169,88 +180,107 @@ export const TapToPlayScreen = memo(
           )}
 
           {screenState === 'writing' && (
-            /* Writing State */
+            /* Writing State - With Cancel Button */
             <View className="items-center py-12">
-              <View className="mb-6">
+              {/* Large Title */}
+              <Text className="mb-8 text-3xl font-bold text-center !text-gray-900">
+                Ready to Scan
+              </Text>
+
+              {/* Loading Spinner */}
+              <View className="mb-8">
                 <LoadingSpinner size="large" />
               </View>
 
-              <Text className="mb-3 text-2xl font-bold text-center !text-gray-900">
-                Hold Phone to NFC Tag
+              {/* Body Text */}
+              <Text className="mb-8 text-base text-center leading-6 !text-gray-600">
+                Hold your {Platform.OS === 'ios' ? 'iPhone' : 'phone'} near the
+                NFC tag
               </Text>
 
-              <Text className="mb-8 text-center !text-gray-600">
-                Keep your phone steady for 2-3 seconds...
-              </Text>
-
-              {/* Quick Reference */}
-              <View className="w-full p-4 rounded-lg bg-amber-50">
+              {/* Info Card */}
+              <View className="w-full p-4 mb-8 rounded-2xl bg-[#F2F2F7]">
                 <View className="flex-row items-start">
                   <Smartphone
                     size={20}
-                    color="#F59E0B"
+                    color="#007AFF"
                     className="mt-0.5 mr-3"
                   />
-                  <Text className="flex-1 text-sm !text-amber-900">
+                  <Text className="flex-1 text-sm leading-5 !text-gray-600">
                     {Platform.OS === 'ios'
                       ? 'Hold top of phone to tag'
                       : 'Hold back center of phone to tag'}
                   </Text>
                 </View>
               </View>
+
+              {/* Cancel Button - Prominent and always visible */}
+              <Pressable
+                onPress={handleCancelScan}
+                className="w-full py-4 rounded-2xl bg-[#F2F2F7] active:bg-[#E5E5EA]"
+              >
+                <Text className="text-lg font-semibold text-center !text-gray-900">
+                  Cancel
+                </Text>
+              </Pressable>
             </View>
           )}
 
           {screenState === 'success' && (
             /* Success State */
             <View className="items-center py-8">
-              <View className="items-center justify-center w-20 h-20 mb-6 bg-green-100 rounded-full">
-                <CheckCircle size={48} color="#10B981" />
+              {/* Success Icon - HIG style */}
+              <View className="items-center justify-center w-24 h-24 mb-6 bg-[#34C759]/10 rounded-full">
+                <CheckCircle size={56} color="#34C759" />
               </View>
 
+              {/* Title 1 - HIG 28pt */}
               <Text className="mb-3 text-3xl font-bold text-center !text-gray-900">
                 You're Tap-Enabled!
               </Text>
 
-              <Text className="mb-8 text-center !text-gray-700">
+              {/* Body Text */}
+              <Text className="mb-8 text-base text-center leading-6 !text-gray-600">
                 Your paddle is ready. Walk up to any game. Tap in. Start
                 playing.
               </Text>
 
-              {/* How Others Use It */}
-              <View className="w-full p-4 mb-8 rounded-lg bg-blue-50">
-                <Text className="mb-3 font-semibold !text-blue-900">
+              {/* Info Card */}
+              <View className="w-full p-4 mb-8 rounded-2xl bg-[#F2F2F7]">
+                <Text className="mb-3 font-semibold !text-gray-900">
                   How Others Use It:
                 </Text>
                 <View className="space-y-2">
-                  <Text className="text-sm !text-blue-800">
+                  <Text className="text-sm leading-5 !text-gray-600">
                     • They tap your paddle with their phone
                   </Text>
-                  <Text className="text-sm !text-blue-800">
+                  <Text className="text-sm leading-5 !text-gray-600">
                     • Your profile opens instantly
                   </Text>
-                  <Text className="text-sm !text-blue-800">
+                  <Text className="text-sm leading-5 !text-gray-600">
                     • They add you to their game
                   </Text>
-                  <Text className="text-sm !text-blue-800">
+                  <Text className="text-sm leading-5 !text-gray-600">
                     • Match gets tracked automatically
                   </Text>
                 </View>
               </View>
 
-              {/* Primary CTA */}
+              {/* Primary Button */}
               <Pressable
                 onPress={handleDone}
-                className="w-full px-6 py-4 mb-4 bg-blue-600 rounded-xl active:bg-blue-700"
+                className="w-full py-4 mb-4 rounded-2xl bg-[#007AFF] active:bg-[#0051D5]"
               >
                 <Text className="text-lg font-semibold text-center !text-white">
                   Get on the Court
                 </Text>
               </Pressable>
 
-              {/* Secondary Option */}
-              <Pressable onPress={handleProgramAnother}>
-                <Text className="text-blue-600">Program Another Tag</Text>
+              {/* Text Button */}
+              <Pressable onPress={handleProgramAnother} className="py-2">
+                <Text className="text-base !text-[#007AFF]">
+                  Program Another Tag
+                </Text>
               </Pressable>
             </View>
           )}
