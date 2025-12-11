@@ -26,6 +26,7 @@ import { Card } from "@/components/ui/Card";
 import { DraggablePlayerSlot } from "@/components/features/lobby/DraggablePlayerSlot";
 import { CountdownOverlay } from "@/components/features/lobby/CountdownOverlay";
 import { LobbyHeader } from "@/components/features/lobby/LobbyHeader";
+import { QRCodeModal } from "@/components/features/lobby/QRCodeModal";
 import type { Player } from "@/types/lobby";
 import { doc, updateDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { firestore } from "@/config/firebase";
@@ -78,6 +79,9 @@ export const LobbyDetailScreen = memo(
 
     // State for NFC scanning
     const [isScanning, setIsScanning] = useState(false);
+
+    // State for QR code modal
+    const [showQRModal, setShowQRModal] = useState(false);
 
     // Initialize NFC
     const {
@@ -499,8 +503,7 @@ export const LobbyDetailScreen = memo(
     };
 
     const handleQrPress = () => {
-      // TODO: Show QR code modal
-      toast.info("QR code feature coming soon!");
+      setShowQRModal(true);
     };
 
     const handleLeave = () => {
@@ -925,6 +928,13 @@ export const LobbyDetailScreen = memo(
           <CountdownOverlay
             visible={!!lobby.countdownActive}
             value={lobby.countdownValue || null}
+          />
+
+          {/* QR Code Modal */}
+          <QRCodeModal
+            visible={showQRModal}
+            roomCode={roomCode}
+            onClose={() => setShowQRModal(false)}
           />
         </SafeAreaView>
       </GestureHandlerRootView>

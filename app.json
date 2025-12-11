@@ -7,6 +7,10 @@
     "icon": "./assets/expo-icons/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "picklebean",
+    "extra": {
+      "webUrl": "https://picklebean-ranking-app.web.app"
+    },
     "splash": {
       "image": "./assets/logo.png",
       "resizeMode": "contain",
@@ -15,11 +19,16 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.niiazemil.picklebeanmobile",
+      "associatedDomains": [
+        "applinks:picklebean-ranking-app.web.app",
+        "applinks:localhost"
+      ],
       "infoPlist": {
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.814786041248-t2j1ml926rc7ddmif2mvpqg37m7llrfo"
+              "com.googleusercontent.apps.814786041248-t2j1ml926rc7ddmif2mvpqg37m7llrfo",
+              "picklebean"
             ]
           }
         ]
@@ -36,7 +45,33 @@
       ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.niiazemil.picklebeanmobile"
+      "package": "com.niiazemil.picklebeanmobile",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "picklebean-ranking-app.web.app",
+              "pathPrefix": "/lobby"
+            },
+            {
+              "scheme": "https",
+              "host": "localhost",
+              "port": "5173",
+              "pathPrefix": "/lobby"
+            },
+            {
+              "scheme": "picklebean"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/expo-icons/favicon.png"
