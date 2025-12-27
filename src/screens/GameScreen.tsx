@@ -307,11 +307,11 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
             </Text>
             
             {/* Helper Text */}
-            <Text className="px-4 mb-6 text-center !text-gray-600">
-              This will end the match immediately.{'\n'}
-              <Text className="font-semibold !text-green-600">
-                No ratings will be affected.
-              </Text>
+            <Text className="px-4 mb-2 text-center !text-gray-600">
+              This will end the match immediately.
+            </Text>
+            <Text className="px-4 mb-6 text-center font-medium !text-gray-600">
+              No ratings will be affected.
             </Text>
             
             {/* Optional Reason Textarea */}
@@ -326,9 +326,10 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
                 placeholderTextColor="#9ca3af"
                 className="px-4 py-4 border border-gray-300 rounded-lg bg-gray-50 !text-gray-900"
                 multiline
-                numberOfLines={4}
+                numberOfLines={6}
                 maxLength={100}
                 textAlignVertical="top"
+                style={{ minHeight: 120 }}
               />
             </View>
             
@@ -353,12 +354,12 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
                 </Text>
               </Pressable>
               
-              {/* Secondary Action - Text Link */}
+              {/* Secondary Action - Subtle Grey Button */}
               <Pressable 
                 onPress={() => setShowCancelModal(false)}
-                className="py-3 mt-3"
+                className="py-3 mt-3 bg-gray-100 rounded-lg active:bg-gray-200"
               >
-                <Text className="font-medium text-center !text-gray-600">
+                <Text className="font-medium text-center !text-gray-700">
                   No, Continue
                 </Text>
               </Pressable>
