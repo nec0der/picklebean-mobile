@@ -1,5 +1,5 @@
 import { memo, useCallback, useState, useMemo, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, TextInput } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Crown, X, AlertCircle } from 'lucide-react-native';
@@ -293,7 +293,11 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
           
-          <View className="w-full py-8">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={0}
+          >
+            <View className="w-full py-8">
             {/* Icon */}
             <View className="items-center mb-6">
               <View className="items-center justify-center w-16 h-16 bg-red-100 rounded-full">
@@ -365,6 +369,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
               </Pressable>
             </View>
           </View>
+          </KeyboardAvoidingView>
         </ActionsheetContent>
       </Actionsheet>
 
