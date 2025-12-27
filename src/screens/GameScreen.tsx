@@ -1,8 +1,15 @@
 import { memo, useCallback, useState, useMemo, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Crown, X, AlertCircle } from 'lucide-react-native';
+import {
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicatorWrapper,
+  ActionsheetDragIndicator,
+} from '@gluestack-ui/themed';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList, RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -278,15 +285,15 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
         <View className="w-10" />
       </View>
 
-      {/* Cancel Confirmation Modal */}
-      <Modal
-        visible={showCancelModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCancelModal(false)}
-      >
-        <View className="items-center justify-center flex-1 px-4 bg-black/50">
-          <View className="w-full max-w-sm p-6 bg-white rounded-xl">
+      {/* Cancel Confirmation Sheet */}
+      <Actionsheet isOpen={showCancelModal} onClose={() => setShowCancelModal(false)}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent className="px-0 pb-6">
+          <ActionsheetDragIndicatorWrapper>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
+          
+          <View className="w-full py-6">
             {/* Icon */}
             <View className="items-center mb-4">
               <View className="items-center justify-center w-16 h-16 bg-red-100 rounded-full">
@@ -295,12 +302,12 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
             </View>
             
             {/* Title */}
-            <Text className="text-xl font-bold text-center mb-2 !text-gray-900">
+            <Text className="px-4 mb-2 text-xl font-bold text-center !text-gray-900">
               Cancel This Match?
             </Text>
             
             {/* Helper Text */}
-            <Text className="text-center mb-4 !text-gray-600">
+            <Text className="px-4 mb-4 text-center !text-gray-600">
               This will end the match immediately.{'\n'}
               <Text className="font-semibold !text-green-600">
                 No ratings will be affected.
@@ -308,7 +315,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
             </Text>
             
             {/* Optional Reason Input */}
-            <View className="mb-4">
+            <View className="px-4 mb-4">
               <Text className="mb-2 text-sm font-medium !text-gray-700">
                 Reason (optional)
               </Text>
@@ -325,12 +332,12 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
             </View>
             
             {/* Buttons */}
-            <View className="flex-row gap-3">
+            <View className="flex-row gap-3 px-4">
               <Pressable 
                 onPress={() => setShowCancelModal(false)}
                 className="flex-1 py-3 bg-gray-200 rounded-lg active:bg-gray-300"
               >
-                <Text className="text-center font-semibold !text-gray-700">
+                <Text className="font-semibold text-center !text-gray-700">
                   No, Continue
                 </Text>
               </Pressable>
@@ -349,14 +356,14 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
                 }}
                 className="flex-1 py-3 bg-red-500 rounded-lg active:bg-red-600"
               >
-                <Text className="text-center font-semibold !text-white">
+                <Text className="font-semibold text-center !text-white">
                   Yes, Cancel
                 </Text>
               </Pressable>
             </View>
           </View>
-        </View>
-      </Modal>
+        </ActionsheetContent>
+      </Actionsheet>
 
       {/* Game Status Bar - HUGE Timer as Hero */}
       <View className="items-center px-4 py-6 bg-white border-b border-gray-200">
