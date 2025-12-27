@@ -288,34 +288,34 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
       {/* Cancel Confirmation Sheet */}
       <Actionsheet isOpen={showCancelModal} onClose={() => setShowCancelModal(false)}>
         <ActionsheetBackdrop />
-        <ActionsheetContent className="px-0 pb-6">
+        <ActionsheetContent className="px-0 pb-8">
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
           
-          <View className="w-full py-6">
+          <View className="w-full py-8">
             {/* Icon */}
-            <View className="items-center mb-4">
+            <View className="items-center mb-6">
               <View className="items-center justify-center w-16 h-16 bg-red-100 rounded-full">
                 <AlertCircle size={32} color="#EF4444" />
               </View>
             </View>
             
             {/* Title */}
-            <Text className="px-4 mb-2 text-xl font-bold text-center !text-gray-900">
+            <Text className="px-4 mb-3 text-xl font-bold text-center !text-gray-900">
               Cancel This Match?
             </Text>
             
             {/* Helper Text */}
-            <Text className="px-4 mb-4 text-center !text-gray-600">
+            <Text className="px-4 mb-6 text-center !text-gray-600">
               This will end the match immediately.{'\n'}
               <Text className="font-semibold !text-green-600">
                 No ratings will be affected.
               </Text>
             </Text>
             
-            {/* Optional Reason Input */}
-            <View className="px-4 mb-4">
+            {/* Optional Reason Textarea */}
+            <View className="px-4 mb-6">
               <Text className="mb-2 text-sm font-medium !text-gray-700">
                 Reason (optional)
               </Text>
@@ -324,24 +324,16 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
                 onChangeText={setCancelReason}
                 placeholder="e.g., Wrong teams, practice match..."
                 placeholderTextColor="#9ca3af"
-                className="px-4 py-3 border border-gray-300 rounded-lg !text-gray-900"
+                className="px-4 py-4 border border-gray-300 rounded-lg bg-gray-50 !text-gray-900"
                 multiline
-                numberOfLines={2}
+                numberOfLines={4}
                 maxLength={100}
+                textAlignVertical="top"
               />
             </View>
             
-            {/* Buttons */}
-            <View className="flex-row gap-3 px-4">
-              <Pressable 
-                onPress={() => setShowCancelModal(false)}
-                className="flex-1 py-3 bg-gray-200 rounded-lg active:bg-gray-300"
-              >
-                <Text className="font-semibold text-center !text-gray-700">
-                  No, Continue
-                </Text>
-              </Pressable>
-              
+            {/* Primary Action - Full Width */}
+            <View className="px-4">
               <Pressable 
                 onPress={async () => {
                   setShowCancelModal(false);
@@ -354,10 +346,20 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
                     Alert.alert('Error', 'Failed to cancel match. Please try again.');
                   }
                 }}
-                className="flex-1 py-3 bg-red-500 rounded-lg active:bg-red-600"
+                className="w-full py-4 bg-red-500 rounded-lg active:bg-red-600"
               >
-                <Text className="font-semibold text-center !text-white">
+                <Text className="font-bold text-center !text-white">
                   Yes, Cancel
+                </Text>
+              </Pressable>
+              
+              {/* Secondary Action - Text Link */}
+              <Pressable 
+                onPress={() => setShowCancelModal(false)}
+                className="py-3 mt-3"
+              >
+                <Text className="font-medium text-center !text-gray-600">
+                  No, Continue
                 </Text>
               </Pressable>
             </View>
