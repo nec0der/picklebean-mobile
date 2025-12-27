@@ -1,5 +1,5 @@
 import { memo, useCallback, useState, useMemo, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, TextInput } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Crown, X, AlertCircle } from 'lucide-react-native';
@@ -34,7 +34,6 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   const { lobby, loading, error, exists } = useLobby(roomCode);
   const [showScoreEntry, setShowScoreEntry] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState<string>('');
   const insets = useSafeAreaInsets();
 
   const isHost = user?.id === lobby?.hostId;
@@ -293,14 +292,9 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
           
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            <View className="w-full py-8">
+          <View className="w-full py-6">
             {/* Icon */}
-            <View className="items-center mb-6">
+            <View className="items-center mb-4">
               <View className="items-center justify-center w-16 h-16 bg-red-100 rounded-full">
                 <AlertCircle size={32} color="#EF4444" />
               </View>
@@ -319,33 +313,14 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
               No ratings will be affected.
             </Text>
             
-            {/* Optional Reason Textarea */}
-            <View className="px-4 mb-6">
-              <Text className="mb-2 text-sm font-medium !text-gray-700">
-                Reason (optional)
-              </Text>
-              <TextInput
-                value={cancelReason}
-                onChangeText={setCancelReason}
-                placeholder="e.g., Wrong teams, practice match..."
-                placeholderTextColor="#9ca3af"
-                className="px-4 py-4 border border-gray-300 rounded-lg bg-gray-50 !text-gray-900"
-                multiline
-                numberOfLines={6}
-                maxLength={100}
-                textAlignVertical="top"
-                style={{ minHeight: 120 }}
-              />
-            </View>
-            
-            {/* Primary Action - Full Width */}
+            {/* Buttons */}
             <View className="px-4">
               <Pressable 
                 onPress={async () => {
                   setShowCancelModal(false);
                   try {
                     if (!user?.id) return;
-                    await cancelMatch(roomCode, user.id, cancelReason);
+                    await cancelMatch(roomCode, user.id, '');
                     navigation.navigate('Tabs');
                   } catch (err) {
                     console.error('Error cancelling match:', err);
@@ -370,7 +345,6 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
               </Pressable>
             </View>
           </View>
-          </ScrollView>
         </ActionsheetContent>
       </Actionsheet>
 
