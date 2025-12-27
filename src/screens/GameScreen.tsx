@@ -15,6 +15,7 @@ import { GameTimer } from '@/components/game/GameTimer';
 import { ScorePickerSheet } from '@/components/game/ScorePickerSheet';
 import { GameSummary } from '@/components/game/GameSummary';
 import { completeMatch, calculateGameDuration } from '@/lib/matchHistory';
+import { cancelMatch } from '@/services/lobbyService';
 import type { Player } from '@/types/lobby';
 
 type GameNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Game'>;
@@ -318,11 +319,16 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
               </Pressable>
               
               <Pressable 
-                onPress={() => {
+                onPress={async () => {
                   setShowCancelModal(false);
-                  // TODO: Implement cancel logic
-                  Alert.alert('Coming Soon', 'Match cancellation will be implemented soon.');
-                  navigation.navigate('Tabs');
+                  try {
+                    if (!user?.id) return;
+                    await cancelMatch(roomCode, user.id, cancelReason);
+                    navigation.navigate('Tabs');
+                  } catch (err) {
+                    console.error('Error cancelling match:', err);
+                    Alert.alert('Error', 'Failed to cancel match. Please try again.');
+                  }
                 }}
                 className="flex-1 py-3 bg-red-500 rounded-lg active:bg-red-600"
               >

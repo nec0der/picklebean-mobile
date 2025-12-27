@@ -34,6 +34,11 @@ export interface Lobby {
   // Countdown fields
   countdownActive?: boolean;
   countdownValue?: 1 | 2 | 'START!';  // 1 = first ZERO, 2 = second ZERO
+  // Cancellation fields
+  cancelled?: boolean;
+  cancelledAt?: Timestamp;
+  cancelledBy?: string;  // uid of host who cancelled
+  cancelReason?: string;  // optional reason for cancellation
   createdAt: Timestamp;
   lastActivity: Timestamp;
 }

@@ -217,3 +217,25 @@ export const setExhibitionMatch = async (
     lastActivity: serverTimestamp(),
   });
 };
+
+/**
+ * Cancels an active match
+ * @param roomCode - Room code
+ * @param cancelledBy - User ID of host cancelling
+ * @param reason - Optional reason for cancellation
+ */
+export const cancelMatch = async (
+  roomCode: string,
+  cancelledBy: string,
+  reason?: string
+): Promise<void> => {
+  await updateDoc(doc(firestore, 'lobbies', roomCode), {
+    cancelled: true,
+    cancelledAt: serverTimestamp(),
+    cancelledBy,
+    cancelReason: reason || null,
+    gameCompleted: true,  // Mark as completed so it doesn't show in pending games
+    gameCompletedAt: serverTimestamp(),
+    lastActivity: serverTimestamp(),
+  });
+};
