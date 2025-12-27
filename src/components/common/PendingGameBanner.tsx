@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/types/navigation';
 import type { PendingGame } from '@/hooks/firestore/usePendingGame';
-import { ArrowRight } from 'lucide-react-native';
+import { AlertCircle } from 'lucide-react-native';
 
 interface PendingGameBannerProps {
   pendingGame: PendingGame;
@@ -25,36 +25,27 @@ export const PendingGameBanner = memo(({ pendingGame }: PendingGameBannerProps) 
   }, [navigation, pendingGame.type, pendingGame.roomCode]);
 
   return (
-    <View className="p-4 mx-4 mt-4 mb-2 shadow-lg bg-gradient-to-r from-green-500 to-green-600 rounded-xl">
-      {/* Header */}
-      <View className="flex-row items-center mb-3">
-        <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-white/20">
-          <Text className="text-2xl">🎾</Text>
-        </View>
+    <View className="p-4 mx-4 mt-4 mb-2 border-2 border-yellow-200 rounded-lg bg-yellow-50">
+      <View className="flex-row items-start">
+        <AlertCircle size={20} color="#f59e0b" className="mt-0.5 mr-2" />
         <View className="flex-1">
-          <Text className="text-lg font-bold !text-white">
-            {pendingGame.type === 'game' ? 'Game in Progress' : 'Lobby Waiting'}
+          <Text className="mb-1 text-base font-semibold !text-yellow-900">
+            Active {pendingGame.type === 'game' ? 'Game' : 'Lobby'}
           </Text>
-          <View className="flex-row items-center gap-2 mt-1">
-            <Text className="text-sm !text-white/80">
-              Room: {pendingGame.roomCode}
+          <Text className="mb-3 text-sm !text-yellow-800">
+            You have an active {pendingGame.type === 'game' ? 'game' : 'lobby'}. 
+            Complete or leave it to start a new one.
+          </Text>
+          <Pressable
+            onPress={handleReturn}
+            className="self-start px-4 py-2 bg-yellow-500 rounded-lg active:bg-yellow-600"
+          >
+            <Text className="font-semibold !text-white">
+              Resume Game
             </Text>
-          </View>
+          </Pressable>
         </View>
       </View>
-      
-      {/* Resume Button */}
-      <Pressable 
-        onPress={handleReturn}
-        className="py-3 bg-white rounded-lg active:bg-gray-100"
-      >
-        <View className="flex-row items-center justify-center gap-2">
-          <Text className="text-base font-semibold !text-green-600">
-            {pendingGame.type === 'game' ? 'Resume Game' : 'Go to Lobby'}
-          </Text>
-          <ArrowRight size={20} color="#16a34a" />
-        </View>
-      </Pressable>
     </View>
   );
 });

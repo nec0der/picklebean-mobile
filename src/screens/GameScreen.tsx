@@ -1,5 +1,5 @@
 import { memo, useCallback, useState, useMemo, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Crown, X, AlertCircle } from 'lucide-react-native';
@@ -260,7 +260,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
             onPress={() => setShowCancelModal(true)}
             className="p-2"
           >
-            <X size={24} color="#EF4444" />
+            <X size={24} color="#374151" />
           </Pressable>
         ) : (
           <View className="w-10" />
@@ -307,8 +307,25 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
               </Text>
             </Text>
             
+            {/* Optional Reason Input */}
+            <View className="mb-4">
+              <Text className="mb-2 text-sm font-medium !text-gray-700">
+                Reason (optional)
+              </Text>
+              <TextInput
+                value={cancelReason}
+                onChangeText={setCancelReason}
+                placeholder="e.g., Wrong teams, practice match..."
+                placeholderTextColor="#9ca3af"
+                className="px-4 py-3 border border-gray-300 rounded-lg !text-gray-900"
+                multiline
+                numberOfLines={2}
+                maxLength={100}
+              />
+            </View>
+            
             {/* Buttons */}
-            <View className="flex-row gap-3 mt-6">
+            <View className="flex-row gap-3">
               <Pressable 
                 onPress={() => setShowCancelModal(false)}
                 className="flex-1 py-3 bg-gray-200 rounded-lg active:bg-gray-300"
