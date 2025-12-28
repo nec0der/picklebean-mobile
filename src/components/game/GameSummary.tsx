@@ -9,15 +9,17 @@ interface GameSummaryProps {
   lobby: Lobby;
   currentUserId: string;
   onPlayAgain: () => void;
+  onRematch?: () => void;
 }
 
-export const GameSummary = ({ lobby, currentUserId, onPlayAgain }: GameSummaryProps) => {
+export const GameSummary = ({ lobby, currentUserId, onPlayAgain, onRematch }: GameSummaryProps) => {
   if (!lobby.gameCompleted || !lobby.finalScores || !lobby.winner) {
     return null;
   }
 
   const { team1, team2 } = lobby.finalScores;
   const winningTeam = lobby.winner;
+  const isHost = currentUserId === lobby.hostId;
 
   // Get REAL calculated point changes from lobby (not hardcoded ±25)
   const team1Points = lobby.pointChanges?.team1 ?? 0;
@@ -158,13 +160,27 @@ export const GameSummary = ({ lobby, currentUserId, onPlayAgain }: GameSummaryPr
         </View>
       </View>
 
-      {/* Fixed Bottom Button */}
+      {/* Fixed Bottom Buttons */}
       <View className="px-4 pt-4 pb-4 bg-white border-t border-gray-200">
+        {isHost && onRematch && (
+          <Pressable
+            onPress={onRematch}
+            className="items-center py-4 mb-3 bg-blue-500 rounded-lg active:bg-blue-600"
+          >
+            <Text className="text-lg font-bold !text-white">🔄 Create Rematch</Text>
+          </Pressable>
+        )}
         <Pressable
           onPress={onPlayAgain}
-          className="items-center py-4 bg-green-500 rounded-lg active:bg-green-600"
+          className={`items-center py-4 rounded-lg active:bg-green-600 ${
+            isHost && onRematch ? 'bg-gray-100' : 'bg-green-500'
+          }`}
         >
-          <Text className="text-lg font-bold !text-white">Back to Home</Text>
+          <Text className={`text-lg font-bold ${
+            isHost && onRematch ? '!text-gray-700' : '!text-white'
+          }`}>
+            Back to Home
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>

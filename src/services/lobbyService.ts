@@ -239,3 +239,38 @@ export const cancelMatch = async (
     lastActivity: serverTimestamp(),
   });
 };
+
+/**
+ * Creates a rematch lobby with same players and settings
+ * @param previousLobby - The completed lobby to rematch
+ * @returns New room code
+ */
+export const createRematch = async (previousLobby: Lobby): Promise<string> => {
+  const newRoomCode = generateRoomCode();
+
+  // Create new lobby with same settings and players
+  const rematchLobby: Lobby = {
+    roomCode: newRoomCode,
+    hostId: previousLobby.hostId,
+    gameMode: previousLobby.gameMode,
+    team1: {
+      player1: previousLobby.team1.player1,
+      player2: previousLobby.team1.player2,
+    },
+    team2: {
+      player1: previousLobby.team2.player1,
+      player2: previousLobby.team2.player2,
+    },
+    waitingPlayers: [],
+    gameStarted: false,
+    isExhibition: previousLobby.isExhibition || false,
+    isRematch: true,
+    originalRoomCode: previousLobby.roomCode,
+    createdAt: serverTimestamp() as any,
+    lastActivity: serverTimestamp() as any,
+  };
+
+  await setDoc(doc(firestore, 'lobbies', newRoomCode), rematchLobby);
+
+  return newRoomCode;
+};

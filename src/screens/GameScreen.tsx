@@ -16,7 +16,7 @@ import { ScorePickerSheet } from '@/components/game/ScorePickerSheet';
 import { CancelMatchSheet } from '@/components/game/CancelMatchSheet';
 import { GameSummary } from '@/components/game/GameSummary';
 import { completeMatch, calculateGameDuration } from '@/lib/matchHistory';
-import { cancelMatch } from '@/services/lobbyService';
+import { cancelMatch, createRematch } from '@/services/lobbyService';
 import type { Player } from '@/types/lobby';
 
 type GameNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Game'>;
@@ -153,6 +153,29 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
     navigation.navigate('Tabs');
   }, [navigation]);
 
+  const handleRematch = useCallback(async () => {
+    if (!lobby) return;
+    
+    try {
+      const newRoomCode = await createRematch(lobby);
+      Alert.alert(
+        'Rematch Created!',
+        `New lobby created with code: ${newRoomCode}. All players will be automatically added.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.replace('LobbyDetail', { roomCode: newRoomCode });
+            },
+          },
+        ]
+      );
+    } catch (err) {
+      console.error('Error creating rematch:', err);
+      Alert.alert('Error', 'Failed to create rematch. Please try again.');
+    }
+  }, [lobby, navigation]);
+
   const handleCancelMatch = useCallback(async (): Promise<void> => {
     try {
       if (!user?.id) return;
@@ -275,6 +298,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
           lobby={lobby}
           currentUserId={user.id}
           onPlayAgain={handlePlayAgain}
+          onRematch={isHost ? handleRematch : undefined}
         />
       </SafeAreaView>
     );
