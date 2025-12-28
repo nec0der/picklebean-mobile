@@ -297,6 +297,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
         <GameSummary
           lobby={lobby}
           currentUserId={user.id}
+          currentUserName={user.displayName || 'Player'}
           onPlayAgain={handlePlayAgain}
           onRematch={isHost ? handleRematch : undefined}
         />

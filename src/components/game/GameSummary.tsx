@@ -1,18 +1,26 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, TrendingUp, TrendingDown, Trophy } from 'lucide-react-native';
+import { X, TrendingUp, TrendingDown, Trophy, Share2 } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
+import { shareMatchResult } from '@/lib/share';
 import type { Lobby } from '@/types/lobby';
 
 interface GameSummaryProps {
   lobby: Lobby;
   currentUserId: string;
+  currentUserName: string;
   onPlayAgain: () => void;
   onRematch?: () => void;
 }
 
-export const GameSummary = ({ lobby, currentUserId, onPlayAgain, onRematch }: GameSummaryProps) => {
+export const GameSummary = ({ 
+  lobby, 
+  currentUserId, 
+  currentUserName,
+  onPlayAgain, 
+  onRematch 
+}: GameSummaryProps) => {
   if (!lobby.gameCompleted || !lobby.finalScores || !lobby.winner) {
     return null;
   }
@@ -24,6 +32,21 @@ export const GameSummary = ({ lobby, currentUserId, onPlayAgain, onRematch }: Ga
   // Get REAL calculated point changes from lobby (not hardcoded ±25)
   const team1Points = lobby.pointChanges?.team1 ?? 0;
   const team2Points = lobby.pointChanges?.team2 ?? 0;
+
+  // Determine current user's point change
+  const isOnTeam1 = 
+    lobby.team1.player1?.uid === currentUserId || 
+    lobby.team1.player2?.uid === currentUserId;
+  const currentUserPoints = isOnTeam1 ? team1Points : team2Points;
+
+  const handleShare = async () => {
+    try {
+      await shareMatchResult(lobby, currentUserName, currentUserPoints);
+    } catch (error) {
+      console.error('Error sharing:', error);
+      Alert.alert('Error', 'Unable to share match result');
+    }
+  };
 
   // Calculate game duration
   const duration = lobby.gameStartedAt && lobby.gameCompletedAt
@@ -70,7 +93,9 @@ export const GameSummary = ({ lobby, currentUserId, onPlayAgain, onRematch }: Ga
           <X size={24} color="#374151" />
         </Pressable>
         <Text className="text-lg font-bold !text-gray-900">Match Complete</Text>
-        <View className="w-10" />
+        <Pressable onPress={handleShare} className="p-2">
+          <Share2 size={24} color="#374151" />
+        </Pressable>
       </View>
 
       {/* Content */}
