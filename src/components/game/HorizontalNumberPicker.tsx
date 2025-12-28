@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect } from 'react';
+import { memo, useRef, useEffect, useState } from 'react';
 import { View, Text, ScrollView, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
@@ -14,6 +14,7 @@ interface HorizontalNumberPickerProps {
   max: number;
   label: string;
   color: 'green' | 'blue';
+  hint?: string; // Optional hint text explaining range
 }
 
 export const HorizontalNumberPicker = memo(({
@@ -23,8 +24,11 @@ export const HorizontalNumberPicker = memo(({
   max,
   label,
   color,
+  hint,
 }: HorizontalNumberPickerProps) => {
   const scrollViewRef = useRef<ScrollView>(null);
+  const [prevMin, setPrevMin] = useState(min);
+  const [prevMax, setPrevMax] = useState(max);
   const numbers = Array.from({ length: max - min + 1 }, (_, i) => i + min);
   
   // Calculate exact snap offsets for each number
@@ -56,6 +60,40 @@ export const HorizontalNumberPicker = memo(({
       });
     }, 100);
   }, []); // Empty deps - only run once on mount
+
+  // Handle min/max range changes - clamp value and scroll if needed
+  useEffect(() => {
+    if (min !== prevMin || max !== prevMax) {
+      setPrevMin(min);
+      setPrevMax(max);
+      
+      // Clamp current value to new range
+      let newValue = value;
+      if (value < min) {
+        newValue = min;
+        onChange(min);
+      } else if (value > max) {
+        newValue = max;
+        onChange(max);
+      }
+      
+      // Scroll to clamped value
+      const index = newValue - min;
+      const offset = index * ITEM_WIDTH;
+      
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({
+          x: offset,
+          animated: true,
+        });
+      }, 50);
+      
+      // Haptic feedback for range change
+      if (newValue !== value) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+    }
+  }, [min, max, value, onChange, prevMin, prevMax]);
 
   // Handle scroll to auto-select centered number
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -101,9 +139,16 @@ export const HorizontalNumberPicker = memo(({
   return (
     <View className="mb-6">
       {/* Label */}
-      <Text className={`text-base px-4 font-semibold mb-3 ${colors.label}`}>
+      <Text className={`text-base px-4 font-semibold mb-2 ${colors.label}`}>
         {label}
       </Text>
+      
+      {/* Hint Text */}
+      {hint && (
+        <Text className="px-4 mb-2 text-xs !text-gray-500">
+          {hint}
+        </Text>
+      )}
 
       {/* Container with center indicator */}
       <View className="relative h-20">

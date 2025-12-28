@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import {
@@ -10,6 +10,7 @@ import {
 } from '@gluestack-ui/themed';
 import { HorizontalNumberPicker } from './HorizontalNumberPicker';
 import { LoadingSpinner } from '@/components/common';
+import { getValidScoreRange, isValidPickleballScore, clampScoreToRange } from '@/lib/scoreValidation';
 
 interface ScorePickerSheetProps {
   visible: boolean;
@@ -31,34 +32,39 @@ export const ScorePickerSheet = ({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Calculate valid ranges dynamically based on opposing team's score
+  const team1Range = useMemo(() => getValidScoreRange(team2Score), [team2Score]);
+  const team2Range = useMemo(() => getValidScoreRange(team1Score), [team1Score]);
+
+  // When Team 1 score changes, ensure Team 2 is within valid range
+  useEffect(() => {
+    const range = getValidScoreRange(team1Score);
+    if (team2Score < range.min || team2Score > range.max) {
+      const clampedScore = clampScoreToRange(team2Score, range);
+      setTeam2Score(clampedScore);
+    }
+  }, [team1Score, team2Score]);
+
+  // When Team 2 score changes, ensure Team 1 is within valid range
+  useEffect(() => {
+    const range = getValidScoreRange(team2Score);
+    if (team1Score < range.min || team1Score > range.max) {
+      const clampedScore = clampScoreToRange(team1Score, range);
+      setTeam1Score(clampedScore);
+    }
+  }, [team2Score, team1Score]);
+
   const handleSubmit = useCallback(async () => {
     // Medium impact for submit button press (intentional action)
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
     setError(null);
 
-    // Check for tie
-    if (team1Score === team2Score) {
-      setError('Scores cannot be tied');
-      // Error haptic for validation failure
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-
-    // Check if someone reached 11
-    if (team1Score < 11 && team2Score < 11) {
-      setError('At least one team must reach 11 points');
-      // Error haptic for validation failure
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-
-    // Check win by 2 rule (if past 10)
-    const maxScore = Math.max(team1Score, team2Score);
-    const minScore = Math.min(team1Score, team2Score);
+    // Validate with comprehensive pickleball rules
+    const validation = isValidPickleballScore(team1Score, team2Score);
     
-    if (maxScore > 11 && (maxScore - minScore) < 2) {
-      setError('Must win by 2 points when past 11');
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid score');
       // Error haptic for validation failure
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
@@ -103,10 +109,11 @@ export const ScorePickerSheet = ({
           <HorizontalNumberPicker
             value={team1Score}
             onChange={setTeam1Score}
-            min={0}
-            max={20}
+            min={team1Range.min}
+            max={team1Range.max}
             label="Team 1"
             color="green"
+            hint={team1Range.explanation}
           />
 
           {/* VS Divider */}
@@ -120,10 +127,11 @@ export const ScorePickerSheet = ({
           <HorizontalNumberPicker
             value={team2Score}
             onChange={setTeam2Score}
-            min={0}
-            max={20}
+            min={team2Range.min}
+            max={team2Range.max}
             label="Team 2"
             color="blue"
+            hint={team2Range.explanation}
           />
 
           {/* Spacer before error/submit */}
