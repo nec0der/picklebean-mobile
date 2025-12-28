@@ -43,7 +43,8 @@ export const ScorePickerSheet = ({
       const clampedScore = clampScoreToRange(team2Score, range);
       setTeam2Score(clampedScore);
     }
-  }, [team1Score, team2Score]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [team1Score]); // Only depend on trigger, not result
 
   // When Team 2 score changes, ensure Team 1 is within valid range
   useEffect(() => {
@@ -52,7 +53,8 @@ export const ScorePickerSheet = ({
       const clampedScore = clampScoreToRange(team1Score, range);
       setTeam1Score(clampedScore);
     }
-  }, [team2Score, team1Score]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [team2Score]); // Only depend on trigger, not result
 
   const handleSubmit = useCallback(async () => {
     // Medium impact for submit button press (intentional action)
