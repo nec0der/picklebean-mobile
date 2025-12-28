@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import {
@@ -10,7 +10,7 @@ import {
 } from '@gluestack-ui/themed';
 import { HorizontalNumberPicker } from './HorizontalNumberPicker';
 import { LoadingSpinner } from '@/components/common';
-import { getValidScoreRange, isValidPickleballScore, clampScoreToRange } from '@/lib/scoreValidation';
+import { isValidPickleballScore } from '@/lib/scoreValidation';
 
 interface ScorePickerSheetProps {
   visible: boolean;
@@ -31,30 +31,6 @@ export const ScorePickerSheet = ({
   const [team2Score, setTeam2Score] = useState(defaultTeam2Score);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Calculate valid ranges dynamically based on opposing team's score
-  const team1Range = useMemo(() => getValidScoreRange(team2Score), [team2Score]);
-  const team2Range = useMemo(() => getValidScoreRange(team1Score), [team1Score]);
-
-  // When Team 1 score changes, ensure Team 2 is within valid range
-  useEffect(() => {
-    const range = getValidScoreRange(team1Score);
-    if (team2Score < range.min || team2Score > range.max) {
-      const clampedScore = clampScoreToRange(team2Score, range);
-      setTeam2Score(clampedScore);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [team1Score]); // Only depend on trigger, not result
-
-  // When Team 2 score changes, ensure Team 1 is within valid range
-  useEffect(() => {
-    const range = getValidScoreRange(team2Score);
-    if (team1Score < range.min || team1Score > range.max) {
-      const clampedScore = clampScoreToRange(team1Score, range);
-      setTeam1Score(clampedScore);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [team2Score]); // Only depend on trigger, not result
 
   const handleSubmit = useCallback(async () => {
     // Medium impact for submit button press (intentional action)
@@ -111,11 +87,10 @@ export const ScorePickerSheet = ({
           <HorizontalNumberPicker
             value={team1Score}
             onChange={setTeam1Score}
-            min={team1Range.min}
-            max={team1Range.max}
+            min={0}
+            max={20}
             label="Team 1"
             color="green"
-            hint={team1Range.explanation}
           />
 
           {/* VS Divider */}
@@ -129,11 +104,10 @@ export const ScorePickerSheet = ({
           <HorizontalNumberPicker
             value={team2Score}
             onChange={setTeam2Score}
-            min={team2Range.min}
-            max={team2Range.max}
+            min={0}
+            max={20}
             label="Team 2"
             color="blue"
-            hint={team2Range.explanation}
           />
 
           {/* Spacer before error/submit */}
