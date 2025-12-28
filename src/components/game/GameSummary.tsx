@@ -1,6 +1,8 @@
-import { View, Text, Pressable, Alert } from 'react-native';
+import { View, Text, Pressable, Alert, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, TrendingUp, TrendingDown, Trophy, Share2 } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { shareMatchResult } from '@/lib/share';
@@ -39,12 +41,68 @@ export const GameSummary = ({
     lobby.team1.player2?.uid === currentUserId;
   const currentUserPoints = isOnTeam1 ? team1Points : team2Points;
 
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  // Entrance animations on mount
+  useEffect(() => {
+    // Victory haptic
+    Haptics.notificationAsync(
+      Haptics.NotificationFeedbackType.Success
+    );
+
+    // Staggered entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const handleShare = async () => {
+    // Haptic feedback on press
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     try {
       await shareMatchResult(lobby, currentUserName, currentUserPoints);
+      // Success haptic
+      await Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Success
+      );
     } catch (error) {
+      // Error haptic
+      await Haptics.notificationAsync(
+        Haptics.NotificationFeedbackType.Error
+      );
       console.error('Error sharing:', error);
-      Alert.alert('Error', 'Unable to share match result');
+      Alert.alert('Share Failed', 'Unable to share match result. Please try again.');
+    }
+  };
+
+  const handlePlayAgainPress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onPlayAgain();
+  };
+
+  const handleRematchPress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (onRematch) {
+      onRematch();
     }
   };
 
@@ -89,7 +147,7 @@ export const GameSummary = ({
     <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-        <Pressable onPress={onPlayAgain} className="p-2">
+        <Pressable onPress={handlePlayAgainPress} className="p-2">
           <X size={24} color="#374151" />
         </Pressable>
         <Text className="text-lg font-bold !text-gray-900">Match Complete</Text>
@@ -189,14 +247,14 @@ export const GameSummary = ({
       <View className="px-4 pt-4 pb-4 bg-white border-t border-gray-200">
         {isHost && onRematch && (
           <Pressable
-            onPress={onRematch}
+            onPress={handleRematchPress}
             className="items-center py-4 mb-3 bg-blue-500 rounded-lg active:bg-blue-600"
           >
             <Text className="text-lg font-bold !text-white">🔄 Create Rematch</Text>
           </Pressable>
         )}
         <Pressable
-          onPress={onPlayAgain}
+          onPress={handlePlayAgainPress}
           className={`items-center py-4 rounded-lg active:bg-green-600 ${
             isHost && onRematch ? 'bg-gray-100' : 'bg-green-500'
           }`}
