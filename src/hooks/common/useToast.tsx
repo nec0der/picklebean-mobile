@@ -1,4 +1,5 @@
-import { useToast as useGluestackToast, Toast, ToastTitle, VStack } from '@gluestack-ui/themed';
+import { useToast as useGluestackToast, Toast, ToastTitle, HStack, Icon } from '@gluestack-ui/themed';
+import { AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react-native';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -27,14 +28,33 @@ export const useToast = (): UseToastReturn => {
       warning: '$warning600',
     };
 
+    const iconMap = {
+      success: CheckCircle,
+      error: AlertCircle,
+      info: Info,
+      warning: AlertTriangle,
+    };
+
     toast.show({
       placement: 'top',
       duration: 3000,
       render: ({ id }) => (
-        <Toast nativeID={id} action={actionMap[type]} variant="solid" bg={bgColors[type]}>
-          <VStack space="xs">
-            <ToastTitle color="$white">{message}</ToastTitle>
-          </VStack>
+        <Toast 
+          nativeID={id} 
+          action={actionMap[type]} 
+          variant="solid" 
+          bg={bgColors[type]}
+          borderRadius="$lg"
+          mx="$4"
+          px="$4"
+          py="$3"
+        >
+          <HStack space="md" alignItems="center">
+            <Icon as={iconMap[type]} size="xl" color="$white" />
+            <ToastTitle color="$white" flex={1}>
+              {message}
+            </ToastTitle>
+          </HStack>
         </Toast>
       ),
     });
