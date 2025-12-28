@@ -70,7 +70,7 @@ export function isValidPickleballScore(
 ): { valid: boolean; error?: string } {
   // Check for tie
   if (team1Score === team2Score) {
-    return { valid: false, error: 'Scores cannot be tied' };
+    return { valid: false, error: 'Game cannot end in a tie - the winner must win by 2' };
   }
   
   const maxScore = Math.max(team1Score, team2Score);
@@ -78,13 +78,13 @@ export function isValidPickleballScore(
   
   // At least one team must reach 11
   if (maxScore < 11) {
-    return { valid: false, error: 'At least one team must reach 11 points' };
+    return { valid: false, error: 'Game not complete - at least one team must reach 11 points' };
   }
   
   // If winner has exactly 11, loser must be 0-9
   if (maxScore === 11) {
     if (minScore >= 10) {
-      return { valid: false, error: 'If score is 11-10, game continues to 12-10' };
+      return { valid: false, error: 'Score 11-10 is invalid - game must continue to 12-10 (win by 2)' };
     }
     return { valid: true };
   }
@@ -94,7 +94,7 @@ export function isValidPickleballScore(
   if (maxScore - minScore !== 2) {
     return { 
       valid: false, 
-      error: `When past 11, must win by exactly 2 (should be ${minScore + 2}-${minScore})`,
+      error: `Score ${maxScore}-${minScore} is invalid - the winner must win by 2`,
     };
   }
   
@@ -102,7 +102,7 @@ export function isValidPickleballScore(
   if (minScore < 10) {
     return { 
       valid: false, 
-      error: `Invalid: Game would've ended at 11-${minScore}`,
+      error: `Score ${maxScore}-${minScore} is invalid - game would've ended at 11-${minScore}`,
     };
   }
   

@@ -11,6 +11,7 @@ import {
 import { HorizontalNumberPicker } from './HorizontalNumberPicker';
 import { LoadingSpinner } from '@/components/common';
 import { isValidPickleballScore } from '@/lib/scoreValidation';
+import { useToast } from '@/hooks/common/useToast';
 
 interface ScorePickerSheetProps {
   visible: boolean;
@@ -29,20 +30,18 @@ export const ScorePickerSheet = ({
 }: ScorePickerSheetProps) => {
   const [team1Score, setTeam1Score] = useState(defaultTeam1Score);
   const [team2Score, setTeam2Score] = useState(defaultTeam2Score);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
 
   const handleSubmit = useCallback(async () => {
     // Medium impact for submit button press (intentional action)
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
-    setError(null);
 
     // Validate with comprehensive pickleball rules
     const validation = isValidPickleballScore(team1Score, team2Score);
     
     if (!validation.valid) {
-      setError(validation.error || 'Invalid score');
+      toast.error(validation.error || 'Invalid score');
       // Error haptic for validation failure
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
@@ -57,15 +56,14 @@ export const ScorePickerSheet = ({
       // Reset on success
       setTeam1Score(defaultTeam1Score);
       setTeam2Score(defaultTeam2Score);
-      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit scores');
+      toast.error(err instanceof Error ? err.message : 'Failed to submit scores');
       // Error haptic for submission failure
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsSubmitting(false);
     }
-  }, [team1Score, team2Score, onSubmit, defaultTeam1Score, defaultTeam2Score]);
+  }, [team1Score, team2Score, onSubmit, defaultTeam1Score, defaultTeam2Score, toast]);
 
   return (
     <Actionsheet isOpen={visible} onClose={onClose}>
@@ -110,17 +108,8 @@ export const ScorePickerSheet = ({
             color="blue"
           />
 
-          {/* Spacer before error/submit */}
+          {/* Spacer before submit */}
           <View className="h-8" />
-
-          {/* Error Message */}
-          {error && (
-            <View className="p-3 mx-4 mb-4 rounded-lg bg-red-50">
-              <Text className="text-sm font-medium text-center !text-red-600">
-                {error}
-              </Text>
-            </View>
-          )}
 
           {/* Loading State */}
           {isSubmitting && (
