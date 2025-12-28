@@ -103,6 +103,10 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
       throw new Error('Game data not available');
     }
 
+    if (!stakesData || stakesData.loading) {
+      throw new Error('Point calculation not ready');
+    }
+
     try {
       // Determine winner
       const winner = team1Score > team2Score ? 1 : 2;
@@ -110,12 +114,28 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
       // Calculate game duration
       const gameDuration = calculateGameDuration(lobby.gameStartedAt.toDate());
 
-      // Complete match (creates history records and updates rankings)
+      // Calculate REAL point changes based on winner
+      const pointChanges = {
+        team1: winner === 1 ? stakesData.team1Win : -stakesData.team1Loss,
+        team2: winner === 2 ? stakesData.team2Win : -stakesData.team2Loss,
+      };
+
+      // Store stakes snapshot for debugging/audit
+      const stakesSnapshot = {
+        team1Win: stakesData.team1Win,
+        team1Loss: stakesData.team1Loss,
+        team2Win: stakesData.team2Win,
+        team2Loss: stakesData.team2Loss,
+      };
+
+      // Complete match with REAL calculated points
       await completeMatch(lobby, {
         team1Score,
         team2Score,
         winner,
         gameDuration,
+        pointChanges,
+        stakesSnapshot,
       });
 
       // Close modal
@@ -127,7 +147,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
       console.error('Error completing match:', err);
       throw new Error('Failed to complete match. Please try again.');
     }
-  }, [lobby]);
+  }, [lobby, stakesData]);
 
   const handlePlayAgain = useCallback(() => {
     navigation.navigate('Tabs');

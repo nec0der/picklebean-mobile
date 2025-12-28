@@ -13,6 +13,16 @@ interface MatchResult {
   team2Score: number;
   winner: 1 | 2;
   gameDuration: number; // in seconds
+  pointChanges: {
+    team1: number;  // Points for team 1 players (can be + or -)
+    team2: number;  // Points for team 2 players (can be + or -)
+  };
+  stakesSnapshot?: {
+    team1Win: number;
+    team1Loss: number;
+    team2Win: number;
+    team2Loss: number;
+  };
 }
 
 /**
@@ -25,7 +35,7 @@ export const completeMatch = async (
   result: MatchResult
 ): Promise<void> => {
   const batch = writeBatch(firestore);
-  const { team1Score, team2Score, winner, gameDuration } = result;
+  const { team1Score, team2Score, winner, gameDuration, pointChanges, stakesSnapshot } = result;
 
   // Get all player IDs
   const team1PlayerIds: string[] = [];
@@ -42,9 +52,9 @@ export const completeMatch = async (
   const winnerPlayerIds = winner === 1 ? team1PlayerIds : team2PlayerIds;
   const loserPlayerIds = winner === 1 ? team2PlayerIds : team1PlayerIds;
 
-  // Points changes (fixed ±25 points for MVP)
-  const winnerPoints = 25;
-  const loserPoints = -25;
+  // Use REAL calculated point changes (not hardcoded ±25)
+  const team1Points = pointChanges.team1;
+  const team2Points = pointChanges.team2;
 
   // Create match records for each player
   for (const playerId of allPlayerIds) {
@@ -76,7 +86,7 @@ export const completeMatch = async (
         team1: team1Score,
         team2: team2Score,
       },
-      pointsChange: isWinner ? winnerPoints : loserPoints,
+      pointsChange: isTeam1 ? team1Points : team2Points,
       opponentIds,
       opponentNames,
       // Only include partnerId and partnerName for doubles (avoid undefined in Firestore)
@@ -97,8 +107,11 @@ export const completeMatch = async (
       const currentLosses = userData.losses || 0;
       const currentTotalMatches = userData.totalMatches || 0;
 
+      // Use the actual calculated points for this player's team
+      const playerPoints = isTeam1 ? team1Points : team2Points;
+      
       batch.update(userRef, {
-        ranking: currentRanking + (isWinner ? winnerPoints : loserPoints),
+        ranking: currentRanking + playerPoints,
         wins: isWinner ? currentWins + 1 : currentWins,
         losses: isWinner ? currentLosses : currentLosses + 1,
         totalMatches: currentTotalMatches + 1,
@@ -107,7 +120,7 @@ export const completeMatch = async (
     }
   }
 
-  // Update lobby document
+  // Update lobby document with real point changes
   const lobbyRef = doc(firestore, 'lobbies', lobby.roomCode);
   batch.update(lobbyRef, {
     gameCompleted: true,
@@ -117,6 +130,11 @@ export const completeMatch = async (
       team2: team2Score,
     },
     winner,
+    pointChanges: {
+      team1: team1Points,
+      team2: team2Points,
+    },
+    ...(stakesSnapshot && { stakesSnapshot }),
     lastActivity: new Date(),
   });
 

@@ -28,6 +28,20 @@ export interface Lobby {
   };
   winner?: 1 | 2;
   scoreConfirmations?: { [playerId: string]: boolean };
+  // Point calculation results (NEW - Phase 1)
+  pointChanges?: {
+    team1: number;  // Actual points applied to team 1 players
+    team2: number;  // Actual points applied to team 2 players
+  };
+  stakesSnapshot?: {
+    team1Win: number;   // Points team 1 would gain if they win
+    team1Loss: number;  // Points team 1 would lose if they lose
+    team2Win: number;   // Points team 2 would gain if they win
+    team2Loss: number;  // Points team 2 would lose if they lose
+  };
+  // Rematch tracking (NEW - Phase 1)
+  isRematch?: boolean;
+  originalRoomCode?: string;  // Link to original game if this is a rematch
   // Exhibition match fields
   isExhibition?: boolean;
   gameCategory?: 'singles' | 'same_gender_doubles' | 'mixed_doubles';
