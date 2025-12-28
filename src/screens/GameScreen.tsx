@@ -138,11 +138,8 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
         stakesSnapshot,
       });
 
-      // Close modal
+      // Close modal - user will see GameSummary screen automatically
       setShowScoreEntry(false);
-      
-      // Show success message
-      Alert.alert('Success', 'Match completed! Ranks updated.');
     } catch (err) {
       console.error('Error completing match:', err);
       throw new Error('Failed to complete match. Please try again.');
