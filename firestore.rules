@@ -25,9 +25,9 @@ service cloud.firestore {
     
     // Users collection
     match /users/{userId} {
-      // Anyone authenticated can read public profiles
-      // Users can always read their own profile
-      allow read: if isAuthenticated() && (isOwner(userId) || isPublicProfile(userId));
+      // MVP: Anyone authenticated can read any user profile
+      // (Privacy settings can be added later if needed)
+      allow read: if isAuthenticated();
       
       // Only the user can create their own profile
       allow create: if isOwner(userId);
