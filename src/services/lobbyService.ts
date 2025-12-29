@@ -249,17 +249,18 @@ export const createRematch = async (previousLobby: Lobby): Promise<string> => {
   const newRoomCode = generateRoomCode();
 
   // Create new lobby with same settings and players
+  // Only include player2 fields if they exist (prevents undefined in Firestore)
   const rematchLobby: Lobby = {
     roomCode: newRoomCode,
     hostId: previousLobby.hostId,
     gameMode: previousLobby.gameMode,
     team1: {
       player1: previousLobby.team1.player1,
-      player2: previousLobby.team1.player2,
+      ...(previousLobby.team1.player2 && { player2: previousLobby.team1.player2 }),
     },
     team2: {
       player1: previousLobby.team2.player1,
-      player2: previousLobby.team2.player2,
+      ...(previousLobby.team2.player2 && { player2: previousLobby.team2.player2 }),
     },
     waitingPlayers: [],
     gameStarted: false,

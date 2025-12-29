@@ -2,12 +2,13 @@ import { memo, useCallback, useState, useMemo, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Crown, X } from 'lucide-react-native';
+import { Crown, X, User, Users,  } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList, RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLobby } from '@/hooks/firestore/useLobby';
 import { useStakesCalculation } from '@/hooks/game/useStakesCalculation';
+import { useToast } from '@/hooks/common/useToast';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
@@ -25,7 +26,8 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   const { roomCode } = route.params;
   const navigation = useNavigation<GameNavigationProp>();
   const { user } = useAuth();
-  const { lobby, loading, error, exists } = useLobby(roomCode);
+  const { lobby, loading, error, exists} = useLobby(roomCode);
+  const toast = useToast();
   const [showScoreEntry, setShowScoreEntry] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const insets = useSafeAreaInsets();
@@ -155,23 +157,16 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
     
     try {
       const newRoomCode = await createRematch(lobby);
-      Alert.alert(
-        'Rematch Created!',
-        `New lobby created with code: ${newRoomCode}. All players will be automatically added.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.replace('LobbyDetail', { roomCode: newRoomCode });
-            },
-          },
-        ]
-      );
+      toast.success(`Rematch created! New lobby: ${newRoomCode}`);
+      // Navigate after short delay to let toast show
+      setTimeout(() => {
+        navigation.replace('LobbyDetail', { roomCode: newRoomCode });
+      }, 500);
     } catch (err) {
       console.error('Error creating rematch:', err);
-      Alert.alert('Error', 'Failed to create rematch. Please try again.');
+      toast.error('Failed to create rematch. Please try again.');
     }
-  }, [lobby, navigation]);
+  }, [lobby, navigation, toast]);
 
   const handleCancelMatch = useCallback(async (): Promise<void> => {
     try {
@@ -180,9 +175,9 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
       navigation.navigate('Tabs');
     } catch (err) {
       console.error('Error cancelling match:', err);
-      Alert.alert('Error', 'Failed to cancel match. Please try again.');
+      toast.error('Failed to cancel match. Please try again.');
     }
-  }, [roomCode, user?.id, navigation]);
+  }, [roomCode, user?.id, navigation, toast]);
 
   const renderPlayer = useCallback(
     (player: Player | undefined, teamNumber: number) => {
@@ -354,6 +349,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
           </Text>
         </View>
       </View>
+      
 
       <ScrollView
         className="flex-1"
@@ -430,8 +426,8 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
         visible={showScoreEntry}
         onClose={() => setShowScoreEntry(false)}
         onSubmit={handleSubmitScores}
-        defaultTeam1Score={11}
-        defaultTeam2Score={9}
+        defaultTeam1Score={0}
+        defaultTeam2Score={0}
       />
     </SafeAreaView>
   );
