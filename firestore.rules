@@ -19,7 +19,8 @@ service cloud.firestore {
     // Helper function to check if update is only modifying match-related stats
     function isMatchStatsUpdate() {
       let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
-      let allowedKeys = ['ranking', 'wins', 'losses', 'totalMatches', 'lastMatchAt'].toSet();
+      // Allow nested ranking and match stats updates
+      let allowedKeys = ['rankings', 'matchStats', 'lastMatchAt'].toSet();
       return affectedKeys.hasOnly(allowedKeys);
     }
     

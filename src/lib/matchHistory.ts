@@ -102,19 +102,26 @@ export const completeMatch = async (
     
     if (userDoc.exists()) {
       const userData = userDoc.data();
-      const currentRanking = userData.ranking || 1000;
-      const currentWins = userData.wins || 0;
-      const currentLosses = userData.losses || 0;
-      const currentTotalMatches = userData.totalMatches || 0;
+      
+      // Determine which ranking category to update based on game mode and category
+      const rankingCategory = lobby.gameMode === 'singles' ? 'singles' :
+                             lobby.gameCategory === 'mixed_doubles' ? 'mixedDoubles' :
+                             'sameGenderDoubles';
+      
+      // Get current values from nested objects
+      const currentRankings = userData.rankings || { singles: 1000, sameGenderDoubles: 1000, mixedDoubles: 1000 };
+      const currentRanking = currentRankings[rankingCategory] || 1000;
+      const currentMatchStats = userData.matchStats || { wins: 0, losses: 0, totalMatches: 0 };
 
       // Use the actual calculated points for this player's team
       const playerPoints = isTeam1 ? team1Points : team2Points;
       
+      // Update using nested field paths
       batch.update(userRef, {
-        ranking: currentRanking + playerPoints,
-        wins: isWinner ? currentWins + 1 : currentWins,
-        losses: isWinner ? currentLosses : currentLosses + 1,
-        totalMatches: currentTotalMatches + 1,
+        [`rankings.${rankingCategory}`]: currentRanking + playerPoints,
+        'matchStats.wins': isWinner ? currentMatchStats.wins + 1 : currentMatchStats.wins,
+        'matchStats.losses': isWinner ? currentMatchStats.losses : currentMatchStats.losses + 1,
+        'matchStats.totalMatches': currentMatchStats.totalMatches + 1,
         lastMatchAt: serverTimestamp(),
       });
     }
