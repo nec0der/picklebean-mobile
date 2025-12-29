@@ -16,15 +16,25 @@ service cloud.firestore {
       return profile.data.profileVisibility == 'public';
     }
     
+    // Helper function to check if update is only modifying match-related stats
+    function isMatchStatsUpdate() {
+      let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      let allowedKeys = ['ranking', 'wins', 'losses', 'totalMatches', 'lastMatchAt'].toSet();
+      return affectedKeys.hasOnly(allowedKeys);
+    }
+    
     // Users collection
     match /users/{userId} {
       // Anyone authenticated can read public profiles
       // Users can always read their own profile
       allow read: if isAuthenticated() && (isOwner(userId) || isPublicProfile(userId));
       
-      // Only the user can create/update their own profile
+      // Only the user can create their own profile
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
+      
+      // User can update own profile OR authenticated users can update match stats only
+      allow update: if isOwner(userId) || 
+        (isAuthenticated() && isMatchStatsUpdate());
       
       // No one can delete profiles
       allow delete: if false;
@@ -47,7 +57,21 @@ service cloud.firestore {
         resource.data.hostId == request.auth.uid;
     }
     
-    // Matches collection
+    // Match History collection
+    match /matchHistory/{matchId} {
+      // Anyone authenticated can read match history
+      allow read: if isAuthenticated();
+      
+      // Anyone authenticated can create match records
+      // (Will be restricted by lobby host validation in future)
+      allow create: if isAuthenticated();
+      
+      // No updates or deletes allowed (immutable records)
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // Matches collection (legacy - keeping for backward compatibility)
     match /matches/{matchId} {
       // Anyone authenticated can read matches
       allow read: if isAuthenticated();
