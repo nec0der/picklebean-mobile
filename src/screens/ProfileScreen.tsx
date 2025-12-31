@@ -1,9 +1,7 @@
-import { memo, useState, useMemo } from 'react';
-import { View, Text, Pressable } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { memo, useState, useMemo, useEffect } from 'react';
+import { View, Pressable } from 'react-native';
 import { Settings } from 'lucide-react-native';
-import type { TabScreenProps, RootStackParamList } from '@/types/navigation';
-import type { NavigationProp } from '@react-navigation/native';
+import type { TabScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -14,8 +12,7 @@ import { MatchesTab } from '@/components/profile/MatchesTab';
 import { StatisticsTab } from '@/components/profile/StatisticsTab';
 import { PostsTab } from '@/components/profile/PostsTab';
 
-export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
-  const rootNavigation = useNavigation<NavigationProp<RootStackParamList>>();
+export const ProfileScreen = memo((props: TabScreenProps<'Profile'>) => {
   const { userDocument, firebaseUser, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<ProfileTab>('matches');
 
@@ -62,6 +59,17 @@ export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
     console.log('Open following/followers');
   };
 
+  // Set header right button with Settings icon
+  useEffect(() => {
+    props.navigation.setOptions({
+      headerRight: () => (
+        <Pressable onPress={handleSettings} className="mr-2 active:opacity-70">
+          <Settings size={24} color="#6B7280" />
+        </Pressable>
+      ),
+    });
+  }, [props.navigation]);
+
   // Get profile data
   const profilePicture = userDocument?.profilePictureUrl || firebaseUser?.photoURL || null;
   const fullName = userDocument?.displayName || firebaseUser?.displayName || 'User';
@@ -80,67 +88,54 @@ export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header with Profile title centered and Settings on right */}
-      <View className="flex-row items-center justify-center px-4 pt-12 pb-3 bg-white border-b border-gray-200">
-        <Text className="text-xl font-semibold !text-gray-900">Profile</Text>
-        <Pressable 
-          onPress={handleSettings} 
-          className="absolute p-2 right-4 active:opacity-70"
-        >
-          <Settings size={24} color="#6B7280" />
-        </Pressable>
+      {/* Hero Section */}
+      <ProfileHero
+        profilePicture={profilePicture}
+        fullName={fullName}
+        username={username}
+        bio={bio}
+        followingCount={followingCount}
+        followersCount={followersCount}
+        isOwnProfile={true}
+        onEditPress={handleEditProfile}
+        onFollowingPress={handleFollowingPress}
+      />
+
+      {/* Stats Section - 50/50 side by side */}
+      <View className="flex-row gap-3 px-4 py-4 bg-gray-50">
+        <View className="flex-1">
+          <RankingStatCard
+            category="Singles"
+            rank={singlesPosition}
+            points={userDocument?.rankings?.singles || 1000}
+            matchCount={totalMatches}
+            winRate={singlesWinRate}
+          />
+        </View>
+
+        <View className="flex-1">
+          <RankingStatCard
+            category="Doubles"
+            rank={doublesPosition}
+            points={userDocument?.rankings?.sameGenderDoubles || 1000}
+            matchCount={totalMatches}
+            winRate={doublesWinRate}
+          />
+        </View>
       </View>
 
+      {/* Tab Bar */}
+      <ProfileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Tab Content */}
       <View className="flex-1">
-        {/* Hero Section */}
-        <ProfileHero
-          profilePicture={profilePicture}
-          fullName={fullName}
-          username={username}
-          bio={bio}
-          followingCount={followingCount}
-          followersCount={followersCount}
-          isOwnProfile={true}
-          onEditPress={handleEditProfile}
-          onFollowingPress={handleFollowingPress}
-        />
-
-        {/* Stats Section - 50/50 side by side */}
-        <View className="flex-row gap-3 px-4 py-4 bg-gray-50">
-          <View className="flex-1">
-            <RankingStatCard
-              category="Singles"
-              rank={singlesPosition}
-              points={userDocument?.rankings?.singles || 1000}
-              matchCount={totalMatches}
-              winRate={singlesWinRate}
-            />
-          </View>
-
-          <View className="flex-1">
-            <RankingStatCard
-              category="Doubles"
-              rank={doublesPosition}
-              points={userDocument?.rankings?.sameGenderDoubles || 1000}
-              matchCount={totalMatches}
-              winRate={doublesWinRate}
-            />
-          </View>
-        </View>
-
-        {/* Tab Bar */}
-        <ProfileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {/* Tab Content */}
-        <View className="flex-1">
-          {activeTab === 'matches' && userDocument?.uid && (
-            <MatchesTab userId={userDocument.uid} />
-          )}
-          {activeTab === 'statistics' && userDocument?.uid && (
-            <StatisticsTab userId={userDocument.uid} />
-          )}
-          {activeTab === 'posts' && <PostsTab />}
-        </View>
+        {activeTab === 'matches' && userDocument?.uid && (
+          <MatchesTab userId={userDocument.uid} />
+        )}
+        {activeTab === 'statistics' && userDocument?.uid && (
+          <StatisticsTab userId={userDocument.uid} />
+        )}
+        {activeTab === 'posts' && <PostsTab />}
       </View>
     </View>
   );
