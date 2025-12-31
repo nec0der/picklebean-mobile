@@ -1,5 +1,5 @@
 import { memo, useState, useMemo } from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Settings } from 'lucide-react-native';
 import type { TabScreenProps, RootStackParamList } from '@/types/navigation';
@@ -89,7 +89,7 @@ export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
         </Pressable>
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <View className="flex-1">
         {/* Hero Section */}
         <ProfileHero
           profilePicture={profilePicture}
@@ -135,7 +135,7 @@ export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
           )}
           {activeTab === 'posts' && <PostsTab />}
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 });

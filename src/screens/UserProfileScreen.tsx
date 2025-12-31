@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Lock } from 'lucide-react-native';
 import type { RootStackScreenProps } from '@/types/navigation';
@@ -146,7 +146,7 @@ export const UserProfileScreen = memo(
           <Text className="!text-2xl font-semibold !text-gray-900">{displayName}</Text>
         </View>
 
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="flex-1">
           {/* Hero Section with Follow button */}
           <ProfileHero
             profilePicture={profilePicture}
@@ -193,7 +193,7 @@ export const UserProfileScreen = memo(
             {activeTab === 'statistics' && user.uid && <StatisticsTab userId={user.uid} />}
             {activeTab === 'posts' && <PostsTab />}
           </View>
-        </ScrollView>
+        </View>
       </SafeAreaView>
     );
   }
