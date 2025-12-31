@@ -64,18 +64,16 @@ export const MatchCard = memo(({ match, onPress }: MatchCardProps) => {
           </View>
 
           {/* Points Change */}
-          {!match.isExhibition && (
-            <View className="flex-shrink-0">
-              <Text
-                className={`text-base font-bold ${
-                  isWin ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {match.pointsChange > 0 ? '+' : ''}
-                {match.pointsChange}
-              </Text>
-            </View>
-          )}
+          <View className="flex-shrink-0">
+            <Text
+              className={`text-base font-bold ${
+                isWin ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {match.pointsChange > 0 ? '+' : ''}
+              {match.pointsChange}
+            </Text>
+          </View>
         </View>
       </Card>
     </Pressable>

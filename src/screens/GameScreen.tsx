@@ -1,5 +1,5 @@
 import { memo, useCallback, useState, useMemo, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Crown, X, User, Users,  } from 'lucide-react-native';
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLobby } from '@/hooks/firestore/useLobby';
 import { useStakesCalculation } from '@/hooks/game/useStakesCalculation';
 import { useToast } from '@/hooks/common/useToast';
+import { useAlert } from '@/hooks/common/useAlert';
 import { LoadingSpinner, ErrorMessage } from '@/components/common';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
@@ -28,6 +29,7 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   const { user } = useAuth();
   const { lobby, loading, error, exists} = useLobby(roomCode);
   const toast = useToast();
+  const alert = useAlert();
   const [showScoreEntry, setShowScoreEntry] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const insets = useSafeAreaInsets();
@@ -42,11 +44,11 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   }, [navigation]);
 
   // Determine game category for stakes calculation
-  const getGameCategory = (): 'singles' | 'sameGenderDoubles' | 'mixedDoubles' => {
+  const getGameCategory = (): 'singles' | 'same_gender_doubles' | 'mixed_doubles' => {
     if (!lobby) return 'singles';
     if (lobby.gameMode === 'singles') return 'singles';
-    // For doubles, check if mixed (would need gender info, default to sameGender for now)
-    return 'sameGenderDoubles';
+    // For doubles, use stored category or default to same_gender_doubles
+    return lobby.gameCategory || 'same_gender_doubles';
   };
 
   // Extract player UIDs for stakes calculation (stable references)
@@ -80,21 +82,18 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   );
 
   const handleLeaveGame = useCallback(() => {
-    Alert.alert(
+    alert.confirm(
       'Leave Game?',
       'Are you sure you want to leave the game in progress?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: () => {
-            navigation.navigate('Tabs');
-          },
+      {
+        onConfirm: () => {
+          navigation.navigate('Tabs');
         },
-      ]
+        confirmText: 'Leave',
+        confirmStyle: 'destructive',
+      }
     );
-  }, [navigation]);
+  }, [navigation, alert]);
 
   const handleCompleteGame = useCallback(() => {
     setShowScoreEntry(true);

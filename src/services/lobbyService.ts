@@ -42,7 +42,6 @@ export const createLobby = async (
     team2: {},
     waitingPlayers: [],
     gameStarted: false,
-    isExhibition: false,
     createdAt: serverTimestamp() as any,
     lastActivity: serverTimestamp() as any,
   };
@@ -204,21 +203,6 @@ export const confirmScore = async (
 };
 
 /**
- * Toggles exhibition match status
- * @param roomCode - Room code
- * @param isExhibition - Exhibition status
- */
-export const setExhibitionMatch = async (
-  roomCode: string,
-  isExhibition: boolean
-): Promise<void> => {
-  await updateDoc(doc(firestore, 'lobbies', roomCode), {
-    isExhibition,
-    lastActivity: serverTimestamp(),
-  });
-};
-
-/**
  * Cancels an active match
  * @param roomCode - Room code
  * @param cancelledBy - User ID of host cancelling
@@ -245,6 +229,22 @@ export const cancelMatch = async (
  * @param previousLobby - The completed lobby to rematch
  * @returns New room code
  */
+/**
+ * Remove a player from a lobby slot
+ */
+export const removePlayerFromLobby = async (
+  roomCode: string,
+  team: 1 | 2,
+  slot: 1 | 2
+): Promise<void> => {
+  const lobbyRef = doc(firestore, 'lobbies', roomCode);
+  
+  await updateDoc(lobbyRef, {
+    [`team${team}.player${slot}`]: {},
+    lastActivity: new Date(),
+  });
+};
+
 export const createRematch = async (previousLobby: Lobby): Promise<string> => {
   const newRoomCode = generateRoomCode();
 
@@ -264,7 +264,6 @@ export const createRematch = async (previousLobby: Lobby): Promise<string> => {
     },
     waitingPlayers: [],
     gameStarted: false,
-    isExhibition: previousLobby.isExhibition || false,
     isRematch: true,
     originalRoomCode: previousLobby.roomCode,
     createdAt: serverTimestamp() as any,

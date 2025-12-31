@@ -9,17 +9,17 @@ import {
   ActionsheetDragIndicator,
 } from '@gluestack-ui/themed';
 
-interface CancelMatchSheetProps {
+interface CloseLobbySheetProps {
   visible: boolean;
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }
 
-export const CancelMatchSheet = memo(({
+export const CloseLobbySheet = memo(({
   visible,
   onClose,
   onConfirm,
-}: CancelMatchSheetProps) => {
+}: CloseLobbySheetProps) => {
   const handleConfirm = async (): Promise<void> => {
     onClose();
     await onConfirm();
@@ -43,15 +43,15 @@ export const CancelMatchSheet = memo(({
           
           {/* Title */}
           <Text className="px-4 mb-6 text-xl font-bold text-center !text-gray-900">
-            Cancel This Match?
+            Close This Lobby?
           </Text>
           
           {/* Helper Text */}
           <Text className="px-4 mb-2 text-center !text-gray-600">
-            This will end the match immediately.
+            This will end the lobby immediately.
           </Text>
           <Text className="px-4 mb-8 text-center font-medium !text-gray-600">
-            No ratings will be affected.
+            All players will be removed.
           </Text>
           
           {/* Buttons */}
@@ -62,7 +62,7 @@ export const CancelMatchSheet = memo(({
               className="flex-1 py-4 bg-gray-100 rounded-lg active:bg-gray-200"
             >
               <Text className="font-medium text-center !text-gray-700">
-                No, Continue
+                No, Keep Open
               </Text>
             </Pressable>
             
@@ -71,7 +71,7 @@ export const CancelMatchSheet = memo(({
               className="flex-1 py-4 bg-red-500 rounded-lg active:bg-red-600"
             >
               <Text className="font-bold text-center !text-white">
-                Yes, Cancel
+                Yes, Close
               </Text>
             </Pressable>
           </View>
@@ -81,6 +81,6 @@ export const CancelMatchSheet = memo(({
   );
 });
 
-CancelMatchSheet.displayName = 'CancelMatchSheet';
+CloseLobbySheet.displayName = 'CloseLobbySheet';
 
-export type { CancelMatchSheetProps };
+export type { CloseLobbySheetProps };

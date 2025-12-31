@@ -105,11 +105,10 @@ export const completeMatch = async (
       
       // Determine which ranking category to update based on game mode and category
       const rankingCategory = lobby.gameMode === 'singles' ? 'singles' :
-                             lobby.gameCategory === 'mixed_doubles' ? 'mixedDoubles' :
-                             'sameGenderDoubles';
+                             'sameGenderDoubles';  // Both same-gender and mixed use sameGenderDoubles
       
       // Get current values from nested objects
-      const currentRankings = userData.rankings || { singles: 1000, sameGenderDoubles: 1000, mixedDoubles: 1000 };
+      const currentRankings = userData.rankings || { singles: 1000, sameGenderDoubles: 1000 };
       const currentRanking = currentRankings[rankingCategory] || 1000;
       const currentMatchStats = userData.matchStats || { wins: 0, losses: 0, totalMatches: 0 };
 

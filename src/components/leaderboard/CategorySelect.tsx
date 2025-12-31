@@ -3,12 +3,12 @@ import { View, Text, Pressable, ScrollView } from 'react-native';
 import type { GameCategory } from '@/types/lobby';
 
 export type CategoryFilter =
+  | 'all_singles'
   | 'mens_singles'
   | 'womens_singles'
+  | 'all_doubles'
   | 'mens_doubles'
-  | 'womens_doubles'
-  | 'mens_mixed'
-  | 'womens_mixed';
+  | 'womens_doubles';
 
 interface CategorySelectProps {
   value: CategoryFilter;
@@ -16,12 +16,12 @@ interface CategorySelectProps {
 }
 
 const categories: { value: CategoryFilter; label: string }[] = [
+  { value: 'all_singles', label: 'Singles (All)' },
   { value: 'mens_singles', label: "Men's Singles" },
   { value: 'womens_singles', label: "Women's Singles" },
+  { value: 'all_doubles', label: 'Doubles (All)' },
   { value: 'mens_doubles', label: "Men's Doubles" },
   { value: 'womens_doubles', label: "Women's Doubles" },
-  { value: 'mens_mixed', label: "Men's Mixed" },
-  { value: 'womens_mixed', label: "Women's Mixed" },
 ];
 
 export const CategorySelect = memo(({ value, onChange }: CategorySelectProps) => {
@@ -65,20 +65,20 @@ CategorySelect.displayName = 'CategorySelect';
  */
 export const parseCategoryFilter = (
   filter: CategoryFilter
-): { category: GameCategory; gender: 'male' | 'female' } => {
+): { category: GameCategory; gender: 'male' | 'female' | undefined } => {
   switch (filter) {
+    case 'all_singles':
+      return { category: 'singles', gender: undefined };
     case 'mens_singles':
       return { category: 'singles', gender: 'male' };
     case 'womens_singles':
       return { category: 'singles', gender: 'female' };
+    case 'all_doubles':
+      return { category: 'same_gender_doubles', gender: undefined };
     case 'mens_doubles':
       return { category: 'same_gender_doubles', gender: 'male' };
     case 'womens_doubles':
       return { category: 'same_gender_doubles', gender: 'female' };
-    case 'mens_mixed':
-      return { category: 'mixed_doubles', gender: 'male' };
-    case 'womens_mixed':
-      return { category: 'mixed_doubles', gender: 'female' };
   }
 };
 

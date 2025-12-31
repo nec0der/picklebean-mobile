@@ -1,16 +1,22 @@
-import { memo, useState, useEffect, useCallback } from "react";
+import { memo, useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
   Pressable,
   ScrollView,
-  Alert,
   Clipboard,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 import { X, Copy, Check, User, Users, Radio } from "lucide-react-native";
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  FadeIn,
+  FadeOut
+} from "react-native-reanimated";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type {
   RootStackParamList,
@@ -20,17 +26,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLobby } from "@/hooks/firestore/useLobby";
 import { useLobbyActions } from "@/hooks/actions/useLobbyActions";
 import { useToast } from "@/hooks/common/useToast";
+import { useAlert } from "@/hooks/common/useAlert";
 import { useNFC } from "@/hooks/common/useNFC";
+import { useStakesCalculation } from "@/hooks/game/useStakesCalculation";
 import { LoadingSpinner, ErrorMessage } from "@/components/common";
 import { Card } from "@/components/ui/Card";
 import { DraggablePlayerSlot } from "@/components/features/lobby/DraggablePlayerSlot";
 import { CountdownOverlay } from "@/components/features/lobby/CountdownOverlay";
 import { LobbyHeader } from "@/components/features/lobby/LobbyHeader";
 import { QRCodeModal } from "@/components/features/lobby/QRCodeModal";
+import { PlayerActionSheet } from "@/components/features/lobby/PlayerActionSheet";
+import { CloseLobbySheet } from "@/components/features/lobby/CloseLobbySheet";
 import type { Player } from "@/types/lobby";
 import { doc, updateDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { removePlayerFromLobby } from "@/services/lobbyService";
 import { firestore } from "@/config/firebase";
-import { extractUserIdFromNFCUrl } from "@/lib/nfc";
+import { extractUsernameFromNFCUrl, getUserIdFromUsername } from "@/lib/nfc";
 
 type LobbyDetailNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -41,11 +52,12 @@ export const LobbyDetailScreen = memo(
   ({ route }: RootStackScreenProps<"LobbyDetail">) => {
     const { roomCode } = route.params;
     const navigation = useNavigation<LobbyDetailNavigationProp>();
-    const { user, userDocument } = useAuth();
-    const { lobby, loading, error, exists } = useLobby(roomCode);
-    const { joinLobby, leaveLobby, deleteLobby } = useLobbyActions();
-    const toast = useToast();
-    const insets = useSafeAreaInsets();
+  const { user, userDocument } = useAuth();
+  const { lobby, loading, error, exists } = useLobby(roomCode);
+  const { joinLobby, leaveLobby, deleteLobby } = useLobbyActions();
+  const toast = useToast();
+  const alert = useAlert();
+  const insets = useSafeAreaInsets();
 
       const [isJoining, setIsJoining] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
@@ -82,6 +94,72 @@ export const LobbyDetailScreen = memo(
 
     // State for QR code modal
     const [showQRModal, setShowQRModal] = useState(false);
+
+    // State for player action sheet
+    const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+    const [selectedPlayerTeam, setSelectedPlayerTeam] = useState<1 | 2 | null>(null);
+    const [selectedPlayerSlot, setSelectedPlayerSlot] = useState<1 | 2 | null>(null);
+    const [showPlayerActionSheet, setShowPlayerActionSheet] = useState(false);
+
+    // State for close lobby sheet
+    const [showCloseLobbySheet, setShowCloseLobbySheet] = useState(false);
+
+    // State for player ratings
+    const [playerRatings, setPlayerRatings] = useState<Record<string, number>>({});
+
+    // Helper function to check if game can start (must be declared before use)
+    const canStartGame = useCallback((): boolean => {
+      if (!lobby) return false;
+
+      if (lobby.gameMode === "singles") {
+        return !!(lobby.team1.player1?.uid && lobby.team2.player1?.uid);
+      } else {
+        return !!(
+          lobby.team1.player1?.uid &&
+          lobby.team1.player2?.uid &&
+          lobby.team2.player1?.uid &&
+          lobby.team2.player2?.uid
+        );
+      }
+    }, [lobby]);
+
+    // Determine game category for stakes calculation
+    const getGameCategory = (): 'singles' | 'same_gender_doubles' | 'mixed_doubles' => {
+      if (!lobby) return 'singles';
+      if (lobby.gameMode === 'singles') return 'singles';
+      // For doubles, use stored category or default to same_gender_doubles
+      return lobby.gameCategory || 'same_gender_doubles';
+    };
+
+    // Extract player UIDs for stakes calculation (stable references)
+    const team1PlayerIds = useMemo(() => {
+      if (!lobby) return [];
+      if (lobby.gameMode === 'singles') {
+        return lobby.team1.player1?.uid ? [lobby.team1.player1.uid] : [];
+      }
+      return [
+        lobby.team1.player1?.uid,
+        lobby.team1.player2?.uid
+      ].filter(Boolean) as string[];
+    }, [lobby?.gameMode, lobby?.team1.player1?.uid, lobby?.team1.player2?.uid]);
+
+    const team2PlayerIds = useMemo(() => {
+      if (!lobby) return [];
+      if (lobby.gameMode === 'singles') {
+        return lobby.team2.player1?.uid ? [lobby.team2.player1.uid] : [];
+      }
+      return [
+        lobby.team2.player1?.uid,
+        lobby.team2.player2?.uid
+      ].filter(Boolean) as string[];
+    }, [lobby?.gameMode, lobby?.team2.player1?.uid, lobby?.team2.player2?.uid]);
+
+    const stakesData = useStakesCalculation(
+      team1PlayerIds,
+      team2PlayerIds,
+      lobby?.gameMode || 'doubles',
+      getGameCategory()
+    );
 
     // Initialize NFC
     const {
@@ -256,7 +334,7 @@ export const LobbyDetailScreen = memo(
           });
         } catch (err) {
           console.error("Error moving player:", err);
-          Alert.alert("Error", "Failed to move player");
+          alert.show("Error", "Failed to move player");
         } finally {
           setDraggedPlayer(null);
         }
@@ -280,11 +358,19 @@ export const LobbyDetailScreen = memo(
     async function handleNFCTagRead(url: string): Promise<boolean> {
       console.log("📱 NFC tag detected:", url);
 
-      // Extract user ID from URL
-      const scannedUserId = extractUserIdFromNFCUrl(url);
+      // Extract username from URL
+      const scannedUsername = extractUsernameFromNFCUrl(url);
+
+      if (!scannedUsername) {
+        toast.error("Invalid NFC tag format");
+        return true; // Continue scanning
+      }
+
+      // Look up userId from username
+      const scannedUserId = await getUserIdFromUsername(scannedUsername);
 
       if (!scannedUserId) {
-        toast.error("Invalid NFC tag format");
+        toast.error("Player not found");
         return true; // Continue scanning
       }
 
@@ -418,6 +504,51 @@ export const LobbyDetailScreen = memo(
       };
     }, []); // Don't include isScanning - causes premature cleanup!
 
+    // Disable swipe gestures during active lobby
+    useEffect(() => {
+      navigation.setOptions({
+        gestureEnabled: false,
+      });
+    }, [navigation]);
+
+    // Fetch player ratings when lobby loads or players change
+    useEffect(() => {
+      if (!lobby) return;
+
+      const fetchRatings = async () => {
+        const allPlayers = [
+          lobby.team1.player1,
+          lobby.team1.player2,
+          lobby.team2.player1,
+          lobby.team2.player2,
+        ].filter((p): p is Player => !!p?.uid);
+
+        const ratings: Record<string, number> = {};
+
+        for (const player of allPlayers) {
+          try {
+            const userDoc = await getDoc(doc(firestore, 'users', player.uid));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const ranking = lobby.gameMode === 'singles'
+                ? userData.rankings?.singles
+                : 1000; // Hardcoded 1000 for doubles for now
+              ratings[player.uid] = ranking || 1000;
+            } else {
+              ratings[player.uid] = 1000;
+            }
+          } catch (error) {
+            console.error(`Error fetching rating for ${player.uid}:`, error);
+            ratings[player.uid] = 1000;
+          }
+        }
+
+        setPlayerRatings(ratings);
+      };
+
+      fetchRatings();
+    }, [lobby?.team1.player1?.uid, lobby?.team1.player2?.uid, lobby?.team2.player1?.uid, lobby?.team2.player2?.uid, lobby?.gameMode]);
+
     // Auto-join when lobby loads
     useEffect(() => {
       if (!lobby || !user || !userDocument || isJoining || isInLobby()) return;
@@ -507,61 +638,43 @@ export const LobbyDetailScreen = memo(
     };
 
     const handleLeave = () => {
-      Alert.alert(
+      alert.confirm(
         "Leave Lobby?",
         "Are you sure you want to leave this lobby?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Leave",
-            style: "destructive",
-            onPress: async () => {
-              setIsLeaving(true);
-              try {
-                await leaveLobby(roomCode, user!.id);
-                navigation.goBack();
-              } catch (err) {
-                console.error("Error leaving lobby:", err);
-                Alert.alert(
-                  "Error",
-                  "Failed to leave lobby. Please try again."
-                );
-              } finally {
-                setIsLeaving(false);
-              }
-            },
+        {
+          onConfirm: async () => {
+            setIsLeaving(true);
+            try {
+              await leaveLobby(roomCode, user!.id);
+              navigation.goBack();
+            } catch (err) {
+              console.error("Error leaving lobby:", err);
+              alert.show("Error", "Failed to leave lobby. Please try again.");
+            } finally {
+              setIsLeaving(false);
+            }
           },
-        ]
+          confirmText: "Leave",
+          confirmStyle: "destructive",
+        }
       );
     };
 
     const handleClose = () => {
-      Alert.alert(
-        "Close Lobby?",
-        "Are you sure you want to close this lobby? All players will be removed.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Close",
-            style: "destructive",
-            onPress: async () => {
-              setIsLeaving(true);
-              try {
-                await deleteLobby(roomCode);
-                navigation.goBack();
-              } catch (err) {
-                console.error("Error closing lobby:", err);
-                Alert.alert(
-                  "Error",
-                  "Failed to close lobby. Please try again."
-                );
-              } finally {
-                setIsLeaving(false);
-              }
-            },
-          },
-        ]
-      );
+      setShowCloseLobbySheet(true);
+    };
+
+    const handleConfirmClose = async () => {
+      setIsLeaving(true);
+      try {
+        await deleteLobby(roomCode);
+        navigation.goBack();
+      } catch (err) {
+        console.error("Error closing lobby:", err);
+        alert.show("Error", "Failed to close lobby. Please try again.");
+      } finally {
+        setIsLeaving(false);
+      }
     };
 
     const handleStartGame = async () => {
@@ -578,9 +691,57 @@ export const LobbyDetailScreen = memo(
         });
       } catch (err) {
         console.error("Error starting countdown:", err);
-        Alert.alert("Error", "Failed to start game. Please try again.");
+        alert.show("Error", "Failed to start game. Please try again.");
       }
     };
+
+    // Player tap handler - opens action sheet
+    const handlePlayerTap = useCallback((player: Player, team: 1 | 2, slot: 1 | 2) => {
+      setSelectedPlayer(player);
+      setSelectedPlayerTeam(team);
+      setSelectedPlayerSlot(slot);
+      setShowPlayerActionSheet(true);
+    }, []);
+
+    // Navigate to player profile - fetch username first
+    const handleViewProfile = useCallback(async (userId: string) => {
+      try {
+        // Fetch user document to get username
+        const userDoc = await getDoc(doc(firestore, 'users', userId));
+        
+        if (!userDoc.exists()) {
+          toast.error('User not found');
+          return;
+        }
+        
+        const userData = userDoc.data();
+        const username = userData.username;
+        
+        if (!username) {
+          toast.error('User profile unavailable');
+          return;
+        }
+        
+        // Navigate with username (not userId!)
+        navigation.navigate('UserProfile', { username });
+      } catch (error) {
+        console.error('Error fetching user for profile:', error);
+        toast.error('Failed to load profile');
+      }
+    }, [navigation, toast]);
+
+    // Remove player from lobby
+    const handleRemovePlayer = useCallback(async () => {
+      if (!selectedPlayerTeam || !selectedPlayerSlot || !selectedPlayer) return;
+
+      try {
+        await removePlayerFromLobby(roomCode, selectedPlayerTeam, selectedPlayerSlot);
+        toast.success(`${selectedPlayer.displayName} removed from lobby`);
+      } catch (err) {
+        console.error('Error removing player:', err);
+        toast.error('Failed to remove player. Please try again.');
+      }
+    }, [roomCode, selectedPlayerTeam, selectedPlayerSlot, selectedPlayer, toast]);
 
     // Countdown effect - host manages countdown progression
     useEffect(() => {
@@ -641,21 +802,6 @@ export const LobbyDetailScreen = memo(
       }
     }, [isHost, lobby?.countdownActive, lobby?.countdownValue, roomCode]);
 
-    const canStartGame = (): boolean => {
-      if (!lobby) return false;
-
-      if (lobby.gameMode === "singles") {
-        return !!(lobby.team1.player1?.uid && lobby.team2.player1?.uid);
-      } else {
-        return !!(
-          lobby.team1.player1?.uid &&
-          lobby.team1.player2?.uid &&
-          lobby.team2.player1?.uid &&
-          lobby.team2.player2?.uid
-        );
-      }
-    };
-
     const isRoomFull = (): boolean => {
       if (!lobby) return false;
 
@@ -673,6 +819,17 @@ export const LobbyDetailScreen = memo(
         lobby.team2.player2?.uid === user.id
       );
     };
+
+    // Helper to check if current user is in a specific team
+    const isMyTeam = useCallback((teamNumber: 1 | 2): boolean => {
+      if (!user?.id || !lobby) return false;
+      
+      const team = teamNumber === 1 ? lobby.team1 : lobby.team2;
+      return !!(
+        team.player1?.uid === user.id ||
+        team.player2?.uid === user.id
+      );
+    }, [user?.id, lobby]);
 
     // Loading state
     if (loading || isJoining || isLeaving) {
@@ -719,7 +876,7 @@ export const LobbyDetailScreen = memo(
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-          {/* Compact Header */}
+          {/* Compact Header - Role-based title */}
           <View className="relative flex-row items-center justify-center px-4 py-3 border-b border-gray-200">
             <Pressable
               onPress={isHost ? handleClose : handleLeave}
@@ -727,11 +884,13 @@ export const LobbyDetailScreen = memo(
             >
               <X size={24} color="#6b7280" />
             </Pressable>
-            <Text className="text-xl font-bold text-gray-900">Game Lobby</Text>
+            <Text className="text-xl font-bold !text-gray-900">
+              {isHost ? 'Game Lobby' : 'Waiting to Start'}
+            </Text>
           </View>
 
           {/* Lobby Header with Room Code and Actions */}
-          {isHost && isSupported && !isRoomFull() && (
+          {isHost && isSupported && (
             <LobbyHeader
               roomCode={roomCode}
               isScanning={isScanning}
@@ -739,7 +898,7 @@ export const LobbyDetailScreen = memo(
               onScanPress={handleScanPlayers}
             />
           )}
-          {(!isHost || !isSupported || isRoomFull()) && (
+          {(!isHost || !isSupported) && (
             <View className="flex-col items-center justify-center px-4 py-3 bg-white border-b border-gray-200">
               <Text className="mb-1 text-xs font-medium tracking-wider text-gray-500">
                 ROOM CODE
@@ -750,7 +909,7 @@ export const LobbyDetailScreen = memo(
             </View>
           )}
 
-          {/* Game Mode Badge - Moved here, right after header */}
+          {/* Game Mode Badge */}
           <View className="items-center py-3 bg-white border-b border-gray-200">
             <View className="flex-row items-center gap-2">
               {lobby.gameMode === "singles" ? (
@@ -792,11 +951,22 @@ export const LobbyDetailScreen = memo(
 
               {/* Teams */}
               <View className="space-y-6">
-                {/* Team 1 */}
-                <Card variant="outlined" padding="lg" className="border-green-200 bg-green-50/30">
-                  <Text className="mb-4 text-base font-semibold text-green-700">
-                    Team 1
-                  </Text>
+                {/* Team 1 - Highlight if current user's team */}
+                <Card 
+                  variant="outlined" 
+                  padding="lg" 
+                  className="!p-0 bg-green-100 border-0"
+                >
+                  <View className="flex-row items-start justify-between mb-4">
+                    <Text className="text-base font-semibold !text-green-700">
+                      Team 1
+                    </Text>
+                    {canStartGame() && !stakesData.loading && (
+                      <Text className="text-xs !text-green-600">
+                        Win: +{stakesData.team1Win} | Lose: -{stakesData.team1Loss}
+                      </Text>
+                    )}
+                  </View>
                   <View className="gap-3">
                     <DraggablePlayerSlot
                       player={lobby.team1.player1}
@@ -805,10 +975,13 @@ export const LobbyDetailScreen = memo(
                       isHost={isHost}
                       isCurrentUser={lobby.team1.player1?.uid === user?.id}
                       hostId={lobby.hostId}
+                      gameMode={lobby.gameMode}
+                      playerRating={lobby.team1.player1?.uid ? playerRatings[lobby.team1.player1.uid] || 1000 : 1000}
                       onDragStart={handleDragStart}
                       onDragMove={handleDragMove}
                       onDragEnd={handleDragEnd}
                       onLayout={handleSlotLayout}
+                      onPlayerTap={(player) => handlePlayerTap(player, 1, 1)}
                       isHighlighted={
                         activeDropZone?.team === 1 &&
                         activeDropZone?.slot === 1 &&
@@ -825,10 +998,13 @@ export const LobbyDetailScreen = memo(
                         isHost={isHost}
                         isCurrentUser={lobby.team1.player2?.uid === user?.id}
                         hostId={lobby.hostId}
+                        gameMode={lobby.gameMode}
+                        playerRating={lobby.team1.player2?.uid ? playerRatings[lobby.team1.player2.uid] || 1000 : 1000}
                         onDragStart={handleDragStart}
                         onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
                         onLayout={handleSlotLayout}
+                        onPlayerTap={(player) => handlePlayerTap(player, 1, 2)}
                         isHighlighted={
                           activeDropZone?.team === 1 &&
                           activeDropZone?.slot === 2 &&
@@ -851,11 +1027,22 @@ export const LobbyDetailScreen = memo(
                   <View className="flex-1 h-px bg-gray-300" />
                 </View>
 
-                {/* Team 2 */}
-                <Card variant="outlined" padding="lg" className="border-blue-200 bg-blue-50/30">
-                  <Text className="mb-4 text-base font-semibold text-blue-700">
-                    Team 2
-                  </Text>
+                {/* Team 2 - Highlight if current user's team */}
+                <Card 
+                  variant="outlined" 
+                  padding="lg" 
+                  className="bg-blue-100 !border-0 !p-0"
+                >
+                  <View className="flex-row items-start justify-between mb-4">
+                    <Text className="text-base font-semibold !text-blue-700">
+                      Team 2
+                    </Text>
+                    {canStartGame() && !stakesData.loading && (
+                      <Text className="text-xs !text-blue-600">
+                        Win: +{stakesData.team2Win} | Lose: -{stakesData.team2Loss}
+                      </Text>
+                    )}
+                  </View>
                   <View className="gap-3">
                     <DraggablePlayerSlot
                       player={lobby.team2.player1}
@@ -864,10 +1051,13 @@ export const LobbyDetailScreen = memo(
                       isHost={isHost}
                       isCurrentUser={lobby.team2.player1?.uid === user?.id}
                       hostId={lobby.hostId}
+                      gameMode={lobby.gameMode}
+                      playerRating={lobby.team2.player1?.uid ? playerRatings[lobby.team2.player1.uid] || 1000 : 1000}
                       onDragStart={handleDragStart}
                       onDragMove={handleDragMove}
                       onDragEnd={handleDragEnd}
                       onLayout={handleSlotLayout}
+                      onPlayerTap={(player) => handlePlayerTap(player, 2, 1)}
                       isHighlighted={
                         activeDropZone?.team === 2 &&
                         activeDropZone?.slot === 1 &&
@@ -884,10 +1074,13 @@ export const LobbyDetailScreen = memo(
                         isHost={isHost}
                         isCurrentUser={lobby.team2.player2?.uid === user?.id}
                         hostId={lobby.hostId}
+                        gameMode={lobby.gameMode}
+                        playerRating={lobby.team2.player2?.uid ? playerRatings[lobby.team2.player2.uid] || 1000 : 1000}
                         onDragStart={handleDragStart}
                         onDragMove={handleDragMove}
                         onDragEnd={handleDragEnd}
                         onLayout={handleSlotLayout}
+                        onPlayerTap={(player) => handlePlayerTap(player, 2, 2)}
                         isHighlighted={
                           activeDropZone?.team === 2 &&
                           activeDropZone?.slot === 2 &&
@@ -904,8 +1097,8 @@ export const LobbyDetailScreen = memo(
             </View>
           </ScrollView>
 
-          {/* Fixed Start Game Button (Host Only) */}
-          {isHost && (
+          {/* Fixed Bottom Area - Role-based */}
+          {isHost ? (
             <View 
               className="absolute bottom-0 left-0 right-0 px-4 pt-4 bg-white border-t border-gray-200"
               style={{ paddingBottom: Math.max(insets.bottom, 16) }}
@@ -919,8 +1112,17 @@ export const LobbyDetailScreen = memo(
                     : "bg-gray-300"
                 }`}
               >
-                <Text className="text-lg font-bold text-white">Start Game</Text>
+                <Text className="text-lg font-bold !text-white">Start Game</Text>
               </Pressable>
+            </View>
+          ) : (
+            <View 
+              className="absolute bottom-0 left-0 right-0 px-4 py-4 bg-white border-t border-gray-200"
+              style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            >
+              <Text className="text-center text-sm !text-gray-500">
+                Waiting for host to start game...
+              </Text>
             </View>
           )}
 
@@ -935,6 +1137,32 @@ export const LobbyDetailScreen = memo(
             visible={showQRModal}
             roomCode={roomCode}
             onClose={() => setShowQRModal(false)}
+          />
+
+          {/* Player Action Sheet */}
+          {selectedPlayer && (
+            <PlayerActionSheet
+              visible={showPlayerActionSheet}
+              player={selectedPlayer}
+              isHost={isHost}
+              isHostPlayer={selectedPlayer.uid === lobby.hostId}
+              onViewProfile={() => {
+                setShowPlayerActionSheet(false);
+                handleViewProfile(selectedPlayer.uid);
+              }}
+              onRemove={() => {
+                setShowPlayerActionSheet(false);
+                handleRemovePlayer();
+              }}
+              onClose={() => setShowPlayerActionSheet(false)}
+            />
+          )}
+
+          {/* Close Lobby Sheet */}
+          <CloseLobbySheet
+            visible={showCloseLobbySheet}
+            onClose={() => setShowCloseLobbySheet(false)}
+            onConfirm={handleConfirmClose}
           />
         </SafeAreaView>
       </GestureHandlerRootView>

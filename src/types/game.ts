@@ -31,7 +31,6 @@ export interface Match {
   winnerId: string;
   gameMode: GameMode;
   gameCategory: GameCategory;
-  isExhibition: boolean;
   duration: number; // in seconds
   createdAt: Timestamp;
   // Match confirmation fields

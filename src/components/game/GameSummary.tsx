@@ -1,9 +1,10 @@
-import { View, Text, Pressable, Alert, Animated } from 'react-native';
+import { View, Text, Pressable, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, TrendingUp, TrendingDown, Trophy } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useRef } from 'react';
 import { shareMatchResult } from '@/lib/share';
+import { useAlert } from '@/hooks/common/useAlert';
 import type { Lobby } from '@/types/lobby';
 
 interface GameSummaryProps {
@@ -21,6 +22,8 @@ export const GameSummary = ({
   onPlayAgain, 
   onRematch 
 }: GameSummaryProps) => {
+  const alert = useAlert();
+  
   if (!lobby.gameCompleted || !lobby.finalScores || !lobby.winner) {
     return null;
   }
@@ -87,7 +90,7 @@ export const GameSummary = ({
         Haptics.NotificationFeedbackType.Error
       );
       console.error('Error sharing:', error);
-      Alert.alert('Share Failed', 'Unable to share match result. Please try again.');
+      alert.show('Share Failed', 'Unable to share match result. Please try again.');
     }
   };
 

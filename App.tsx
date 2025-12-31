@@ -7,7 +7,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { AlertProvider } from '@/contexts/AlertContext';
 import { AppNavigator } from '@/navigation/AppNavigator';
+import { AlertSheet } from '@/components/common/AlertSheet';
 import { configureGoogleSignIn } from '@/lib/oauth';
 
 export default function App() {
@@ -41,10 +43,13 @@ export default function App() {
     <GluestackUIProvider config={config}>
       <SafeAreaProvider>
         <AuthProvider>
-          <NavigationContainer linking={linking}>
-            <AppNavigator />
-            <StatusBar style="auto" />
-          </NavigationContainer>
+          <AlertProvider>
+            <NavigationContainer linking={linking}>
+              <AppNavigator />
+              <StatusBar style="auto" />
+            </NavigationContainer>
+            <AlertSheet />
+          </AlertProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GluestackUIProvider>

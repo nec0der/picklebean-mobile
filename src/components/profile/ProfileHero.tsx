@@ -12,6 +12,7 @@ interface ProfileHeroProps {
   followersCount?: number;
   isOwnProfile: boolean;
   isFollowing?: boolean;
+  followLoading?: boolean;
   onEditPress?: () => void;
   onChallengePress?: () => void;
   onFollowPress?: () => void;
@@ -27,6 +28,7 @@ export const ProfileHero = memo(({
   followersCount = 0,
   isOwnProfile,
   isFollowing = false,
+  followLoading = false,
   onEditPress,
   onChallengePress,
   onFollowPress,
@@ -91,6 +93,7 @@ export const ProfileHero = memo(({
               onPress={onFollowPress}
               variant={isFollowing ? 'secondary' : 'primary'}
               fullWidth
+              disabled={followLoading}
             />
           </View>
         </View>

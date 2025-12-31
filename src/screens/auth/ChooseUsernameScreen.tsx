@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
-import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
+import { View, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { ChevronLeft, Check, AlertCircle } from 'lucide-react-native';
 import type { AuthStackScreenProps, OnboardingStackScreenProps } from '@/types/navigation';
 import { validateUsername, checkUsernameAvailability } from '@/lib/username';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAlert } from '@/hooks/common/useAlert';
 
 type ChooseUsernameScreenProps = 
   | AuthStackScreenProps<'ChooseUsername'> 
@@ -15,6 +16,7 @@ export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreen
   const params = route.params as { isSignupFlow: boolean; oauthPhotoURL?: string };
   const { isSignupFlow } = params;
   const { signOut, firebaseUser } = useAuth();
+  const alert = useAlert();
   
   // Check if user is OAuth user by email domain
   const { isOAuthUser } = require('@/lib/oauth');
@@ -71,26 +73,23 @@ export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreen
   const handleBack = useCallback(async () => {
     if (isOAuthFlow) {
       // OAuth users: Show confirmation before signing out
-      Alert.alert(
+      alert.confirm(
         'Sign Out',
         'Are you sure you want to sign out and return to login?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Sign Out', 
-            style: 'destructive',
-            onPress: async () => {
-              await signOut();
-              // Navigation will happen automatically when user signs out
-            }
-          }
-        ]
+        {
+          onConfirm: async () => {
+            await signOut();
+            // Navigation will happen automatically when user signs out
+          },
+          confirmText: 'Sign Out',
+          confirmStyle: 'destructive',
+        }
       );
     } else {
       // Signup flow: Just navigate back to Login (no confirmation needed)
       (navigation as any).navigate('Login');
     }
-  }, [isOAuthFlow, signOut, navigation]);
+  }, [isOAuthFlow, signOut, navigation, alert]);
 
   const handleNext = useCallback(() => {
     // Check if username is empty first

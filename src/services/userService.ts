@@ -49,7 +49,7 @@ export const updateUserRankings = async (
   const categoryToRankingKey: Record<GameCategory, keyof UserRankings> = {
     'singles': 'singles',
     'same_gender_doubles': 'sameGenderDoubles',
-    'mixed_doubles': 'mixedDoubles',
+    'mixed_doubles': 'sameGenderDoubles',  // Map mixed to sameGenderDoubles
   };
 
   const rankingKey = categoryToRankingKey[category];

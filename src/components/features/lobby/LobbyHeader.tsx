@@ -22,7 +22,7 @@ export const LobbyHeader = memo(({
         <Text className="mb-1 text-xs font-medium tracking-wider text-gray-500">
           ROOM CODE
         </Text>
-        <Text className="text-3xl font-bold tracking-widest text-gray-900">
+        <Text className="text-4xl font-bold tracking-widest text-gray-900">
           {roomCode}
         </Text>
       </View>
@@ -32,7 +32,7 @@ export const LobbyHeader = memo(({
         {/* QR Code Button */}
         <Pressable
           onPress={onQrPress}
-          className="flex-row items-center justify-center h-10 px-4 bg-gray-100 rounded-lg active:bg-gray-200"
+          className="flex-row items-center justify-center h-12 px-4 bg-gray-100 rounded-lg active:bg-gray-200"
         >
           <QrCode size={20} color="#374151" />
         </Pressable>
@@ -40,7 +40,7 @@ export const LobbyHeader = memo(({
         {/* Scan Button */}
         <Pressable
           onPress={onScanPress}
-          className={`h-10 px-4 rounded-lg flex-row items-center justify-center ${
+          className={`h-12 px-4 rounded-lg flex-row items-center justify-center ${
             isScanning 
               ? 'bg-green-500 active:bg-green-600' 
               : 'bg-gray-100 active:bg-gray-200'

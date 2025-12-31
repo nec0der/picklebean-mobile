@@ -40,7 +40,7 @@ export const useLeaderboard = (
     const categoryToField: Record<GameCategory, string> = {
       'singles': 'rankings.singles',
       'same_gender_doubles': 'rankings.sameGenderDoubles',
-      'mixed_doubles': 'rankings.mixedDoubles',
+      'mixed_doubles': 'rankings.sameGenderDoubles',  // Both map to sameGenderDoubles
     };
 
     const rankingField = categoryToField[category];

@@ -1,7 +1,8 @@
 import { memo } from 'react';
-import { Share, Alert } from 'react-native';
+import { Share } from 'react-native';
 import { Share2 } from 'lucide-react-native';
 import { Button, ButtonText } from '@gluestack-ui/themed';
+import { useAlert } from '@/hooks/common/useAlert';
 
 interface ShareProfileButtonProps {
   username: string;
@@ -14,6 +15,8 @@ const PROFILE_BASE_URL = 'https://picklebean-ranking-app.web.app/profile';
  * Button to share user's profile via native share sheet
  */
 export const ShareProfileButton = memo(({ username, displayName }: ShareProfileButtonProps) => {
+  const alert = useAlert();
+  
   const handleShare = async (): Promise<void> => {
     const profileUrl = `${PROFILE_BASE_URL}/${username}`;
     const message = `Check out ${displayName}'s Picklebean profile!`;
@@ -36,7 +39,7 @@ export const ShareProfileButton = memo(({ username, displayName }: ShareProfileB
       }
     } catch (error) {
       console.error('Error sharing profile:', error);
-      Alert.alert('Error', 'Failed to share profile. Please try again.');
+      alert.show('Error', 'Failed to share profile. Please try again.');
     }
   };
 

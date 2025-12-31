@@ -8,6 +8,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { ChevronsUpDown } from 'lucide-react-native';
 import { Avatar } from '@/components/ui/Avatar';
 import { LoadingSpinner } from '@/components/common';
 import type { Player } from '@/types/lobby';
@@ -19,10 +20,13 @@ interface DraggablePlayerSlotProps {
   isHost: boolean;
   isCurrentUser: boolean;
   hostId: string;
+  gameMode: 'singles' | 'doubles';
+  playerRating?: number;
   onDragStart: (team: number, slot: number, width: number, height: number) => void;
   onDragMove?: (x: number, y: number) => void;
   onDragEnd: (x: number, y: number) => void;
   onLayout: (team: number, slot: number, layout: { x: number; y: number; width: number; height: number }) => void;
+  onPlayerTap?: (player: Player) => void;
   isHighlighted?: boolean;
 }
 
@@ -33,10 +37,13 @@ export const DraggablePlayerSlot = memo(({
   isHost,
   isCurrentUser,
   hostId,
+  gameMode,
+  playerRating = 1000,
   onDragStart,
   onDragMove,
   onDragEnd,
   onLayout,
+  onPlayerTap,
   isHighlighted = false,
 }: DraggablePlayerSlotProps) => {
   const viewRef = useRef<View>(null);
@@ -68,6 +75,17 @@ export const DraggablePlayerSlot = memo(({
     cardWidth.value = width;
     cardHeight.value = height;
   };
+
+  // Tap gesture for opening action menu
+  const tapGesture = Gesture.Tap()
+    .enabled(hasPlayer)
+    .maxDuration(250)
+    .onEnd(() => {
+      if (player && onPlayerTap) {
+        runOnJS(onPlayerTap)(player);
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+      }
+    });
 
   // Long press gesture for dragging (host only)
   const longPressGesture = Gesture.LongPress()
@@ -114,8 +132,12 @@ export const DraggablePlayerSlot = memo(({
       showPlaceholder.value = withSpring(0);
     });
 
-  // Combine gestures
-  const composedGesture = Gesture.Simultaneous(longPressGesture, panGesture);
+  // Combine gestures - Race between tap and drag
+  // Tap wins if completed < 250ms, drag wins if held ≥ 300ms
+  const composedGesture = Gesture.Race(
+    tapGesture,
+    Gesture.Simultaneous(longPressGesture, panGesture)
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -143,7 +165,7 @@ export const DraggablePlayerSlot = memo(({
         }`}
       >
         <LoadingSpinner size="small" />
-        <Text className="ml-3 text-gray-400 text-sm">Waiting for player...</Text>
+        <Text className="ml-3 text-sm text-gray-400">Waiting for player...</Text>
       </View>
     );
   }
@@ -156,13 +178,13 @@ export const DraggablePlayerSlot = memo(({
       {/* Placeholder - shows at original position during drag */}
       <Animated.View 
         style={placeholderStyle}
-        className="h-20 border-2 border-dashed border-blue-400 bg-blue-50 rounded-lg p-3"
+        className="h-20 p-3 border-2 border-blue-400 border-dashed rounded-lg bg-blue-50"
       >
         <View className="flex-row items-center py-2">
-          <View className="w-10 h-10 rounded-full bg-blue-200" />
-          <View className="ml-3 flex-1">
-            <View className="h-4 bg-blue-200 rounded w-24 mb-1" />
-            <View className="h-3 bg-blue-100 rounded w-16" />
+          <View className="w-10 h-10 bg-blue-200 rounded-full" />
+          <View className="flex-1 ml-3">
+            <View className="w-24 h-4 mb-1 bg-blue-200 rounded" />
+            <View className="w-16 h-3 bg-blue-100 rounded" />
           </View>
         </View>
       </Animated.View>
@@ -186,11 +208,12 @@ export const DraggablePlayerSlot = memo(({
                 name={player.displayName}
                 size="md"
               />
-              <View className="ml-3 flex-1">
-                <Text className="font-semibold text-gray-900">
-                  {player.displayName}
-                </Text>
-                <View className="flex-row items-center gap-2">
+              <View className="flex-1 ml-3">
+                {/* Username + Badges (inline) */}
+                <View className="flex-row flex-wrap items-center gap-2">
+                  <Text className="font-semibold text-gray-900">
+                    {player.displayName}
+                  </Text>
                   {isHostPlayer && (
                     <Text className="text-xs text-blue-600">Host</Text>
                   )}
@@ -198,9 +221,16 @@ export const DraggablePlayerSlot = memo(({
                     <Text className="text-xs text-green-600">You</Text>
                   )}
                 </View>
+                
+                {/* Rating (below username) */}
+                <Text className="text-sm text-gray-600 mt-0.5">
+                  {playerRating} points
+                </Text>
               </View>
               {isHost && canDrag && (
-                <Text className="text-gray-400 text-xs ml-2">Hold to move</Text>
+                <View className="ml-2">
+                  <ChevronsUpDown size={20} color="#9CA3AF" />
+                </View>
               )}
             </View>
           </Animated.View>

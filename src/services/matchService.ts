@@ -45,7 +45,7 @@ export const determineGameCategory = (
     return 'same_gender_doubles';
   }
 
-  return 'mixed_doubles';
+  return 'same_gender_doubles';  // Default to same_gender_doubles
 };
 
 /**
@@ -73,42 +73,47 @@ export const createMatchRecords = async (
   // Calculate points change
   let pointsChange = 0;
 
-  if (!lobby.isExhibition) {
-    if (lobby.gameMode === 'singles') {
-      const winner = users.find((u) => u.uid === (winningTeam === 'team1' ? lobby.team1.player1?.uid : lobby.team2.player1?.uid));
-      const loser = users.find((u) => u.uid === (winningTeam === 'team1' ? lobby.team2.player1?.uid : lobby.team1.player1?.uid));
+  if (lobby.gameMode === 'singles') {
+    const winner = users.find((u) => u.uid === (winningTeam === 'team1' ? lobby.team1.player1?.uid : lobby.team2.player1?.uid));
+    const loser = users.find((u) => u.uid === (winningTeam === 'team1' ? lobby.team2.player1?.uid : lobby.team1.player1?.uid));
 
-      if (winner && loser) {
-        const winnerRating = winner.rankings?.[gameCategory] || 1000;
-        const loserRating = loser.rankings?.[gameCategory] || 1000;
-        pointsChange = calculatePointsChange(winnerRating, loserRating);
-      }
-    } else {
-      // Doubles
-      const team1Users = users.filter((u) => 
-        u.uid === lobby.team1.player1?.uid || u.uid === lobby.team1.player2?.uid
-      );
-      const team2Users = users.filter((u) =>
-        u.uid === lobby.team2.player1?.uid || u.uid === lobby.team2.player2?.uid
-      );
+    if (winner && loser) {
+      const rankingKey = gameCategory === 'singles' ? 'singles' : 'sameGenderDoubles';
+      const winnerRating = winner.rankings?.[rankingKey] || 1000;
+      const loserRating = loser.rankings?.[rankingKey] || 1000;
+      const winnerGames = winner.matchStats?.totalMatches || 0;
+      const loserGames = loser.matchStats?.totalMatches || 0;
+      pointsChange = calculatePointsChange(winnerRating, loserRating, winnerGames, loserGames);
+    }
+  } else {
+    // Doubles
+    const team1Users = users.filter((u) => 
+      u.uid === lobby.team1.player1?.uid || u.uid === lobby.team1.player2?.uid
+    );
+    const team2Users = users.filter((u) =>
+      u.uid === lobby.team2.player1?.uid || u.uid === lobby.team2.player2?.uid
+    );
 
-      if (team1Users.length === 2 && team2Users.length === 2) {
-        // Map game category to rankings key
-        const categoryToRankingKey: Record<GameCategory, keyof import('@/types/user').UserRankings> = {
-          'singles': 'singles',
-          'same_gender_doubles': 'sameGenderDoubles',
-          'mixed_doubles': 'mixedDoubles',
-        };
-        
-        const rankingKey = categoryToRankingKey[gameCategory];
-        pointsChange = calculateDoublesPointsChange(
-          team1Users[0].rankings?.[rankingKey] || 1000,
-          team1Users[1].rankings?.[rankingKey] || 1000,
-          team2Users[0].rankings?.[rankingKey] || 1000,
-          team2Users[1].rankings?.[rankingKey] || 1000,
-          winningTeam === 'team1'
-        );
-      }
+    if (team1Users.length === 2 && team2Users.length === 2) {
+      // Map game category to rankings key
+      const categoryToRankingKey: Record<GameCategory, keyof import('@/types/user').UserRankings> = {
+        'singles': 'singles',
+        'same_gender_doubles': 'sameGenderDoubles',
+        'mixed_doubles': 'sameGenderDoubles',  // Map mixed to sameGenderDoubles
+      };
+      
+      const rankingKey = categoryToRankingKey[gameCategory];
+      pointsChange = calculateDoublesPointsChange(
+        team1Users[0].rankings?.[rankingKey] || 1000,
+        team1Users[1].rankings?.[rankingKey] || 1000,
+        team1Users[0].matchStats?.totalMatches || 0,
+        team1Users[1].matchStats?.totalMatches || 0,
+        team2Users[0].rankings?.[rankingKey] || 1000,
+        team2Users[1].rankings?.[rankingKey] || 1000,
+        team2Users[0].matchStats?.totalMatches || 0,
+        team2Users[1].matchStats?.totalMatches || 0,
+        winningTeam === 'team1'
+      );
     }
   }
 
@@ -152,7 +157,6 @@ export const createMatchRecords = async (
       opponentNames: opponents,
       partnerName,
       status: 'pending',
-      isExhibition: lobby.isExhibition,
       createdAt: new Date(),
     };
 

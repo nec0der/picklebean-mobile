@@ -104,21 +104,19 @@ export const MatchDetailModal = memo(({ visible, match, onClose }: MatchDetailMo
           )}
 
           {/* Points Change */}
-          {!match.isExhibition && (
-            <View className="mb-6">
-              <Text className="mb-2 text-sm font-semibold text-gray-500 uppercase">
-                Points Change
-              </Text>
-              <Text
-                className={`text-2xl font-bold ${
-                  match.pointsChange > 0 ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {match.pointsChange > 0 ? '+' : ''}
-                {match.pointsChange}
-              </Text>
-            </View>
-          )}
+          <View className="mb-6">
+            <Text className="mb-2 text-sm font-semibold text-gray-500 uppercase">
+              Points Change
+            </Text>
+            <Text
+              className={`text-2xl font-bold ${
+                match.pointsChange > 0 ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {match.pointsChange > 0 ? '+' : ''}
+              {match.pointsChange}
+            </Text>
+          </View>
 
           {/* Date */}
           <View className="mb-6">

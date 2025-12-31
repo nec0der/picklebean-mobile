@@ -16,7 +16,7 @@ import type { UserDocument } from '@/types/user';
 export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user: currentUser } = useAuth();
-  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('mens_doubles');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all_doubles');
   const [refreshing, setRefreshing] = useState(false);
   const isInitialLoad = useRef(true);
 

@@ -1,11 +1,14 @@
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { firestore } from '@/config/firebase';
+
 /**
- * Extract user ID from NFC profile URL
- * @param url - Profile URL from NFC tag (e.g., "https://picklebean.com/profile/user123")
- * @returns User ID or null if invalid format
+ * Extract username from NFC profile URL
+ * @param url - Profile URL from NFC tag (e.g., "https://picklebean.com/profile/username")
+ * @returns Username or null if invalid format
  */
-export const extractUserIdFromNFCUrl = (url: string): string | null => {
+export const extractUsernameFromNFCUrl = (url: string): string | null => {
   try {
-    // Match pattern: /profile/{userId} at the end of URL
+    // Match pattern: /profile/{username} at the end of URL
     const pattern = /\/profile\/([^/?#]+)(?:[?#].*)?$/;
     const match = url.match(pattern);
     
@@ -19,6 +22,37 @@ export const extractUserIdFromNFCUrl = (url: string): string | null => {
     return null;
   }
 };
+
+/**
+ * Get user ID from username by querying Firestore
+ * @param username - Username to look up
+ * @returns User ID (UID) or null if not found
+ */
+export const getUserIdFromUsername = async (username: string): Promise<string | null> => {
+  try {
+    const usersRef = collection(firestore, 'users');
+    const q = query(usersRef, where('username', '==', username));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+    
+    // Return the first matching user's document ID (UID)
+    return querySnapshot.docs[0].id;
+  } catch (error) {
+    console.error('Error looking up user by username:', error);
+    return null;
+  }
+};
+
+/**
+ * LEGACY: Extract user ID from NFC profile URL
+ * @deprecated Use extractUsernameFromNFCUrl + getUserIdFromUsername instead
+ * @param url - Profile URL from NFC tag
+ * @returns Username (not userId) or null if invalid format
+ */
+export const extractUserIdFromNFCUrl = extractUsernameFromNFCUrl;
 
 /**
  * Validate if URL is a profile URL

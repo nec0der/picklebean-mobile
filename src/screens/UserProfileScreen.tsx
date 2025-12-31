@@ -1,31 +1,35 @@
 import { memo, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Lock, User, Users, UsersRound } from 'lucide-react-native';
+import { ArrowLeft, Lock } from 'lucide-react-native';
 import type { RootStackScreenProps } from '@/types/navigation';
 import { usePublicProfile } from '@/hooks/firestore/usePublicProfile';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
-import { useMatches } from '@/hooks/firestore/useMatches';
+import { useFollow } from '@/hooks/actions/useFollow';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import { ProfileHeroSection } from '@/components/profile/ProfileHeroSection';
-import { RankingItem } from '@/components/profile/RankingItem';
-import { MatchCard } from '@/components/history/MatchCard';
+import { ProfileHero } from '@/components/profile/ProfileHero';
+import { RankingStatCard } from '@/components/profile/RankingStatCard';
+import { ProfileTabBar, type ProfileTab } from '@/components/profile/ProfileTabBar';
+import { MatchesTab } from '@/components/profile/MatchesTab';
+import { StatisticsTab } from '@/components/profile/StatisticsTab';
+import { PostsTab } from '@/components/profile/PostsTab';
+import { useState } from 'react';
 
 export const UserProfileScreen = memo(
   ({ navigation, route }: RootStackScreenProps<'UserProfile'>) => {
     const { username } = route.params;
     const { user, loading, error, isPrivate, isOwn } = usePublicProfile(username);
+    const [activeTab, setActiveTab] = useState<ProfileTab>('matches');
+    
+    // Follow functionality
+    const { isFollowing, loading: followLoading, toggleFollow } = useFollow(user?.uid || '');
 
     // Get rankings for position calculation
     const userGender =
       user?.gender === 'male' || user?.gender === 'female' ? user.gender : undefined;
     const { rankings: singlesRankings } = useLeaderboard('singles', userGender, 100);
     const { rankings: doublesRankings } = useLeaderboard('same_gender_doubles', userGender, 100);
-    const { rankings: mixedRankings } = useLeaderboard('mixed_doubles', undefined, 100);
-
-    // Get recent matches
-    const { matches, loading: matchesLoading } = useMatches(user?.uid || '', 5);
 
     // Calculate positions
     const singlesPosition = useMemo(() => {
@@ -40,40 +44,9 @@ export const UserProfileScreen = memo(
       return pos >= 0 ? pos + 1 : null;
     }, [doublesRankings, user?.uid]);
 
-    const mixedPosition = useMemo(() => {
-      if (!user?.uid || mixedRankings.length === 0) return null;
-      const pos = mixedRankings.findIndex((u) => u.uid === user.uid);
-      return pos >= 0 ? pos + 1 : null;
-    }, [mixedRankings, user?.uid]);
-
     const handleBack = () => {
       navigation.goBack();
     };
-
-    // Get category labels based on gender
-    const getCategoryLabels = () => {
-      const gender = user?.gender;
-      if (gender === 'male') {
-        return {
-          singles: "Men's Singles",
-          doubles: "Men's Doubles",
-          mixed: 'Mixed Doubles',
-        };
-      } else if (gender === 'female') {
-        return {
-          singles: "Women's Singles",
-          doubles: "Women's Doubles",
-          mixed: 'Mixed Doubles',
-        };
-      }
-      return {
-        singles: 'Singles',
-        doubles: 'Same Gender Doubles',
-        mixed: 'Mixed Doubles',
-      };
-    };
-
-    const categoryLabels = getCategoryLabels();
 
     // Loading state
     if (loading) {
@@ -152,11 +125,15 @@ export const UserProfileScreen = memo(
     // Calculate stats
     const totalMatches = user.matchStats?.totalMatches || 0;
     const wins = user.matchStats?.wins || 0;
-    const winRate = totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(0) : '0';
+    const singlesWinRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+    const doublesWinRate = singlesWinRate; // For now, same as overall
 
-    // Get profile picture
+    // Get profile picture and data
     const profilePicture = user.profilePictureUrl || user.photoURL || null;
     const displayName = user.displayName || 'User';
+    const bio = user.bio;
+    const followingCount = user.followingCount || 0;
+    const followersCount = user.followersCount || 0;
 
     // Main content
     return (
@@ -166,75 +143,55 @@ export const UserProfileScreen = memo(
           <Pressable onPress={handleBack} className="mr-3">
             <ArrowLeft size={24} color="#000" />
           </Pressable>
-          <Text className="text-lg font-semibold !text-gray-900">Profile</Text>
+          <Text className="!text-2xl font-semibold !text-gray-900">{displayName}</Text>
         </View>
 
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          {/* Hero Section - no edit button for public profiles */}
-          <ProfileHeroSection
+          {/* Hero Section with Follow button */}
+          <ProfileHero
             profilePicture={profilePicture}
             fullName={displayName}
-            onEditPress={undefined}
+            username={username}
+            bio={bio}
+            followingCount={followingCount}
+            followersCount={followersCount}
+            isOwnProfile={isOwn}
+            isFollowing={isFollowing}
+            followLoading={followLoading}
+            onFollowPress={toggleFollow}
+            onFollowingPress={() => {
+              // TODO: Navigate to following/followers screen
+              console.log('View following/followers');
+            }}
           />
 
-          <View className="px-4">
-            {/* Minimalistic Stats */}
-            <Text className="mt-6 mb-6 text-sm text-center text-gray-600">
-              {totalMatches} matches • {winRate}% win rate
-            </Text>
+          {/* Stats Section */}
+          <View className="px-4 py-4 space-y-3 bg-gray-50">
+            <RankingStatCard
+              category="Singles"
+              rank={singlesPosition}
+              points={user.rankings?.singles || 1000}
+              matchCount={totalMatches}
+              winRate={singlesWinRate}
+            />
 
-            {/* Rankings Section */}
-            <View className="mb-6">
-              <Text className="mb-3 text-lg font-bold text-gray-900">Rankings</Text>
+            <RankingStatCard
+              category="Doubles"
+              rank={doublesPosition}
+              points={user.rankings?.sameGenderDoubles || 1000}
+              matchCount={totalMatches}
+              winRate={doublesWinRate}
+            />
+          </View>
 
-              <RankingItem
-                category={categoryLabels.singles}
-                position={singlesPosition}
-                points={user.rankings?.singles || 1000}
-                color="bg-blue-500"
-                icon={User}
-              />
+          {/* Tab Bar */}
+          <ProfileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-              <RankingItem
-                category={categoryLabels.doubles}
-                position={doublesPosition}
-                points={user.rankings?.sameGenderDoubles || 1000}
-                color="bg-green-500"
-                icon={Users}
-              />
-
-              <RankingItem
-                category={categoryLabels.mixed}
-                position={mixedPosition}
-                points={user.rankings?.mixedDoubles || 1000}
-                color="bg-purple-500"
-                icon={UsersRound}
-              />
-            </View>
-
-            {/* Recent Matches Section */}
-            {matches.length > 0 && (
-              <View className="mb-8">
-                <Text className="mb-3 text-lg font-bold text-gray-900">Recent Matches</Text>
-                <View className="space-y-3">
-                  {matches.map((match) => (
-                    <MatchCard key={match.id} match={match} />
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {matchesLoading && (
-              <View className="items-center py-4">
-                <LoadingSpinner />
-              </View>
-            )}
-
-            {!matchesLoading && matches.length === 0 && (
-              <View className="py-8">
-                <Text className="text-center text-gray-500">No matches yet</Text>
-              </View>
-            )}
+          {/* Tab Content */}
+          <View className="flex-1">
+            {activeTab === 'matches' && user.uid && <MatchesTab userId={user.uid} />}
+            {activeTab === 'statistics' && user.uid && <StatisticsTab userId={user.uid} />}
+            {activeTab === 'posts' && <PostsTab />}
           </View>
         </ScrollView>
       </SafeAreaView>

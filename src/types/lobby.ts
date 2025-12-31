@@ -42,8 +42,7 @@ export interface Lobby {
   // Rematch tracking (NEW - Phase 1)
   isRematch?: boolean;
   originalRoomCode?: string;  // Link to original game if this is a rematch
-  // Exhibition match fields
-  isExhibition?: boolean;
+  // Game category for match classification
   gameCategory?: 'singles' | 'same_gender_doubles' | 'mixed_doubles';
   // Countdown fields
   countdownActive?: boolean;

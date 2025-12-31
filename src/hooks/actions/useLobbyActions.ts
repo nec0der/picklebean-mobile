@@ -15,7 +15,6 @@ interface UseLobbyActionsReturn {
   startGame: (roomCode: string) => Promise<void>;
   endGame: (roomCode: string, scores: { team1: number; team2: number }) => Promise<void>;
   confirmScore: (roomCode: string, playerId: string, confirmed: boolean) => Promise<void>;
-  setExhibitionMatch: (roomCode: string, isExhibition: boolean) => Promise<void>;
 }
 
 /**
@@ -64,13 +63,6 @@ export const useLobbyActions = (): UseLobbyActionsReturn => {
     []
   );
 
-  const setExhibitionMatch = useCallback(
-    async (roomCode: string, isExhibition: boolean): Promise<void> => {
-      return lobbyService.setExhibitionMatch(roomCode, isExhibition);
-    },
-    []
-  );
-
   return {
     createLobby,
     joinLobby,
@@ -79,6 +71,5 @@ export const useLobbyActions = (): UseLobbyActionsReturn => {
     startGame,
     endGame,
     confirmScore,
-    setExhibitionMatch,
   };
 };

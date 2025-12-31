@@ -5,8 +5,17 @@
 
 import type { UserRankings } from '@/types/user';
 
-// K-factor determines how much ratings change per game
-const K_FACTOR = 25;
+/**
+ * Determines K-factor based on player experience
+ * New players have higher volatility, experienced players more stable
+ * @param gamesPlayed - Total games played by the player
+ * @returns K-factor for ELO calculation
+ */
+export const getKFactor = (gamesPlayed: number): number => {
+  if (gamesPlayed < 30) return 32;  // New players - volatile, fast learning
+  if (gamesPlayed < 100) return 24; // Intermediate - stabilizing
+  return 16;                         // Experienced - stable, established
+};
 
 /**
  * Calculates the expected score for a player based on rating difference
@@ -19,25 +28,28 @@ export const getExpectedScore = (ratingA: number, ratingB: number): number => {
 };
 
 /**
- * Calculates points change for a single match
+ * Calculates points change for a single match with dynamic K-factor
  * @param winnerRating - Current rating of winner
  * @param loserRating - Current rating of loser
- * @param isExhibition - Whether this is an exhibition match (no points change)
+ * @param winnerGamesPlayed - Total games played by winner
+ * @param loserGamesPlayed - Total games played by loser
  * @returns Points to add to winner (and subtract from loser)
  */
 export const calculatePointsChange = (
   winnerRating: number,
   loserRating: number,
-  isExhibition = false
+  winnerGamesPlayed: number,
+  loserGamesPlayed: number
 ): number => {
-  if (isExhibition) {
-    return 0;
-  }
 
+  // Use average K-factor of both players
+  const kFactor = (getKFactor(winnerGamesPlayed) + getKFactor(loserGamesPlayed)) / 2;
+  
   const expectedScore = getExpectedScore(winnerRating, loserRating);
-  const pointsChange = Math.round(K_FACTOR * (1 - expectedScore));
+  const pointsChange = Math.round(kFactor * (1 - expectedScore));
 
-  return pointsChange;
+  // Ensure minimum 1 point for any win
+  return Math.max(1, pointsChange);
 };
 
 /**
@@ -49,7 +61,7 @@ export const calculatePointsChange = (
  */
 export const updateRankings = (
   currentRankings: UserRankings,
-  category: 'singles' | 'sameGenderDoubles' | 'mixedDoubles',
+  category: 'singles' | 'sameGenderDoubles',
   pointsChange: number
 ): UserRankings => {
   const newRankings = { ...currentRankings };
@@ -72,34 +84,40 @@ export const getTeamRating = (player1Rating: number, player2Rating: number): num
 };
 
 /**
- * Calculates points change for doubles match (team vs team)
+ * Calculates points change for doubles match (team vs team) with dynamic K-factor
  * @param team1Player1Rating - Team 1, Player 1 rating
  * @param team1Player2Rating - Team 1, Player 2 rating
+ * @param team1Player1Games - Team 1, Player 1 games played
+ * @param team1Player2Games - Team 1, Player 2 games played
  * @param team2Player1Rating - Team 2, Player 1 rating
  * @param team2Player2Rating - Team 2, Player 2 rating
+ * @param team2Player1Games - Team 2, Player 1 games played
+ * @param team2Player2Games - Team 2, Player 2 games played
  * @param team1Won - Whether team 1 won
- * @param isExhibition - Whether this is an exhibition match
  * @returns Points change for each player
  */
 export const calculateDoublesPointsChange = (
   team1Player1Rating: number,
   team1Player2Rating: number,
+  team1Player1Games: number,
+  team1Player2Games: number,
   team2Player1Rating: number,
   team2Player2Rating: number,
-  team1Won: boolean,
-  isExhibition = false
+  team2Player1Games: number,
+  team2Player2Games: number,
+  team1Won: boolean
 ): number => {
-  if (isExhibition) {
-    return 0;
-  }
-
   const team1Rating = getTeamRating(team1Player1Rating, team1Player2Rating);
   const team2Rating = getTeamRating(team2Player1Rating, team2Player2Rating);
+  
+  // Calculate average games played for each team
+  const team1AvgGames = Math.round((team1Player1Games + team1Player2Games) / 2);
+  const team2AvgGames = Math.round((team2Player1Games + team2Player2Games) / 2);
 
   if (team1Won) {
-    return calculatePointsChange(team1Rating, team2Rating, false);
+    return calculatePointsChange(team1Rating, team2Rating, team1AvgGames, team2AvgGames);
   } else {
-    return calculatePointsChange(team2Rating, team1Rating, false);
+    return calculatePointsChange(team2Rating, team1Rating, team2AvgGames, team1AvgGames);
   }
 };
 
@@ -111,6 +129,5 @@ export const getDefaultRankings = (): UserRankings => {
   return {
     singles: 1000,
     sameGenderDoubles: 1000,
-    mixedDoubles: 1000,
   };
 };

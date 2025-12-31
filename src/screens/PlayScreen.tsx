@@ -157,14 +157,6 @@ export const PlayScreen = memo(({}: TabScreenProps<'Play'>) => {
             <PendingGameBanner pendingGame={pendingGame} />
           )}
 
-          {/* Disabled Overlay Message */}
-          {isDisabled && (
-            <View className="p-4 mb-4 bg-gray-100 border border-gray-200 rounded-lg">
-              <Text className="font-medium text-center text-gray-600">
-                Complete your pending {pendingGame?.type === 'game' ? 'game' : 'lobby'} to start a new one
-              </Text>
-            </View>
-          )}
 
           {/* Tab Switcher */}
           <View className="flex-row p-1 mb-6 bg-gray-100 rounded-lg">
