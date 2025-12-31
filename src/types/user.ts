@@ -2,8 +2,7 @@ import type { Timestamp } from 'firebase/firestore';
 
 export interface UserRankings {
   singles: number;
-  sameGenderDoubles: number;
-  mixedDoubles: number;
+  sameGenderDoubles: number;  // Used for ALL doubles games (same-gender + mixed)
 }
 
 export interface MatchStats {
@@ -23,7 +22,6 @@ export interface MatchHistoryRecord {
   opponentNames: string[];
   partnerName?: string;
   status: 'pending' | 'confirmed';
-  isExhibition?: boolean;
   score?: {
     team1: number;
     team2: number;
@@ -61,7 +59,7 @@ export interface UserDocument {
   // Optional profile data
   profilePictureUrl?: string;
   dateOfBirth?: string;
-  bio?: string; // For later
+  bio?: string;
   links?: string[]; // For later
   adminFeedback?: string;
   // Ranking points (default 1000 each when user is created)
@@ -70,6 +68,11 @@ export interface UserDocument {
   matchStats?: MatchStats;
   // Profile visibility (default: 'public')
   profileVisibility?: 'public' | 'private';
+  // Social features (following system)
+  following?: string[];       // Array of user IDs being followed
+  followers?: string[];       // Array of user IDs who follow this user
+  followingCount?: number;    // Denormalized count for performance
+  followersCount?: number;    // Denormalized count for performance
 }
 
 export type UserId = string;
