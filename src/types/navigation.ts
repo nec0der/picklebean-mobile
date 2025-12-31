@@ -47,6 +47,7 @@ export type RootStackParamList = {
   Game: { roomCode: string };
   GamePlay: { gameId: string };
   UserProfile: { username: string };
+  Settings: undefined;
   ProgramPaddle: undefined;
 };
 

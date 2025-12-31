@@ -1,7 +1,9 @@
 import { memo, useState, useMemo, useEffect } from 'react';
 import { View, Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Settings } from 'lucide-react-native';
-import type { TabScreenProps } from '@/types/navigation';
+import type { TabScreenProps, RootStackParamList } from '@/types/navigation';
+import type { NavigationProp } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -13,6 +15,7 @@ import { StatisticsTab } from '@/components/profile/StatisticsTab';
 import { PostsTab } from '@/components/profile/PostsTab';
 
 export const ProfileScreen = memo((props: TabScreenProps<'Profile'>) => {
+  const rootNavigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { userDocument, firebaseUser, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<ProfileTab>('matches');
 
@@ -50,8 +53,7 @@ export const ProfileScreen = memo((props: TabScreenProps<'Profile'>) => {
   };
 
   const handleSettings = () => {
-    // TODO: Navigate to settings screen
-    console.log('Open settings');
+    rootNavigation.navigate('Settings');
   };
 
   const handleFollowingPress = () => {
