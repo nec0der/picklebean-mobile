@@ -38,13 +38,13 @@ export const ProfileHero = memo(({
     <View className="px-4 py-6 bg-white">
       {/* Avatar and Name Row */}
       <View className="flex-row items-start mb-3">
-        <Avatar uri={profilePicture} name={fullName} size="md" />
+        <Avatar uri={profilePicture} name={fullName} size="lg" />
         
         <View className="flex-1 ml-3">
-          <Text className="text-lg font-bold !text-gray-900">
+          <Text className="text-xl font-bold !text-gray-900">
             {fullName}
           </Text>
-          <Text className="text-sm !text-gray-600">
+          <Text className="text-base !text-gray-600">
             @{username}
           </Text>
         </View>
@@ -62,7 +62,7 @@ export const ProfileHero = memo(({
         onPress={onFollowingPress}
         className="mb-4 active:opacity-70"
       >
-        <Text className="text-xs !text-gray-500">
+        <Text className="text-sm !text-gray-500">
           <Text className="font-semibold !text-gray-700">{followingCount}</Text> following •{' '}
           <Text className="font-semibold !text-gray-700">{followersCount}</Text> followers
         </Text>

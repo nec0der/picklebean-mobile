@@ -1,5 +1,5 @@
 import { memo, useState, useMemo } from 'react';
-import { View, Pressable } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Settings } from 'lucide-react-native';
 import type { TabScreenProps, RootStackParamList } from '@/types/navigation';
@@ -80,11 +80,13 @@ export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header with Settings Icon */}
-      <View className="flex-row items-center justify-between px-4 pt-12 pb-3 bg-white border-b border-gray-200">
-        <View className="w-10" />
-        <View />
-        <Pressable onPress={handleSettings} className="p-2 active:opacity-70">
+      {/* Header with Profile title centered and Settings on right */}
+      <View className="flex-row items-center justify-center px-4 pt-12 pb-3 bg-white border-b border-gray-200">
+        <Text className="text-xl font-semibold !text-gray-900">Profile</Text>
+        <Pressable 
+          onPress={handleSettings} 
+          className="absolute p-2 right-4 active:opacity-70"
+        >
           <Settings size={24} color="#6B7280" />
         </Pressable>
       </View>
@@ -103,23 +105,27 @@ export const ProfileScreen = memo((_props: TabScreenProps<'Profile'>) => {
           onFollowingPress={handleFollowingPress}
         />
 
-        {/* Stats Section */}
-        <View className="px-4 py-4 space-y-3 bg-gray-50">
-          <RankingStatCard
-            category="Singles"
-            rank={singlesPosition}
-            points={userDocument?.rankings?.singles || 1000}
-            matchCount={totalMatches}
-            winRate={singlesWinRate}
-          />
+        {/* Stats Section - 50/50 side by side */}
+        <View className="flex-row gap-3 px-4 py-4 bg-gray-50">
+          <View className="flex-1">
+            <RankingStatCard
+              category="Singles"
+              rank={singlesPosition}
+              points={userDocument?.rankings?.singles || 1000}
+              matchCount={totalMatches}
+              winRate={singlesWinRate}
+            />
+          </View>
 
-          <RankingStatCard
-            category="Doubles"
-            rank={doublesPosition}
-            points={userDocument?.rankings?.sameGenderDoubles || 1000}
-            matchCount={totalMatches}
-            winRate={doublesWinRate}
-          />
+          <View className="flex-1">
+            <RankingStatCard
+              category="Doubles"
+              rank={doublesPosition}
+              points={userDocument?.rankings?.sameGenderDoubles || 1000}
+              matchCount={totalMatches}
+              winRate={doublesWinRate}
+            />
+          </View>
         </View>
 
         {/* Tab Bar */}

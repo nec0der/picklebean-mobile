@@ -165,23 +165,27 @@ export const UserProfileScreen = memo(
             }}
           />
 
-          {/* Stats Section */}
-          <View className="px-4 py-4 space-y-3 bg-gray-50">
-            <RankingStatCard
-              category="Singles"
-              rank={singlesPosition}
-              points={user.rankings?.singles || 1000}
-              matchCount={totalMatches}
-              winRate={singlesWinRate}
-            />
+          {/* Stats Section - 50/50 side by side */}
+          <View className="flex-row gap-3 px-4 py-4 bg-gray-50">
+            <View className="flex-1">
+              <RankingStatCard
+                category="Singles"
+                rank={singlesPosition}
+                points={user.rankings?.singles || 1000}
+                matchCount={totalMatches}
+                winRate={singlesWinRate}
+              />
+            </View>
 
-            <RankingStatCard
-              category="Doubles"
-              rank={doublesPosition}
-              points={user.rankings?.sameGenderDoubles || 1000}
-              matchCount={totalMatches}
-              winRate={doublesWinRate}
-            />
+            <View className="flex-1">
+              <RankingStatCard
+                category="Doubles"
+                rank={doublesPosition}
+                points={user.rankings?.sameGenderDoubles || 1000}
+                matchCount={totalMatches}
+                winRate={doublesWinRate}
+              />
+            </View>
           </View>
 
           {/* Tab Bar */}
