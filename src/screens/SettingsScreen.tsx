@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, User, Lock, Bell, Shield, LogOut, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, User, Lock, Bell, Shield, LogOut, Trash2, Zap } from 'lucide-react-native';
 import type { RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -30,6 +30,10 @@ export const SettingsScreen = memo(({ navigation }: RootStackScreenProps<'Settin
   const handlePrivacy = () => {
     // TODO: Navigate to privacy settings
     Alert.alert('Privacy', 'Privacy settings coming soon!');
+  };
+
+  const handleProgramPaddle = () => {
+    navigation.navigate('ProgramPaddle');
   };
 
   const handleSignOut = () => {
@@ -98,6 +102,19 @@ export const SettingsScreen = memo(({ navigation }: RootStackScreenProps<'Settin
             icon={<Lock size={20} color="#6B7280" />}
             title="Change Password"
             onPress={handleChangePassword}
+          />
+        </View>
+
+        {/* Device Section */}
+        <View className="py-2">
+          <Text className="px-4 py-2 text-xs font-semibold !text-gray-500 uppercase">
+            Device
+          </Text>
+
+          <SettingsItem
+            icon={<Zap size={20} color="#6B7280" />}
+            title="Tap to Play"
+            onPress={handleProgramPaddle}
           />
         </View>
 
