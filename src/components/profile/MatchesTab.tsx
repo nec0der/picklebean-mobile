@@ -58,34 +58,35 @@ export const MatchesTab = memo(({ userId }: MatchesTabProps) => {
   }
 
   return (
-    <View className="flex-1 px-4 pt-4 bg-gray-50">
-      <Text className="mb-3 text-base font-semibold !text-gray-900">
-        Recent Matches
-      </Text>
-
-      <FlatList
-        data={recentMatches}
-        renderItem={({ item }) => (
-          <MatchFeedItem
-            match={item}
-            onPress={() => handleMatchPress(item)}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {matches.length > 10 && (
-        <Pressable
-          onPress={handleViewAll}
-          className="items-center py-4 active:opacity-70"
-        >
-          <Text className="text-sm font-semibold !text-green-600">
-            View All Match History →
-          </Text>
-        </Pressable>
+    <FlatList
+      data={recentMatches}
+      renderItem={({ item }) => (
+        <MatchFeedItem
+          match={item}
+          onPress={() => handleMatchPress(item)}
+        />
       )}
-    </View>
+      keyExtractor={(item) => item.id}
+      showsVerticalScrollIndicator={false}
+      contentContainerClassName="px-4 pt-4 pb-4 bg-gray-50"
+      ListHeaderComponent={
+        <Text className="mb-3 text-base font-semibold !text-gray-900">
+          Recent Matches
+        </Text>
+      }
+      ListFooterComponent={
+        matches.length > 10 ? (
+          <Pressable
+            onPress={handleViewAll}
+            className="items-center py-4 active:opacity-70"
+          >
+            <Text className="text-sm font-semibold !text-green-600">
+              View All Match History →
+            </Text>
+          </Pressable>
+        ) : null
+      }
+    />
   );
 });
 
