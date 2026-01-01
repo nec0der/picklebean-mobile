@@ -153,3 +153,14 @@ export const updateVerificationStatus = async (
 
   await updateDoc(doc(firestore, 'users', userId), updates);
 };
+
+/**
+ * Marks that user has seen Tap-to-Play onboarding
+ * @param userId - User ID
+ */
+export const markTapToPlayOnboardingSeen = async (userId: string): Promise<void> => {
+  await updateDoc(doc(firestore, 'users', userId), {
+    hasSeenTapToPlayOnboarding: true,
+    updatedAt: serverTimestamp(),
+  });
+};

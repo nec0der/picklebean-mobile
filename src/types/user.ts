@@ -73,6 +73,8 @@ export interface UserDocument {
   followers?: string[];       // Array of user IDs who follow this user
   followingCount?: number;    // Denormalized count for performance
   followersCount?: number;    // Denormalized count for performance
+  // Onboarding tracking
+  hasSeenTapToPlayOnboarding?: boolean;  // Whether user has seen NFC onboarding
 }
 
 export type UserId = string;

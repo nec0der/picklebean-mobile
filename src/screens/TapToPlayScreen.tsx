@@ -1,21 +1,28 @@
 import { memo, useState, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { X, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNFCWriter } from '@/hooks/common/useNFCWriter';
 import { TapAnimationHero } from '@/components/features/nfc/TapAnimationHero';
 import { OnboardingCarousel } from '@/components/features/nfc/OnboardingCarousel';
+import { markTapToPlayOnboardingSeen } from '@/services/userService';
 
 type ScreenState = 'onboarding' | 'setup' | 'writing' | 'success';
 
 export const TapToPlayScreen = memo(
   ({ navigation }: RootStackScreenProps<'ProgramPaddle'>) => {
-    const { userDocument } = useAuth();
+    const { user, userDocument } = useAuth();
     const { isWriting, writeProfileUrl, cancelWrite } = useNFCWriter();
-    const [screenState, setScreenState] = useState<ScreenState>('onboarding');
+    
+    // Check if user has seen onboarding
+    const hasSeenOnboarding = userDocument?.hasSeenTapToPlayOnboarding || false;
+    
+    const [screenState, setScreenState] = useState<ScreenState>(
+      hasSeenOnboarding ? 'setup' : 'onboarding'
+    );
     const [showDetails, setShowDetails] = useState(false);
 
     const handleBack = useCallback(async () => {
@@ -26,12 +33,30 @@ export const TapToPlayScreen = memo(
       navigation.goBack();
     }, [isWriting, cancelWrite, navigation]);
 
-    const handleOnboardingComplete = () => {
+    const handleOnboardingComplete = async () => {
+      if (user?.id) {
+        try {
+          await markTapToPlayOnboardingSeen(user.id);
+        } catch (error) {
+          console.error('Error marking onboarding as seen:', error);
+        }
+      }
       setScreenState('setup');
     };
 
-    const handleSkipOnboarding = () => {
+    const handleSkipOnboarding = async () => {
+      if (user?.id) {
+        try {
+          await markTapToPlayOnboardingSeen(user.id);
+        } catch (error) {
+          console.error('Error marking onboarding as seen:', error);
+        }
+      }
       setScreenState('setup');
+    };
+
+    const handleShowHelp = () => {
+      setScreenState('onboarding');
     };
 
     const handleStartWriting = async () => {
@@ -68,7 +93,7 @@ export const TapToPlayScreen = memo(
       setScreenState('setup');
     };
 
-    // Show onboarding carousel first
+    // Show onboarding carousel
     if (screenState === 'onboarding') {
       return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
@@ -80,12 +105,12 @@ export const TapToPlayScreen = memo(
       );
     }
 
-    // Determine animation state
+    // Determine animation state for writing/success only
     const animationState = screenState === 'success' ? 'success' : screenState === 'writing' ? 'tapping' : 'idle';
 
     return (
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        {/* Header */}
+        {/* Header - Match LobbyDetail style */}
         <View className="relative flex-row items-center justify-center px-4 py-3 border-b border-gray-200">
           <Pressable
             onPress={handleBack}
@@ -96,21 +121,24 @@ export const TapToPlayScreen = memo(
           <Text className="text-xl font-bold !text-gray-900">
             {screenState === 'setup' ? 'Setup Tap-to-Play' : 'Tap-to-Play'}
           </Text>
+          {screenState === 'setup' && (
+            <Pressable
+              onPress={handleShowHelp}
+              className="absolute p-2 right-4"
+            >
+              <HelpCircle size={24} color="#007AFF" />
+            </Pressable>
+          )}
         </View>
 
         {/* Content */}
         <View className="items-center justify-between flex-1 px-6 py-8">
           {screenState === 'setup' && (
             <>
-              {/* Animation Hero */}
-              <View className="w-full">
-                <TapAnimationHero state="idle" />
-              </View>
-
-              {/* Setup Instructions */}
+              {/* Setup Instructions - NO ANIMATION */}
               <View className="items-center w-full mb-auto">
                 <Text className="mb-3 text-2xl font-bold text-center !text-gray-900">
-                  Ready to Setup?
+                  Ready to Program?
                 </Text>
                 <Text className="mb-6 text-base text-center !text-gray-600">
                   Get your paddle tap-enabled
