@@ -1,7 +1,7 @@
 import { memo, useState, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { X, ChevronDown, ChevronUp } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,20 +64,17 @@ export const TapToPlayScreen = memo(
 
     return (
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        {/* Header */}
-        <View className="flex-row items-center justify-between px-5 py-3 border-b border-gray-200">
+        {/* Header - Match LobbyDetail style */}
+        <View className="relative flex-row items-center justify-center px-4 py-3 border-b border-gray-200">
           <Pressable
             onPress={handleBack}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            className="flex-row items-center"
+            className="absolute p-2 left-4"
           >
-            <ArrowLeft size={22} color="#007AFF" />
-            <Text className="ml-1 text-base !text-[#007AFF]">Back</Text>
+            <X size={24} color="#6b7280" />
           </Pressable>
-          <Text className="text-base font-semibold !text-gray-900">
-            Tap to Play
+          <Text className="text-xl font-bold !text-gray-900">
+            Program Paddle
           </Text>
-          <View className="w-16" />
         </View>
 
         {/* Content */}

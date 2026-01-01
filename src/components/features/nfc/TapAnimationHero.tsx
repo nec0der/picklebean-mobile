@@ -9,14 +9,13 @@ import Animated, {
   withSpring,
   Easing,
 } from 'react-native-reanimated';
-import { Smartphone } from 'lucide-react-native';
 
 interface TapAnimationHeroProps {
   state: 'idle' | 'tapping' | 'success';
 }
 
 /**
- * Animated hero showing paddle tapping phone
+ * Animated hero showing realistic paddle tapping iPhone
  * - Idle: Paddle bounces gently above phone
  * - Tapping: Paddle moves to phone with ripple effect
  * - Success: Celebration with scale animation
@@ -91,7 +90,7 @@ export const TapAnimationHero = memo(({ state }: TapAnimationHeroProps) => {
 
   return (
     <View className="items-center justify-center h-64">
-      {/* Phone */}
+      {/* iPhone */}
       <View className="items-center justify-center">
         {/* Ripple effect (shown during tapping) */}
         {state === 'tapping' && (
@@ -101,34 +100,70 @@ export const TapAnimationHero = memo(({ state }: TapAnimationHeroProps) => {
           />
         )}
         
-        {/* Phone graphic */}
-        <View className="items-center justify-center w-24 h-40 border-4 border-gray-800 bg-gray-50 rounded-2xl">
-          <Smartphone size={40} color="#9CA3AF" />
+        {/* iPhone 14 Pro Style */}
+        <View className="relative w-32 h-64 overflow-hidden bg-black border-4 border-gray-900 rounded-[32px]">
+          {/* Dynamic Island */}
+          <View className="absolute self-center w-24 h-8 bg-black top-2 rounded-3xl" />
+          
+          {/* Screen */}
+          <View className="absolute inset-0 m-1 bg-white rounded-[28px]">
+            {/* Status bar hint */}
+            <View className="h-12" />
+            {/* Screen content hint - subtle grid/app icons */}
+            <View className="flex-row flex-wrap justify-around px-4 py-2">
+              {[...Array(12)].map((_, i) => (
+                <View key={i} className="w-6 h-6 m-1 bg-gray-200 rounded-xl" />
+              ))}
+            </View>
+          </View>
         </View>
       </View>
 
-      {/* Paddle (animated) */}
+      {/* Realistic Pickleball Paddle (animated) */}
       <Animated.View
         style={[paddleAnimatedStyle]}
-        className="absolute top-8"
+        className="absolute top-0"
       >
-        {/* Simple paddle representation */}
         <View className="items-center">
-          {/* Paddle face */}
-          <View className="w-20 border-4 border-blue-700 shadow-lg h-28 bg-gradient-to-b from-blue-500 to-blue-600 rounded-3xl" />
-          {/* Paddle handle */}
-          <View className="w-8 h-12 mt-1 bg-blue-800 rounded-full" />
+          {/* Paddle Face - Circular with perforations */}
+          <View className="relative items-center justify-center w-24 h-32 overflow-hidden bg-gray-900 rounded-[48px] border-4 border-gray-800">
+            {/* Inner face - colored area */}
+            <View className="absolute inset-2 bg-green-500 rounded-[40px]" />
+            
+            {/* Perforation pattern (holes) - 5x7 grid */}
+            <View className="relative z-10 flex-row flex-wrap items-center justify-center w-20 h-28">
+              {[...Array(35)].map((_, i) => (
+                <View 
+                  key={i} 
+                  className="w-2 h-2 m-0.5 bg-gray-900 rounded-full"
+                />
+              ))}
+            </View>
+          </View>
+          
+          {/* Paddle Handle */}
+          <View className="w-6 h-16 mt-1 bg-gray-800 rounded-full">
+            {/* Grip texture lines */}
+            <View className="absolute w-full h-px bg-gray-700 top-3" />
+            <View className="absolute w-full h-px bg-gray-700 top-6" />
+            <View className="absolute w-full h-px bg-gray-700 top-9" />
+            <View className="absolute w-full h-px bg-gray-700 top-12" />
+          </View>
         </View>
       </Animated.View>
 
       {/* Success indicator */}
       {state === 'success' && (
-        <View className="absolute -translate-x-6 -translate-y-6 top-1/2 left-1/2">
+        <View className="absolute items-center justify-center w-20 h-20 -translate-x-10 -translate-y-10 bg-white rounded-full top-1/2 left-1/2">
           <Animated.View
             style={[{ transform: [{ scale: successScale.value }] }]}
-            className="items-center justify-center w-12 h-12 bg-green-500 rounded-full"
+            className="items-center justify-center w-16 h-16 bg-green-500 rounded-full"
           >
-            <View className="w-6 h-3 transform -rotate-45 -translate-y-1 border-b-4 border-l-4 border-white" />
+            {/* Checkmark */}
+            <View className="w-8 h-4 transform -rotate-45 translate-y-[-2px]">
+              <View className="absolute bottom-0 left-0 w-2 h-full bg-white rounded-full" />
+              <View className="absolute bottom-0 right-0 w-2 h-4 bg-white rounded-full" />
+            </View>
           </Animated.View>
         </View>
       )}
