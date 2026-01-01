@@ -7,23 +7,32 @@ import type { RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNFCWriter } from '@/hooks/common/useNFCWriter';
 import { TapAnimationHero } from '@/components/features/nfc/TapAnimationHero';
+import { OnboardingCarousel } from '@/components/features/nfc/OnboardingCarousel';
 
-type ScreenState = 'intro' | 'writing' | 'success';
+type ScreenState = 'onboarding' | 'setup' | 'writing' | 'success';
 
 export const TapToPlayScreen = memo(
   ({ navigation }: RootStackScreenProps<'ProgramPaddle'>) => {
     const { userDocument } = useAuth();
     const { isWriting, writeProfileUrl, cancelWrite } = useNFCWriter();
-    const [screenState, setScreenState] = useState<ScreenState>('intro');
+    const [screenState, setScreenState] = useState<ScreenState>('onboarding');
     const [showDetails, setShowDetails] = useState(false);
 
     const handleBack = useCallback(async () => {
       if (isWriting) {
         await cancelWrite();
-        setScreenState('intro');
+        setScreenState('setup');
       }
       navigation.goBack();
     }, [isWriting, cancelWrite, navigation]);
+
+    const handleOnboardingComplete = () => {
+      setScreenState('setup');
+    };
+
+    const handleSkipOnboarding = () => {
+      setScreenState('setup');
+    };
 
     const handleStartWriting = async () => {
       if (!userDocument?.username) return;
@@ -42,13 +51,13 @@ export const TapToPlayScreen = memo(
         }
         setScreenState('success');
       } else {
-        setScreenState('intro');
+        setScreenState('setup');
       }
     };
 
     const handleCancelScan = useCallback(async () => {
       await cancelWrite();
-      setScreenState('intro');
+      setScreenState('setup');
     }, [cancelWrite]);
 
     const handleDone = () => {
@@ -56,15 +65,27 @@ export const TapToPlayScreen = memo(
     };
 
     const handleProgramAnother = () => {
-      setScreenState('intro');
+      setScreenState('setup');
     };
+
+    // Show onboarding carousel first
+    if (screenState === 'onboarding') {
+      return (
+        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+          <OnboardingCarousel
+            onComplete={handleOnboardingComplete}
+            onSkip={handleSkipOnboarding}
+          />
+        </SafeAreaView>
+      );
+    }
 
     // Determine animation state
     const animationState = screenState === 'success' ? 'success' : screenState === 'writing' ? 'tapping' : 'idle';
 
     return (
       <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        {/* Header - Match LobbyDetail style */}
+        {/* Header */}
         <View className="relative flex-row items-center justify-center px-4 py-3 border-b border-gray-200">
           <Pressable
             onPress={handleBack}
@@ -73,27 +94,40 @@ export const TapToPlayScreen = memo(
             <X size={24} color="#6b7280" />
           </Pressable>
           <Text className="text-xl font-bold !text-gray-900">
-            Program Paddle
+            {screenState === 'setup' ? 'Setup Tap-to-Play' : 'Tap-to-Play'}
           </Text>
         </View>
 
         {/* Content */}
         <View className="items-center justify-between flex-1 px-6 py-8">
-          {screenState === 'intro' && (
+          {screenState === 'setup' && (
             <>
               {/* Animation Hero */}
               <View className="w-full">
-                <TapAnimationHero state={animationState} />
+                <TapAnimationHero state="idle" />
               </View>
 
-              {/* Minimal Copy */}
+              {/* Setup Instructions */}
               <View className="items-center w-full mb-auto">
-                <Text className="mb-3 text-3xl font-bold text-center !text-gray-900">
-                  Your Paddle,{'\n'}Your Profile
+                <Text className="mb-3 text-2xl font-bold text-center !text-gray-900">
+                  Ready to Setup?
                 </Text>
-                <Text className="mb-6 text-lg text-center !text-gray-600">
-                  Tap to join games instantly
+                <Text className="mb-6 text-base text-center !text-gray-600">
+                  Get your paddle tap-enabled
                 </Text>
+
+                {/* What You Need */}
+                <View className="w-full p-4 mb-6 rounded-2xl bg-gray-50">
+                  <Text className="mb-3 text-sm font-semibold !text-gray-900">
+                    What You Need:
+                  </Text>
+                  <Text className="mb-2 text-sm !text-gray-700">
+                    • NFC sticker (circular recommended)
+                  </Text>
+                  <Text className="text-sm !text-gray-700">
+                    • Stick to your paddle (anywhere)
+                  </Text>
+                </View>
 
                 {/* Expandable Details */}
                 <Pressable
@@ -101,7 +135,7 @@ export const TapToPlayScreen = memo(
                   className="flex-row items-center px-4 py-2 mb-6 rounded-full bg-gray-50 active:bg-gray-100"
                 >
                   <Text className="mr-2 text-sm font-medium !text-gray-700">
-                    How does this work?
+                    Where to get NFC tags?
                   </Text>
                   {showDetails ? (
                     <ChevronUp size={16} color="#374151" />
@@ -112,20 +146,9 @@ export const TapToPlayScreen = memo(
 
                 {showDetails && (
                   <View className="w-full p-4 mb-6 rounded-2xl bg-gray-50">
-                    <Text className="mb-3 text-sm font-semibold !text-gray-900">
-                      Quick Setup:
-                    </Text>
-                    <Text className="mb-2 text-sm leading-5 !text-gray-700">
-                      1. Get an NFC tag (sticker or keychain)
-                    </Text>
-                    <Text className="mb-2 text-sm leading-5 !text-gray-700">
-                      2. Program it once with this button
-                    </Text>
-                    <Text className="mb-4 text-sm leading-5 !text-gray-700">
-                      3. Attach to your paddle
-                    </Text>
-                    <Text className="text-sm leading-5 !text-gray-600">
-                      Now anyone can tap your paddle to see your stats and add you to games.
+                    <Text className="text-sm leading-5 !text-gray-700">
+                      Search for "NFC sticker" or "NFC tag" on Amazon or any electronics store. 
+                      Circular stickers work best for paddle handles. Most blank NFC tags will work!
                     </Text>
                   </View>
                 )}
@@ -137,7 +160,7 @@ export const TapToPlayScreen = memo(
                 className="items-center justify-center w-full py-4 rounded-2xl bg-[#007AFF] active:bg-[#0051D5]"
               >
                 <Text className="text-lg font-semibold !text-white">
-                  Program Paddle
+                  Program Tag
                 </Text>
               </Pressable>
             </>
@@ -185,7 +208,7 @@ export const TapToPlayScreen = memo(
                   You're Tap-Enabled!
                 </Text>
                 <Text className="mb-6 text-base text-center !text-gray-600">
-                  Walk up. Tap in. Start playing.
+                  Stick it to your paddle and you're ready!
                 </Text>
 
                 {/* Quick Guide */}
@@ -212,7 +235,7 @@ export const TapToPlayScreen = memo(
                   className="items-center justify-center w-full py-4 rounded-2xl bg-[#007AFF] active:bg-[#0051D5]"
                 >
                   <Text className="text-lg font-semibold !text-white">
-                    Get on the Court
+                    Done
                   </Text>
                 </Pressable>
 
