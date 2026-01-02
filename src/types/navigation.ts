@@ -49,6 +49,7 @@ export type RootStackParamList = {
   UserProfile: { username: string };
   Settings: undefined;
   ProgramPaddle: undefined;
+  FollowList: { userId: string; initialTab?: 'following' | 'followers' };
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =
