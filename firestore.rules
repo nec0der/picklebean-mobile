@@ -24,6 +24,13 @@ service cloud.firestore {
       return affectedKeys.hasOnly(allowedKeys);
     }
     
+    // Helper function to check if update is only modifying follow-related fields
+    function isFollowUpdate() {
+      let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      let allowedKeys = ['following', 'followingCount', 'followers', 'followersCount', 'updatedAt'].toSet();
+      return affectedKeys.hasOnly(allowedKeys);
+    }
+    
     // Users collection
     match /users/{userId} {
       // MVP: Anyone authenticated can read any user profile
@@ -33,9 +40,10 @@ service cloud.firestore {
       // Only the user can create their own profile
       allow create: if isOwner(userId);
       
-      // User can update own profile OR authenticated users can update match stats only
+      // User can update own profile OR authenticated users can update match stats only OR follow updates
       allow update: if isOwner(userId) || 
-        (isAuthenticated() && isMatchStatsUpdate());
+        (isAuthenticated() && isMatchStatsUpdate()) ||
+        (isAuthenticated() && isFollowUpdate());
       
       // No one can delete profiles
       allow delete: if false;
