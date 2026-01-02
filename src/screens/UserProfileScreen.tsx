@@ -1,26 +1,20 @@
 import { memo, useMemo } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Lock } from 'lucide-react-native';
+import { Lock } from 'lucide-react-native';
 import type { RootStackScreenProps } from '@/types/navigation';
 import { usePublicProfile } from '@/hooks/firestore/usePublicProfile';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
 import { useFollow } from '@/hooks/actions/useFollow';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { ErrorMessage } from '@/components/common/ErrorMessage';
+import { LoadingSpinner, ErrorMessage, ScreenHeader } from '@/components/common';
 import { ProfileHero } from '@/components/profile/ProfileHero';
 import { RankingStatCard } from '@/components/profile/RankingStatCard';
-import { ProfileTabBar, type ProfileTab } from '@/components/profile/ProfileTabBar';
 import { MatchesTab } from '@/components/profile/MatchesTab';
-import { StatisticsTab } from '@/components/profile/StatisticsTab';
-import { PostsTab } from '@/components/profile/PostsTab';
-import { useState } from 'react';
 
 export const UserProfileScreen = memo(
   ({ navigation, route }: RootStackScreenProps<'UserProfile'>) => {
     const { username } = route.params;
     const { user, loading, error, isPrivate, isOwn } = usePublicProfile(username);
-    const [activeTab, setActiveTab] = useState<ProfileTab>('matches');
     
     // Follow functionality
     const { isFollowing, loading: followLoading, toggleFollow } = useFollow(user?.uid || '');
@@ -48,6 +42,24 @@ export const UserProfileScreen = memo(
       navigation.goBack();
     };
 
+    const handleFollowingPress = () => {
+      if (user?.uid) {
+        navigation.navigate('FollowList', {
+          userId: user.uid,
+          initialTab: 'following',
+        });
+      }
+    };
+
+    const handleFollowersPress = () => {
+      if (user?.uid) {
+        navigation.navigate('FollowList', {
+          userId: user.uid,
+          initialTab: 'followers',
+        });
+      }
+    };
+
     // Loading state
     if (loading) {
       return (
@@ -60,33 +72,23 @@ export const UserProfileScreen = memo(
     // Error state
     if (error) {
       return (
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
-            <Pressable onPress={handleBack} className="mr-3">
-              <ArrowLeft size={24} color="#000" />
-            </Pressable>
-            <Text className="text-lg font-semibold !text-gray-900">Profile</Text>
-          </View>
+        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+          <ScreenHeader title="Profile" onLeftPress={handleBack} />
           <View className="items-center justify-center flex-1 px-4">
             <ErrorMessage
               message={error.message || 'Failed to load profile'}
               onRetry={handleBack}
             />
           </View>
-        </View>
+        </SafeAreaView>
       );
     }
 
     // Private profile state (and not the owner)
     if (isPrivate && !isOwn && !user) {
       return (
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
-            <Pressable onPress={handleBack} className="mr-3">
-              <ArrowLeft size={24} color="#000" />
-            </Pressable>
-            <Text className="text-lg font-semibold !text-gray-900">Profile</Text>
-          </View>
+        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+          <ScreenHeader title="Profile" onLeftPress={handleBack} />
           <View className="items-center justify-center flex-1 px-4">
             <Lock size={64} color="#9CA3AF" className="mb-4" />
             <Text className="mb-2 text-xl font-bold text-center text-gray-900">
@@ -96,20 +98,15 @@ export const UserProfileScreen = memo(
               This user has chosen to keep their profile private.
             </Text>
           </View>
-        </View>
+        </SafeAreaView>
       );
     }
 
     // Not found state
     if (!user) {
       return (
-        <View className="flex-1 bg-white">
-          <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
-            <Pressable onPress={handleBack} className="mr-3">
-              <ArrowLeft size={24} color="#000" />
-            </Pressable>
-            <Text className="text-lg font-semibold !text-gray-900">Profile</Text>
-          </View>
+        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+          <ScreenHeader title="Profile" onLeftPress={handleBack} />
           <View className="items-center justify-center flex-1 px-4">
             <Text className="mb-2 text-xl font-bold text-center text-gray-900">
               User Not Found
@@ -118,7 +115,7 @@ export const UserProfileScreen = memo(
               This user profile does not exist.
             </Text>
           </View>
-        </View>
+        </SafeAreaView>
       );
     }
 
@@ -135,19 +132,11 @@ export const UserProfileScreen = memo(
     const followingCount = user.followingCount || 0;
     const followersCount = user.followersCount || 0;
 
-    // Main content
-    return (
-      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-        {/* Header with back button */}
-        <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
-          <Pressable onPress={handleBack} className="mr-3">
-            <ArrowLeft size={24} color="#000" />
-          </Pressable>
-          <Text className="!text-2xl font-semibold !text-gray-900">{displayName}</Text>
-        </View>
-
-        <View className="flex-1">
-          {/* Hero Section with Follow button */}
+    // Prepare header content for MatchesTab
+    const renderHeader = () => (
+      <>
+        {/* Hero Section with Follow button */}
+        <View className="px-4 py-6 bg-white">
           <ProfileHero
             profilePicture={profilePicture}
             fullName={displayName}
@@ -159,14 +148,21 @@ export const UserProfileScreen = memo(
             isFollowing={isFollowing}
             followLoading={followLoading}
             onFollowPress={toggleFollow}
-            onFollowingPress={() => {
-              // TODO: Navigate to following/followers screen
-              console.log('View following/followers');
-            }}
+            onFollowingPress={handleFollowingPress}
+            onFollowersPress={handleFollowersPress}
           />
+        </View>
 
-          {/* Stats Section - 50/50 side by side */}
-          <View className="flex-row gap-3 px-4 py-4 bg-gray-50">
+        {/* Section Divider */}
+        {/* <View className="border-t-2 border-gray-300" /> */}
+
+        {/* Rankings Section */}
+        <View className="px-4 py-2 bg-white">
+          <Text className="mb-3 text-lg font-bold text-gray-900">
+            Rankings
+          </Text>
+          
+          <View className="flex-row gap-2">
             <View className="flex-1">
               <RankingStatCard
                 category="Singles"
@@ -187,17 +183,28 @@ export const UserProfileScreen = memo(
               />
             </View>
           </View>
-
-          {/* Tab Bar */}
-          <ProfileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
-
-          {/* Tab Content */}
-          <View className="flex-1">
-            {activeTab === 'matches' && user.uid && <MatchesTab userId={user.uid} />}
-            {activeTab === 'statistics' && user.uid && <StatisticsTab userId={user.uid} />}
-            {activeTab === 'posts' && <PostsTab />}
-          </View>
         </View>
+
+        {/* Section Divider */}
+        {/* <View className="border-t-2 border-gray-300" /> */}
+      </>
+    );
+
+    // Main content
+    return (
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <ScreenHeader 
+          title={displayName}
+          titleClassName="!text-2xl"
+          onLeftPress={handleBack}
+        />
+
+        {/* Match Feed with Header - Instagram Style */}
+        <MatchesTab 
+          userId={user.uid} 
+          header={renderHeader()} 
+          onViewAllHistory={() => navigation.goBack()}
+        />
       </SafeAreaView>
     );
   }
