@@ -1,17 +1,22 @@
 import { memo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Platform, StyleSheet } from 'react-native';
-import { Home, Trophy, Clock, User } from 'lucide-react-native';
+import { Home, Trophy, MapPin, User } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { PickleballIcon } from '@/components/ui/PickleballIcon';
+import { isGravity } from '@/config/product';
 import type { TabParamList } from '@/types/navigation';
 
 // Import screens
 import { DashboardScreen } from '@/screens/DashboardScreen';
 import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
+import { PlayNowResultScreen } from '@/screens/PlayNowResultScreen';
 import { PlayScreen } from '@/screens/PlayScreen';
-import { HistoryScreen } from '@/screens/HistoryScreen';
+import { MapScreen } from '@/screens/MapScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
+
+// Product-specific navigators
+import { GravityTabNavigator } from './tabs/GravityTabNavigator';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -33,7 +38,8 @@ const styles = StyleSheet.create({
   },
 });
 
-export const TabNavigator = memo(() => {
+// ELO Tab Navigator (original product)
+const EloTabNavigator = memo(() => {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -56,7 +62,7 @@ export const TabNavigator = memo(() => {
           backgroundColor: '#FFFFFF',
           elevation: 0,
           shadowOpacity: 0,
-          borderBottomWidth: 1,
+          // borderBottomWidth: 1,
           borderBottomColor: '#E5E7EB',
         },
         headerTitleStyle: {
@@ -98,6 +104,7 @@ export const TabNavigator = memo(() => {
         name="Play"
         component={PlayScreen}
         options={{
+          headerShown: true,
           tabBarLabel: '',
           tabBarIcon: () => (
             <View style={styles.playButton}>
@@ -113,11 +120,12 @@ export const TabNavigator = memo(() => {
       />
       
       <Tab.Screen
-        name="History"
-        component={HistoryScreen}
+        name="Map"
+        component={MapScreen}
         options={{
-          tabBarLabel: 'History',
-          tabBarIcon: ({ color, size }) => <Clock color={color} size={size} />,
+          tabBarLabel: 'Map',
+          tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} />,
+          headerShown: false,
         }}
         listeners={{
           tabPress: () => {
@@ -141,6 +149,17 @@ export const TabNavigator = memo(() => {
       />
     </Tab.Navigator>
   );
+});
+
+EloTabNavigator.displayName = 'EloTabNavigator';
+
+// Main TabNavigator - renders based on product flag
+export const TabNavigator = memo(() => {
+  if (isGravity) {
+    return <GravityTabNavigator />;
+  }
+  
+  return <EloTabNavigator />;
 });
 
 TabNavigator.displayName = 'TabNavigator';

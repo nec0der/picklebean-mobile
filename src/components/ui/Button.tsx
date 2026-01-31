@@ -4,7 +4,7 @@ import type { PressableProps } from 'react-native';
 
 export interface ButtonProps extends Omit<PressableProps, 'style'> {
   title: string;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'subtle';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
@@ -26,6 +26,7 @@ export const Button = memo(({
     secondary: 'bg-secondary-500 active:bg-secondary-600',
     ghost: 'bg-transparent active:bg-secondary-100',
     danger: 'bg-error active:bg-red-600',
+    subtle: 'bg-gray-100 border border-gray-200 active:bg-gray-200',
   };
 
   const textVariantClasses = {
@@ -33,6 +34,7 @@ export const Button = memo(({
     secondary: 'text-white',
     ghost: 'text-primary-600',
     danger: 'text-white',
+    subtle: 'text-gray-700',
   };
 
   const sizeClasses = {
@@ -66,7 +68,7 @@ export const Button = memo(({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'ghost' ? '#2563eb' : '#ffffff'}
+          color={variant === 'ghost' || variant === 'subtle' ? '#4B5563' : '#ffffff'}
         />
       ) : (
         <Text
