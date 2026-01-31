@@ -1,7 +1,7 @@
 import { memo, useState, useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react-native';
+import { ChevronLeft, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -116,7 +116,7 @@ export const TapToPlayScreen = memo(
             onPress={handleBack}
             className="absolute p-2 left-4"
           >
-            <X size={24} color="#6b7280" />
+            <ChevronLeft size={24} color="#6b7280" />
           </Pressable>
           <Text className="text-xl font-bold !text-gray-900">
             {screenState === 'setup' ? 'Setup Tap-to-Play' : 'Tap-to-Play'}

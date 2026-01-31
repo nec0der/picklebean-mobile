@@ -1,10 +1,27 @@
-import { View, Text, Pressable, Animated } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, TrendingUp, TrendingDown, Trophy } from 'lucide-react-native';
+/**
+ * GameSummary - Minimal, Animated Post-Match Screen
+ * 
+ * Design: Clean layout with staggered animations
+ * Psychology: Context-aware copy, haptic feedback for emotions
+ */
+
+import { memo, useEffect, useMemo, useRef } from 'react';
+import { View, Text, Pressable, Animated, Easing } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { 
+  Trophy, 
+  TrendingUp, 
+  TrendingDown, 
+  Share2, 
+  RotateCcw,
+  Heart,
+  CheckCircle,
+} from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useRef } from 'react';
 import { shareMatchResult } from '@/lib/share';
 import { useAlert } from '@/hooks/common/useAlert';
+import { ScreenHeader } from '@/components/common';
+import { Avatar } from '@/components/ui/Avatar';
 import type { Lobby } from '@/types/lobby';
 
 interface GameSummaryProps {
@@ -15,7 +32,118 @@ interface GameSummaryProps {
   onRematch?: () => void;
 }
 
-export const GameSummary = ({ 
+// =============================================================================
+// PSYCHOLOGY-DRIVEN COPY
+// =============================================================================
+
+interface OutcomeContext {
+  userWon: boolean;
+  isCloseGame: boolean;
+  isDominant: boolean;
+}
+
+const getOutcomeHeadline = (ctx: OutcomeContext): string => {
+  if (ctx.userWon) {
+    if (ctx.isDominant) return 'DOMINANT';
+    if (ctx.isCloseGame) return 'CLUTCH';
+    return 'VICTORY';
+  } else {
+    if (ctx.isCloseGame) return 'SO CLOSE';
+    return 'GG';
+  }
+};
+
+const getOutcomeSubtext = (ctx: OutcomeContext): string => {
+  if (ctx.userWon) {
+    if (ctx.isDominant) return "Absolutely clinical performance.";
+    if (ctx.isCloseGame) return "That was a nail-biter! 🔥";
+    return "Solid win. Keep climbing!";
+  } else {
+    if (ctx.isCloseGame) return "One point away. Next time!";
+    return "Champions learn from every game.";
+  }
+};
+
+// =============================================================================
+// ANIMATED PLAYER ROW
+// =============================================================================
+
+interface PlayerRowProps {
+  player: {
+    uid: string;
+    displayName: string;
+    photoURL?: string;
+  };
+  isCurrentUser: boolean;
+  isWinner: boolean;
+  animDelay: number;
+}
+
+const AnimatedPlayerRow = memo(({ player, isCurrentUser, isWinner, animDelay }: PlayerRowProps) => {
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        delay: animDelay,
+        easing: Easing.out(Easing.back(1.2)),
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 300,
+        delay: animDelay,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [animDelay]);
+
+  const displayName = player.displayName.split(' ')[0];
+
+  return (
+    <Animated.View
+      style={{
+        transform: [{ translateY: slideAnim }],
+        opacity: opacityAnim,
+      }}
+      className="flex-row items-center py-3"
+    >
+      <Avatar
+        uri={player.photoURL}
+        name={displayName}
+        size="md"
+      />
+      
+      <View className="flex-1 ml-3">
+        <View className="flex-row items-center gap-2">
+          <Text className={`text-base ${isCurrentUser ? 'font-bold' : 'font-medium'} !text-gray-900`}>
+            {displayName}
+          </Text>
+          {isCurrentUser && (
+            <View className="px-2 py-0.5 bg-blue-100 rounded-full">
+              <Text className="text-xs font-semibold !text-blue-700">You</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {isWinner && (
+        <CheckCircle size={20} color="#16a34a" />
+      )}
+    </Animated.View>
+  );
+});
+
+AnimatedPlayerRow.displayName = 'AnimatedPlayerRow';
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
+export const GameSummary = memo(({ 
   lobby, 
   currentUserId, 
   currentUserName,
@@ -23,7 +151,19 @@ export const GameSummary = ({
   onRematch 
 }: GameSummaryProps) => {
   const alert = useAlert();
-  
+  const insets = useSafeAreaInsets();
+
+  // Animation refs
+  const iconScale = useRef(new Animated.Value(0)).current;
+  const headlineOpacity = useRef(new Animated.Value(0)).current;
+  const headlineScale = useRef(new Animated.Value(0.8)).current;
+  const scoreOpacity = useRef(new Animated.Value(0)).current;
+  const scoreScale = useRef(new Animated.Value(0.9)).current;
+  const pointsOpacity = useRef(new Animated.Value(0)).current;
+  const buttonSlide = useRef(new Animated.Value(50)).current;
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
+
+  // Guard clause
   if (!lobby.gameCompleted || !lobby.finalScores || !lobby.winner) {
     return null;
   }
@@ -32,215 +172,293 @@ export const GameSummary = ({
   const winningTeam = lobby.winner;
   const isHost = currentUserId === lobby.hostId;
 
-  // Get REAL calculated point changes from lobby
+  // Get point changes from lobby
   const team1Points = lobby.pointChanges?.team1 ?? 0;
   const team2Points = lobby.pointChanges?.team2 ?? 0;
 
-  // Determine current user's point change
+  // Determine current user's position
   const isOnTeam1 = 
     lobby.team1.player1?.uid === currentUserId || 
     lobby.team1.player2?.uid === currentUserId;
+  
   const currentUserPoints = isOnTeam1 ? team1Points : team2Points;
+  const userWon = (isOnTeam1 && winningTeam === 1) || (!isOnTeam1 && winningTeam === 2);
 
-  // Animation values
-  const trophyScale = useRef(new Animated.Value(1)).current;
-  const winnerScale = useRef(new Animated.Value(0.95)).current;
+  // Calculate score difference for context
+  const scoreDiff = Math.abs(team1 - team2);
+  const isCloseGame = scoreDiff <= 3;
+  const isDominant = scoreDiff >= 7;
 
-  // Entrance animations
+  // Outcome context
+  const outcomeContext: OutcomeContext = useMemo(() => ({
+    userWon,
+    isCloseGame,
+    isDominant,
+  }), [userWon, isCloseGame, isDominant]);
+
+  const headline = getOutcomeHeadline(outcomeContext);
+  const subtext = getOutcomeSubtext(outcomeContext);
+
+  // Collect all players (sorted: current user first, then winners)
+  interface PlayerWithTeam {
+    uid: string;
+    displayName: string;
+    photoURL?: string;
+    team: number;
+  }
+  
+  const playersToAdd: (PlayerWithTeam | null)[] = [
+    lobby.team1.player1 ? { uid: lobby.team1.player1.uid, displayName: lobby.team1.player1.displayName, photoURL: lobby.team1.player1.photoURL, team: 1 } : null,
+    lobby.gameMode === 'doubles' && lobby.team1.player2 ? { uid: lobby.team1.player2.uid, displayName: lobby.team1.player2.displayName, photoURL: lobby.team1.player2.photoURL, team: 1 } : null,
+    lobby.team2.player1 ? { uid: lobby.team2.player1.uid, displayName: lobby.team2.player1.displayName, photoURL: lobby.team2.player1.photoURL, team: 2 } : null,
+    lobby.gameMode === 'doubles' && lobby.team2.player2 ? { uid: lobby.team2.player2.uid, displayName: lobby.team2.player2.displayName, photoURL: lobby.team2.player2.photoURL, team: 2 } : null,
+  ];
+  
+  const allPlayers = playersToAdd.filter((p): p is PlayerWithTeam => p !== null);
+  
+  // Sort: current user first, then winners, then losers
+  const sortedPlayers = [...allPlayers].sort((a, b) => {
+    if (a.uid === currentUserId) return -1;
+    if (b.uid === currentUserId) return 1;
+    const aIsWinner = a.team === winningTeam;
+    const bIsWinner = b.team === winningTeam;
+    if (aIsWinner && !bIsWinner) return -1;
+    if (!aIsWinner && bIsWinner) return 1;
+    return 0;
+  });
+
+  // ========= STAGGERED ANIMATION + HAPTICS =========
   useEffect(() => {
-    // Victory haptic
-    Haptics.notificationAsync(
-      Haptics.NotificationFeedbackType.Success
-    );
+    // Haptic choreography
+    if (userWon) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 150);
+      setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 300);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
 
-    // Trophy pulse (continuous, gentle)
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(trophyScale, {
-          toValue: 1.05,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(trophyScale, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Winner entrance (once, subtle)
-    Animated.timing(winnerScale, {
+    // 1. Icon (0ms)
+    Animated.spring(iconScale, {
       toValue: 1,
-      duration: 300,
+      tension: 50,
+      friction: 7,
       useNativeDriver: true,
     }).start();
-  }, []);
+
+    // 2. Headline (200ms)
+    Animated.parallel([
+      Animated.timing(headlineOpacity, {
+        toValue: 1,
+        duration: 400,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+      Animated.spring(headlineScale, {
+        toValue: 1,
+        tension: 60,
+        friction: 10,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // 3. Score (400ms)
+    Animated.parallel([
+      Animated.timing(scoreOpacity, {
+        toValue: 1,
+        duration: 300,
+        delay: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scoreScale, {
+        toValue: 1,
+        tension: 80,
+        friction: 12,
+        delay: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // 4. Points badge (600ms)
+    Animated.timing(pointsOpacity, {
+      toValue: 1,
+      duration: 300,
+      delay: 600,
+      useNativeDriver: true,
+    }).start();
+
+    // 5. Button (1200ms)
+    Animated.parallel([
+      Animated.timing(buttonSlide, {
+        toValue: 0,
+        duration: 400,
+        delay: 1200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonOpacity, {
+        toValue: 1,
+        duration: 300,
+        delay: 1200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [userWon]);
 
   const handleShare = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     try {
       await shareMatchResult(lobby, currentUserName, currentUserPoints);
-      await Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Success
-      );
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
-      await Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Error
-      );
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       console.error('Error sharing:', error);
       alert.show('Share Failed', 'Unable to share match result. Please try again.');
     }
   };
 
-  const handlePlayAgainPress = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onPlayAgain();
-  };
-
   const handleRematchPress = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (onRematch) {
-      onRematch();
-    }
-  };
-
-  // Minimal player row - just Name + Points + Arrow
-  const renderPlayer = (player: typeof lobby.team1.player1, points: number, isWinner: boolean) => {
-    if (!player) return null;
-
-    const isPositive = points > 0;
-    const Icon = isPositive ? TrendingUp : TrendingDown;
-    const iconColor = isPositive ? '#10b981' : '#ef4444';
-
-    return (
-      <View 
-        className={`flex-row items-center justify-between px-4 py-3 ${
-          isWinner ? 'bg-green-50' : 'bg-gray-50'
-        }`}
-      >
-        <Text className={`flex-1 ${
-          isWinner ? 'text-lg font-semibold !text-gray-900' : 'text-base font-regular !text-gray-700'
-        }`}>
-          {player.displayName}
-        </Text>
-        <View className="flex-row items-center gap-2">
-          <Text className={`${
-            isWinner ? 'text-lg' : 'text-base'
-          } font-bold ${isPositive ? '!text-green-600' : '!text-red-600'}`}>
-            {points > 0 ? '+' : ''}{points}
-          </Text>
-          <Icon size={16} color={iconColor} />
-        </View>
-      </View>
-    );
+    onRematch?.();
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
-      {/* Minimal Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-        <Pressable onPress={handlePlayAgainPress} className="p-2">
-          <X size={24} color="#374151" />
-        </Pressable>
-        <View className="w-10" />
-        <Pressable onPress={handleShare} className="p-2">
-          <Text className="text-base font-semibold !text-blue-600">Share</Text>
-        </Pressable>
-      </View>
-
-      {/* Content */}
-      <View className="flex-1 px-4 py-8">
-        {/* Trophy + Winner (Pulsing) */}
-        <View className="items-center mb-8">
-          <Animated.View 
-            style={{ transform: [{ scale: trophyScale }] }}
-            className="items-center justify-center w-16 h-16 mb-4 bg-yellow-400 rounded-full"
+      {/* Header */}
+      <ScreenHeader
+        leftAction="close"
+        title="Match Result"
+        onLeftPress={onPlayAgain}
+        rightComponent={
+          <Pressable 
+            onPress={handleShare}
+            className="flex-row items-center gap-1 px-3 py-2"
           >
-            <Trophy size={32} color="#fff" />
-          </Animated.View>
-          <Text className="text-3xl font-bold !text-gray-900">
-            TEAM {winningTeam} WINS!
-          </Text>
-        </View>
+            <Share2 size={18} color="#3b82f6" />
+            <Text className="text-sm font-semibold !text-blue-600">Share</Text>
+          </Pressable>
+        }
+      />
 
-        {/* Score - Just Numbers */}
-        <View className="flex-row items-center justify-center gap-6 mb-8">
-          <Text className={`text-6xl font-bold ${
-            winningTeam === 1 ? '!text-green-600' : '!text-gray-400'
+      {/* Main Content - Centered */}
+      <View className="items-center justify-center flex-1 px-6">
+        
+        {/* Icon */}
+        <Animated.View 
+          style={{ transform: [{ scale: iconScale }] }}
+          className={`items-center justify-center w-20 h-20 mb-5 rounded-full ${
+            userWon ? 'bg-green-100' : 'bg-blue-50'
+          }`}
+        >
+          {userWon ? (
+            <Trophy size={40} color="#16a34a" />
+          ) : (
+            <Heart size={36} color="#3b82f6" />
+          )}
+        </Animated.View>
+
+        {/* Headline + Subtext */}
+        <Animated.View 
+          style={{ 
+            opacity: headlineOpacity,
+            transform: [{ scale: headlineScale }],
+          }}
+          className="items-center mb-8"
+        >
+          <Text className={`text-4xl font-black tracking-tight ${
+            userWon ? '!text-green-600' : '!text-blue-600'
+          }`}>
+            {headline}
+          </Text>
+          <Text className="mt-2 text-base text-center !text-gray-500">
+            {subtext}
+          </Text>
+        </Animated.View>
+
+        {/* Score */}
+        <Animated.View
+          style={{
+            opacity: scoreOpacity,
+            transform: [{ scale: scoreScale }],
+          }}
+          className="flex-row items-baseline justify-center gap-3 mb-4"
+        >
+          <Text className={`text-6xl font-black ${
+            winningTeam === 1 ? '!text-green-600' : '!text-gray-300'
           }`}>
             {team1}
           </Text>
-          <Text className="text-4xl font-bold !text-gray-400">-</Text>
-          <Text className={`text-6xl font-bold ${
-            winningTeam === 2 ? '!text-green-600' : '!text-gray-400'
+          <Text className="text-3xl font-bold !text-gray-300">—</Text>
+          <Text className={`text-6xl font-black ${
+            winningTeam === 2 ? '!text-green-600' : '!text-gray-300'
           }`}>
             {team2}
           </Text>
-        </View>
-
-        {/* Players - Minimal Rows */}
-        <Animated.View 
-          style={{ transform: [{ scale: winnerScale }] }}
-          className="overflow-hidden rounded-lg"
-        >
-          {/* Winners */}
-          {winningTeam === 1 ? (
-            <>
-              {renderPlayer(lobby.team1.player1, team1Points, true)}
-              {lobby.gameMode === 'doubles' && renderPlayer(lobby.team1.player2, team1Points, true)}
-            </>
-          ) : (
-            <>
-              {renderPlayer(lobby.team2.player1, team2Points, true)}
-              {lobby.gameMode === 'doubles' && renderPlayer(lobby.team2.player2, team2Points, true)}
-            </>
-          )}
-
-          {/* Losers */}
-          <View className="h-px my-2 bg-gray-200" />
-          {winningTeam === 1 ? (
-            <>
-              {renderPlayer(lobby.team2.player1, team2Points, false)}
-              {lobby.gameMode === 'doubles' && renderPlayer(lobby.team2.player2, team2Points, false)}
-            </>
-          ) : (
-            <>
-              {renderPlayer(lobby.team1.player1, team1Points, false)}
-              {lobby.gameMode === 'doubles' && renderPlayer(lobby.team1.player2, team1Points, false)}
-            </>
-          )}
         </Animated.View>
-      </View>
 
-      {/* Bottom Actions */}
-      <View className="px-4 pt-4 pb-4 bg-white border-t border-gray-200">
-        {isHost && onRematch && (
-          <Pressable
-            onPress={handleRematchPress}
-            className="items-center py-4 mb-3 bg-blue-500 rounded-lg active:bg-blue-600"
-          >
-            <Text className="text-lg font-bold !text-white">Play Again</Text>
-          </Pressable>
-        )}
-        <Pressable
-          onPress={handlePlayAgainPress}
-          className={`items-center py-4 rounded-lg ${
-            isHost && onRematch 
-              ? 'bg-gray-100 active:bg-gray-200' 
-              : 'bg-green-500 active:bg-green-600'
+        {/* Points earned/lost - single display */}
+        <Animated.View
+          style={{ opacity: pointsOpacity }}
+          className={`flex-row items-center gap-2 px-4 py-2 mb-10 rounded-full ${
+            currentUserPoints > 0 ? 'bg-green-50' : 'bg-gray-100'
           }`}
         >
+          {currentUserPoints > 0 ? (
+            <TrendingUp size={18} color="#16a34a" />
+          ) : (
+            <TrendingDown size={18} color="#6b7280" />
+          )}
           <Text className={`text-lg font-bold ${
-            isHost && onRematch ? '!text-gray-700' : '!text-white'
+            currentUserPoints > 0 ? '!text-green-600' : '!text-gray-600'
           }`}>
-            Back to Home
+            {currentUserPoints > 0 ? '+' : ''}{currentUserPoints} pts
           </Text>
-        </Pressable>
+        </Animated.View>
+
+        {/* Players - Simple list with divider */}
+        <View className="w-full max-w-sm">
+          <View className="h-px mb-4 bg-gray-200" />
+          
+          {sortedPlayers.map((player, index) => (
+            <AnimatedPlayerRow
+              key={player.uid}
+              player={player}
+              isCurrentUser={player.uid === currentUserId}
+              isWinner={player.team === winningTeam}
+              animDelay={800 + (index * 100)}
+            />
+          ))}
+        </View>
       </View>
+
+      {/* Bottom Action */}
+      {isHost && onRematch && (
+        <Animated.View 
+          style={{
+            transform: [{ translateY: buttonSlide }],
+            opacity: buttonOpacity,
+          }}
+          className="px-6 pt-4 bg-white border-t border-gray-100"
+          // @ts-ignore - style prop type
+          innerStyle={{ paddingBottom: Math.max(insets.bottom, 16) }}
+        >
+          <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+            <Pressable
+              onPress={handleRematchPress}
+              className="flex-row items-center justify-center gap-2 py-4 bg-green-500 rounded-xl active:bg-green-600"
+            >
+              <RotateCcw size={20} color="white" />
+              <Text className="text-lg font-bold !text-white">Rematch</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
-};
+});
+
+GameSummary.displayName = 'GameSummary';
 
 export type { GameSummaryProps };

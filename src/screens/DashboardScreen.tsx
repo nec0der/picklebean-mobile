@@ -41,7 +41,7 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
   }, [navigation]);
 
   const handleViewAllMatches = useCallback(() => {
-    navigation.navigate('History');
+    navigation.navigate('Map');
   }, [navigation]);
 
   const handleViewProfile = useCallback(() => {
@@ -122,7 +122,7 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-white"  edges={['right', 'left']}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}
@@ -282,9 +282,11 @@ export const DashboardScreen = memo(({ navigation }: TabScreenProps<'Dashboard'>
                   </Pressable>
                 </View>
 
-                {matches.slice(0, 3).map((match) => (
-                  <MatchCard key={match.id} match={match} />
-                ))}
+                <View className="px-4">
+                  {matches.slice(0, 3).map((match) => (
+                    <MatchCard key={match.id} match={match} />
+                  ))}
+                </View>
               </View>
             )}
 

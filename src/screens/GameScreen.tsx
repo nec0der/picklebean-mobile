@@ -2,7 +2,7 @@ import { memo, useCallback, useState, useMemo, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Crown, X, User, Users,  } from 'lucide-react-native';
+import { Crown, X } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList, RootStackScreenProps } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +10,7 @@ import { useLobby } from '@/hooks/firestore/useLobby';
 import { useStakesCalculation } from '@/hooks/game/useStakesCalculation';
 import { useToast } from '@/hooks/common/useToast';
 import { useAlert } from '@/hooks/common/useAlert';
-import { LoadingSpinner, ErrorMessage } from '@/components/common';
+import { LoadingSpinner, ErrorMessage, ScreenHeader } from '@/components/common';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { GameTimer } from '@/components/game/GameTimer';
@@ -299,31 +299,16 @@ export const GameScreen = memo(({ route }: RootStackScreenProps<'Game'>) => {
   // Active game view
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Compact Header with Cancel (Host only) and LIVE indicator */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-        {/* Cancel Button (Host Only) */}
-        {isHost ? (
-          <Pressable
-            onPress={() => setShowCancelModal(true)}
-            className="p-2"
-          >
-            <X size={24} color="#374151" />
-          </Pressable>
-        ) : (
-          <View className="w-10" />
-        )}
-        
-        {/* Title with LIVE indicator */}
-        <View className="flex-row items-center gap-2">
-          <View className="w-2 h-2 bg-red-500 rounded-full" />
-          <Text className="text-lg font-bold !text-gray-900">
-            Playing
-          </Text>
-        </View>
-        
-        {/* Spacer for balance */}
-        <View className="w-10" />
-      </View>
+      <ScreenHeader
+        leftAction="close"
+        onLeftPress={isHost ? () => setShowCancelModal(true) : undefined}
+        titleComponent={
+          <View className="flex-row items-center gap-2">
+            <View className="w-2 h-2 bg-red-500 rounded-full" />
+            <Text className="text-lg font-bold !text-gray-900">Playing</Text>
+          </View>
+        }
+      />
 
       {/* Cancel Match Sheet */}
       <CancelMatchSheet

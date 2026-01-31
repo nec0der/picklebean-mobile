@@ -1,31 +1,41 @@
-import { memo } from 'react';
-import { View, Text, Pressable, FlatList } from 'react-native';
+import { memo, useState, type ReactNode } from 'react';
+import { View, Text, Pressable, FlatList, ScrollView, RefreshControl } from 'react-native';
 import { useMatches } from '@/hooks/firestore/useMatches';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
-import { MatchFeedItem } from './MatchFeedItem';
+import { MatchCard } from '@/components/history/MatchCard';
+import { MatchDetailModal } from '@/components/history/MatchDetailModal';
+import { isGravity } from '@/config/product';
+import { FLOATING_TAB_BAR_HEIGHT } from '@/navigation/tabs/GravityTabNavigator';
 import type { MatchHistoryRecord } from '@/types/user';
 
 interface MatchesTabProps {
   userId: string;
+  header?: ReactNode;
+  onViewAllHistory?: () => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  isOwnProfile?: boolean;
 }
 
-export const MatchesTab = memo(({ userId }: MatchesTabProps) => {
+// Bottom padding for content - accounts for floating tab bar in Gravity mode
+const CONTENT_BOTTOM_PADDING = isGravity ? FLOATING_TAB_BAR_HEIGHT : 16;
+
+export const MatchesTab = memo(({ userId, header, onViewAllHistory, refreshing = false, onRefresh, isOwnProfile = false }: MatchesTabProps) => {
   const { matches, loading, error } = useMatches(userId);
+  const [selectedMatch, setSelectedMatch] = useState<MatchHistoryRecord | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   // Show only recent 10 matches
   const recentMatches = matches.slice(0, 10);
 
   const handleMatchPress = (match: MatchHistoryRecord) => {
-    // Navigate to match details
-    // TODO: Implement match detail screen navigation
-    console.log('Match pressed:', match.id);
+    setSelectedMatch(match);
+    setModalVisible(true);
   };
 
   const handleViewAll = () => {
-    // TODO: Navigate to History tab
-    // User can manually go to History tab to see all matches
-    console.log('View all matches');
+    onViewAllHistory?.();
   };
 
   if (loading) {
@@ -46,47 +56,98 @@ export const MatchesTab = memo(({ userId }: MatchesTabProps) => {
 
   if (recentMatches.length === 0) {
     return (
-      <View className="items-center justify-center flex-1 px-4 py-12">
-        <Text className="mb-2 text-lg font-bold !text-gray-900">
-          No matches yet
-        </Text>
-        <Text className="text-sm text-center !text-gray-500">
-          Play your first match to see it here!
-        </Text>
-      </View>
+      <ScrollView
+        className="flex-1 bg-white"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: CONTENT_BOTTOM_PADDING }}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          ) : undefined
+        }
+      >
+        {header}
+        
+        {/* Section header */}
+        <View className="px-4 pt-6">
+          <Text className="mb-3 text-lg font-bold text-gray-900">
+            Matches
+          </Text>
+        </View>
+        
+        <View className="items-center justify-start px-4 py-12">
+          <Text className="mb-2 text-lg font-bold !text-gray-900">
+            No matches yet
+          </Text>
+          <Text className="text-sm text-center !text-gray-500">
+            {isOwnProfile
+              ? "Play your first match to see it here!"
+              : "This user hasn't played any matches yet"
+            }
+          </Text>
+        </View>
+      </ScrollView>
     );
   }
 
   return (
-    <FlatList
-      data={recentMatches}
-      renderItem={({ item }) => (
-        <MatchFeedItem
-          match={item}
-          onPress={() => handleMatchPress(item)}
-        />
-      )}
-      keyExtractor={(item) => item.id}
-      showsVerticalScrollIndicator={false}
-      contentContainerClassName="px-4 pt-4 pb-4 bg-gray-50"
-      ListHeaderComponent={
-        <Text className="mb-3 text-base font-semibold !text-gray-900">
-          Recent Matches
-        </Text>
-      }
-      ListFooterComponent={
-        matches.length > 10 ? (
-          <Pressable
-            onPress={handleViewAll}
-            className="items-center py-4 active:opacity-70"
-          >
-            <Text className="text-sm font-semibold !text-green-600">
-              View All Match History →
-            </Text>
-          </Pressable>
-        ) : null
-      }
-    />
+    <>
+      <FlatList
+        data={recentMatches}
+        renderItem={({ item }) => (
+          <View className="px-4">
+            <MatchCard
+              match={item}
+              onPress={handleMatchPress}
+            />
+          </View>
+        )}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: CONTENT_BOTTOM_PADDING, backgroundColor: '#FFFFFF' }}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          ) : undefined
+        }
+        ListHeaderComponent={
+          <>
+            {header}
+            
+            {/* Section header */}
+            <View className="px-4 pt-6">
+              <Text className="mb-3 text-lg font-bold text-gray-900">
+                Matches
+              </Text>
+            </View>
+          </>
+        }
+        ListFooterComponent={
+          matches.length > 10 ? (
+            <View className="px-4">
+              <Pressable
+                onPress={handleViewAll}
+                className="items-center py-4 active:opacity-70"
+              >
+                <Text className="text-sm font-semibold !text-green-600">
+                  View All Match History →
+                </Text>
+              </Pressable>
+            </View>
+          ) : null
+        }
+      />
+      
+      {/* Match Detail Modal */}
+      <MatchDetailModal
+        visible={modalVisible}
+        match={selectedMatch}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedMatch(null);
+        }}
+      />
+    </>
   );
 });
 

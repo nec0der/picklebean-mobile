@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { Trophy, X } from 'lucide-react-native';
+import { User, Users } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import type { MatchHistoryRecord } from '@/types/user';
 
@@ -25,6 +25,7 @@ const getMatchDisplayText = (match: MatchHistoryRecord): string => {
 
 export const MatchCard = memo(({ match, onPress }: MatchCardProps) => {
   const isWin = match.result === 'win';
+  const isSingles = match.gameType === 'singles' || match.gameCategory === 'singles';
 
   const handlePress = () => {
     onPress?.(match);
@@ -34,40 +35,46 @@ export const MatchCard = memo(({ match, onPress }: MatchCardProps) => {
     <Pressable onPress={handlePress}>
       <Card variant="outlined" className="px-0 py-0 mb-3">
         <View className="flex-row items-center gap-4 p-4 space-x-4">
-          {/* Win/Loss Icon Box */}
+          {/* Game Type Icon Box */}
           <View
-            className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border ${
+            className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center border ${
               isWin
                 ? 'bg-green-100 border-green-200'
                 : 'bg-red-100 border-red-200'
             }`}
           >
-            {isWin ? (
-              <Trophy size={24} color="#16a34a" />
+            {isSingles ? (
+              <User size={20} color={isWin ? '#16a34a' : '#dc2626'} />
             ) : (
-              <X size={24} color="#dc2626" />
+              <Users size={20} color={isWin ? '#16a34a' : '#dc2626'} />
             )}
           </View>
 
           {/* Match Details */}
           <View className="flex-1 min-w-0">
-            <Text
-              className={`font-medium mb-0.5 ${
-                isWin ? 'text-green-800' : 'text-red-800'
-              }`}
-            >
-              {isWin ? 'Won' : 'Lost'}
-            </Text>
+            {match.score && (
+              <Text
+                className={`font-semibold mb-0.5 ${
+                  isWin ? 'text-green-800' : 'text-red-800'
+                }`}
+              >
+                {match.score.team1}-{match.score.team2}
+              </Text>
+            )}
             <Text className="text-sm text-gray-600 truncate">
               {getMatchDisplayText(match)}
             </Text>
           </View>
 
-          {/* Points Change */}
-          <View className="flex-shrink-0">
+          {/* Points Change - Pill Badge */}
+          <View 
+            className={`items-center justify-center px-3 py-1 rounded-full ${
+              match.pointsChange > 0 ? 'bg-green-100' : 'bg-red-100'
+            }`}
+          >
             <Text
-              className={`text-base font-bold ${
-                isWin ? 'text-green-600' : 'text-red-600'
+              className={`text-sm font-bold ${
+                match.pointsChange > 0 ? 'text-green-700' : 'text-red-700'
               }`}
             >
               {match.pointsChange > 0 ? '+' : ''}

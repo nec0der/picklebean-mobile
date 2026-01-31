@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import type { GameCategory } from '@/types/lobby';
 
@@ -16,17 +16,39 @@ interface CategorySelectProps {
 }
 
 const categories: { value: CategoryFilter; label: string }[] = [
-  { value: 'all_singles', label: 'Singles (All)' },
-  { value: 'mens_singles', label: "Men's Singles" },
-  { value: 'womens_singles', label: "Women's Singles" },
-  { value: 'all_doubles', label: 'Doubles (All)' },
+  { value: 'all_doubles', label: 'Doubles' },
+  { value: 'all_singles', label: 'Singles' },
   { value: 'mens_doubles', label: "Men's Doubles" },
   { value: 'womens_doubles', label: "Women's Doubles" },
+  { value: 'mens_singles', label: "Men's Singles" },
+  { value: 'womens_singles', label: "Women's Singles" },
 ];
 
 export const CategorySelect = memo(({ value, onChange }: CategorySelectProps) => {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const buttonLayouts = useRef<Record<string, { x: number; width: number }>>({});
+
+  // Auto-scroll to selected category when value changes
+  useEffect(() => {
+    const selectedIndex = categories.findIndex((c) => c.value === value);
+    if (selectedIndex !== -1 && buttonLayouts.current[value]) {
+      const layout = buttonLayouts.current[value];
+      const scrollX = Math.max(0, layout.x - 60); // Offset to center better
+      
+      scrollViewRef.current?.scrollTo({
+        x: scrollX,
+        animated: true,
+      });
+    }
+  }, [value]);
+
+  const handleLayout = (categoryValue: string, x: number, width: number) => {
+    buttonLayouts.current[categoryValue] = { x, width };
+  };
+
   return (
     <ScrollView
+      ref={scrollViewRef}
       horizontal
       showsHorizontalScrollIndicator={false}
       className="flex-row px-4 -mx-4"
@@ -38,6 +60,10 @@ export const CategorySelect = memo(({ value, onChange }: CategorySelectProps) =>
           <Pressable
             key={category.value}
             onPress={() => onChange(category.value)}
+            onLayout={(event) => {
+              const { x, width } = event.nativeEvent.layout;
+              handleLayout(category.value, x, width);
+            }}
             className={`mr-2 px-4 py-2 rounded-full border ${
               isSelected
                 ? 'bg-blue-500 border-blue-500'

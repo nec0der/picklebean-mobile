@@ -204,6 +204,7 @@ export const UserProfileScreen = memo(
           userId={user.uid} 
           header={renderHeader()} 
           onViewAllHistory={() => navigation.goBack()}
+          isOwnProfile={isOwn}
         />
       </SafeAreaView>
     );

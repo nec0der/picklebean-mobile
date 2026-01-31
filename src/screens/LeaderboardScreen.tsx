@@ -1,150 +1,145 @@
-import { memo, useState, useCallback, useRef, useEffect } from 'react';
-import { View, Text, FlatList, RefreshControl } from 'react-native';
+import { memo, useState, useCallback, useRef } from 'react';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Trophy } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import PagerView from 'react-native-pager-view';
+import type { PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
 import type { TabScreenProps } from '@/types/navigation';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/types/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLeaderboard } from '@/hooks/firestore/useLeaderboard';
-import { LoadingSpinner, ErrorMessage } from '@/components/common';
+import { LoadingSpinner } from '@/components/common';
 import { CategorySelect, parseCategoryFilter, type CategoryFilter } from '@/components/leaderboard/CategorySelect';
-import { LeaderboardRow } from '@/components/leaderboard/LeaderboardRow';
-import type { UserDocument } from '@/types/user';
+import { LeaderboardPage } from '@/components/leaderboard/LeaderboardPage';
+
+const categories: CategoryFilter[] = [
+  'all_doubles',
+  'all_singles',
+  'mens_doubles',
+  'womens_doubles',
+  'mens_singles',
+  'womens_singles',
+];
 
 export const LeaderboardScreen = memo(({}: TabScreenProps<'Leaderboard'>) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user: currentUser } = useAuth();
-  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all_doubles');
-  const [refreshing, setRefreshing] = useState(false);
-  const isInitialLoad = useRef(true);
+  const pagerRef = useRef<PagerView>(null);
+  
+  // Start with "Doubles" as default (index 0)
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [refreshing, setRefreshing] = useState<Record<number, boolean>>({});
 
-  // Parse category filter to get game category and gender
-  const { category, gender } = parseCategoryFilter(selectedCategory);
+  const selectedCategory = categories[selectedIndex];
 
-  // Fetch leaderboard data
-  const { rankings, loading, error, refetch } = useLeaderboard(category, gender, 50);
-
-  // Mark initial load as complete once data loads
-  useEffect(() => {
-    if (!loading) {
-      isInitialLoad.current = false;
+  const handleCategoryChange = useCallback((category: CategoryFilter) => {
+    const index = categories.indexOf(category);
+    if (index !== -1) {
+      setSelectedIndex(index);
+      pagerRef.current?.setPage(index);
     }
-  }, [loading]);
+  }, []);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    refetch();
-    // Give it a moment to feel responsive
-    setTimeout(() => setRefreshing(false), 500);
-  }, [refetch]);
+  const handlePageSelected = useCallback((e: PagerViewOnPageSelectedEvent) => {
+    setSelectedIndex(e.nativeEvent.position);
+  }, []);
 
   const handleUserPress = useCallback((username: string) => {
     navigation.navigate('UserProfile', { username });
   }, [navigation]);
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: UserDocument; index: number }) => {
-      const rank = index + 1;
-      const isCurrentUser = item.uid === currentUser?.id;
+  const handleRefresh = useCallback((index: number, refetch: () => void) => {
+    setRefreshing(prev => ({ ...prev, [index]: true }));
+    refetch();
+    setTimeout(() => {
+      setRefreshing(prev => ({ ...prev, [index]: false }));
+    }, 500);
+  }, []);
 
-      return (
-        <LeaderboardRow
-          user={item}
-          rank={rank}
-          category={category}
-          isCurrentUser={isCurrentUser}
-          onPress={() => handleUserPress(item.username)}
+  return (
+    <SafeAreaView className="flex-1 bg-white" edges={['right', 'left']}>
+      {/* Category Filter */}
+      <View className="px-4 pt-3 pb-4 border-b border-gray-200">
+        <CategorySelect
+          value={selectedCategory}
+          onChange={handleCategoryChange}
         />
-      );
-    },
-    [category, currentUser?.id, handleUserPress]
-  );
-
-  const keyExtractor = useCallback((item: UserDocument) => item.uid, []);
-
-  const renderEmptyState = useCallback(() => {
-    if (loading) return null;
-
-    return (
-      <View className="items-center justify-center flex-1 px-4 py-12">
-        <View className="items-center justify-center w-20 h-20 mb-4 bg-gray-100 rounded-full">
-          <Trophy size={32} color="#9ca3af" />
-        </View>
-        <Text className="mb-2 text-xl font-bold text-gray-900">
-          No Rankings Yet
-        </Text>
-        <Text className="text-base text-center text-gray-600">
-          Be the first to play and claim the top spot!
-        </Text>
       </View>
-    );
-  }, [loading]);
 
-  // Loading state (initial load only)
-  if (loading && isInitialLoad.current) {
+      {/* Swipeable Pages */}
+      <PagerView
+        ref={pagerRef}
+        style={{ flex: 1, flexDirection: 'column' }}
+        initialPage={0}
+        onPageSelected={handlePageSelected}
+      >
+        {categories.map((categoryFilter, index) => (
+          <LeaderboardPageWrapper
+            key={categoryFilter}
+            categoryFilter={categoryFilter}
+            currentUserId={currentUser?.id}
+            refreshing={refreshing[index] || false}
+            onRefresh={handleRefresh}
+            onUserPress={handleUserPress}
+            index={index}
+          />
+        ))}
+      </PagerView>
+    </SafeAreaView>
+  );
+});
+
+LeaderboardScreen.displayName = 'LeaderboardScreen';
+
+// Wrapper component for each page
+interface LeaderboardPageWrapperProps {
+  categoryFilter: CategoryFilter;
+  currentUserId?: string;
+  refreshing: boolean;
+  onRefresh: (index: number, refetch: () => void) => void;
+  onUserPress: (username: string) => void;
+  index: number;
+}
+
+const LeaderboardPageWrapper = memo(({
+  categoryFilter,
+  currentUserId,
+  refreshing,
+  onRefresh,
+  onUserPress,
+  index,
+}: LeaderboardPageWrapperProps) => {
+  const { category, gender } = parseCategoryFilter(categoryFilter);
+  const { rankings, loading, refetch } = useLeaderboard(category, gender, 50);
+
+  const handleRefresh = useCallback(() => {
+    onRefresh(index, refetch);
+  }, [index, onRefresh, refetch]);
+
+  // Show loading for initial load only
+  if (loading && rankings.length === 0) {
     return (
-      <View className="items-center justify-center flex-1 bg-white">
+      <View style={{ flex: 1 }} className="items-center justify-center">
         <LoadingSpinner />
         <Text className="mt-4 text-gray-600">Loading rankings...</Text>
       </View>
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <View className="flex-1 bg-white">
-        <SafeAreaView edges={['top']}>
-          <View className="px-4 py-6">
-            <ErrorMessage
-              message={error.message || 'Failed to load leaderboard'}
-            />
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
-      {/* Category Filter */}
-      <View className="px-4 pt-3 pb-4 border-b border-gray-200">
-        <CategorySelect
-          value={selectedCategory}
-          onChange={setSelectedCategory}
-        />
-      </View>
-
-      {/* Rankings List */}
-      <FlatList
-        data={rankings}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 16,
-          flexGrow: 1,
-        }}
-        ListEmptyComponent={renderEmptyState}
-        ListFooterComponent={
-          rankings.length > 0 ? (
-            <View className="py-4">
-              <Text className="text-sm text-center text-gray-500">
-                End of leaderboard • {rankings.length} players
-              </Text>
-            </View>
-          ) : null
-        }
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
+    // <View style={{ flex: 1, flexDirection: 'column' }} >
+      <LeaderboardPage
+        rankings={rankings}
+        category={category}
+        loading={loading}
+        refreshing={refreshing}
+        currentUserId={currentUserId}
+        onRefresh={handleRefresh}
+        onUserPress={onUserPress}
       />
-    </SafeAreaView>
+    // </View>
   );
 });
 
-LeaderboardScreen.displayName = 'LeaderboardScreen';
+LeaderboardPageWrapper.displayName = 'LeaderboardPageWrapper';

@@ -4,12 +4,11 @@ import {
   Text,
   Pressable,
   ScrollView,
-  Clipboard,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
-import { X, Copy, Check, User, Users, Radio } from "lucide-react-native";
+import { User, Users } from "lucide-react-native";
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -29,7 +28,7 @@ import { useToast } from "@/hooks/common/useToast";
 import { useAlert } from "@/hooks/common/useAlert";
 import { useNFC } from "@/hooks/common/useNFC";
 import { useStakesCalculation } from "@/hooks/game/useStakesCalculation";
-import { LoadingSpinner, ErrorMessage } from "@/components/common";
+import { LoadingSpinner, ErrorMessage, ScreenHeader } from "@/components/common";
 import { Card } from "@/components/ui/Card";
 import { DraggablePlayerSlot } from "@/components/features/lobby/DraggablePlayerSlot";
 import { CountdownOverlay } from "@/components/features/lobby/CountdownOverlay";
@@ -876,18 +875,11 @@ export const LobbyDetailScreen = memo(
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-          {/* Compact Header - Role-based title */}
-          <View className="relative flex-row items-center justify-center px-4 py-3 border-b border-gray-200">
-            <Pressable
-              onPress={isHost ? handleClose : handleLeave}
-              className="absolute p-2 left-4"
-            >
-              <X size={24} color="#6b7280" />
-            </Pressable>
-            <Text className="text-xl font-bold !text-gray-900">
-              {isHost ? 'Game Lobby' : 'Waiting to Start'}
-            </Text>
-          </View>
+          <ScreenHeader
+            leftAction="close"
+            title={isHost ? 'Game Lobby' : 'Waiting to Start'}
+            onLeftPress={isHost ? handleClose : handleLeave}
+          />
 
           {/* Lobby Header with Room Code and Actions */}
           {isHost && isSupported && (

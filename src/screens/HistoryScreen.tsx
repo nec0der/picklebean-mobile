@@ -117,7 +117,7 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
   if (error) {
     return (
       <View className="flex-1 bg-white">
-        <SafeAreaView edges={['top']}>
+        <SafeAreaView edges={['right', 'left']}>
           <View className="px-4 py-6">
             <ErrorMessage
               message={error.message || 'Failed to load match history'}
@@ -130,7 +130,7 @@ export const HistoryScreen = memo(({}: TabScreenProps<'History'>) => {
 
   return (
     <>
-      <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+      <SafeAreaView className="flex-1 bg-white" edges={['right', 'left']}>
         {/* Match List */}
         <FlatList
           data={matches}
