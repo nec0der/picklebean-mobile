@@ -24,6 +24,8 @@
         "applinks:localhost"
       ],
       "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Picklebean uses your location to show nearby courts and calculate travel times when you tap Play Now.",
+        "NSLocationAlwaysUsageDescription": "Picklebean can detect when you're at a court to help you quickly start matches and find other players nearby.",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
