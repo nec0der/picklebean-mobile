@@ -48,6 +48,7 @@ export interface UserDocument {
   email: string;
   displayName: string; // Formatted with @ for display (@username)
   photoURL: string;
+  authProvider: 'password' | 'google.com' | 'apple.com'; // How user registered
   isVerified: boolean;
   isAdmin?: boolean;
   isBanned?: boolean;
