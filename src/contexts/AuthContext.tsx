@@ -15,7 +15,7 @@ import {
   updateProfile,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, firestore } from '@/config/firebase';
 import type { User, UserDocument } from '@/types/user';
 
@@ -28,7 +28,7 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
-  signUpWithUsername: (username: string, password: string, gender: 'male' | 'female', photoUri: string | null) => Promise<void>;
+  signUpWithUsername: (email: string, username: string, password: string, gender: 'male' | 'female', photoUri: string | null) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (updates: { displayName?: string; photoURL?: string }) => Promise<void>;
@@ -134,19 +134,39 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => unsubscribe();
   }, [firebaseUser]);
 
-  // Sign in with username and password (converts username to internal email)
+  // Sign in with username and password (queries Firestore for real email)
   const signIn = useCallback(async (usernameOrEmail: string, password: string): Promise<void> => {
     try {
-      const { usernameToEmail } = await import('@/lib/username');
+      const cleanInput = usernameOrEmail.trim().toLowerCase();
+      let emailToUse: string;
       
-      // Convert username to email if needed
-      // If input already looks like an email (contains @ but not our domain), use as-is
-      // Otherwise, treat as username and convert to @picklebean.app
-      const email = usernameOrEmail.includes('@') && !usernameOrEmail.includes('@picklebean.app')
-        ? usernameOrEmail  // Already an email (OAuth users)
-        : usernameToEmail(usernameOrEmail); // Username → username@picklebean.app
+      // Check if input is an email
+      const isEmail = cleanInput.includes('@');
       
-      await signInWithEmailAndPassword(auth, email, password);
+      if (isEmail) {
+        // Input is already an email - use it directly
+        emailToUse = cleanInput;
+      } else {
+        // Input is a username - query Firestore to get the real email
+        const cleanUsername = cleanInput.replace('@', '');
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('username', '==', cleanUsername));
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+          // Username not found - throw error
+          throw new Error('Invalid username or password');
+        }
+        
+        const userDoc = snapshot.docs[0].data();
+        emailToUse = userDoc.email;
+        
+        if (!emailToUse) {
+          throw new Error('Account configuration error');
+        }
+      }
+      
+      await signInWithEmailAndPassword(auth, emailToUse, password);
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
@@ -185,19 +205,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     []
   );
 
-  // Sign up with username (username-based auth)
+  // Sign up with username (username-based auth with real email)
   const signUpWithUsername = useCallback(
-    async (username: string, password: string, gender: 'male' | 'female', photoUri: string | null): Promise<void> => {
+    async (email: string, username: string, password: string, gender: 'male' | 'female', photoUri: string | null): Promise<void> => {
       try {
-        // Import username utilities
-        const { usernameToEmail } = await import('@/lib/username');
-        
-        // Convert username to internal email
+        // Clean username
         const cleanUsername = username.startsWith('@') ? username.slice(1).toLowerCase() : username.toLowerCase();
-        const email = usernameToEmail(cleanUsername);
         const displayName = cleanUsername; // Store without "@"
 
-        // Create Firebase Auth user
+        // Create Firebase Auth user with REAL email
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const { user: firebaseUser } = userCredential;
 
@@ -208,9 +224,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const userDocument: Partial<UserDocument> = {
           uid: firebaseUser.uid,
           username: cleanUsername,
-          email,
+          email, // Real email for password reset
           displayName,
           photoURL: photoUri || '',
+          authProvider: 'password', // Track how user registered
           gender,
           ...(photoUri && { profilePictureUrl: photoUri }), // Only include if photo exists
           isVerified: false,
@@ -220,7 +237,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           rankings: {
             singles: 1000,
             sameGenderDoubles: 1000,
-            mixedDoubles: 1000,
           },
           matchStats: {
             totalMatches: 0,
@@ -276,6 +292,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           displayName: '', // Will be set from username during onboarding
           username: '', // Will be set during onboarding
           photoURL: oauthUserInfo.photoURL || '', // Keep OAuth photo as default
+          authProvider: 'google.com', // Track OAuth provider
           isVerified: true, // OAuth users are verified
           status: 'incomplete', // User needs to complete onboarding
           createdAt: new Date().toISOString(),
@@ -283,7 +300,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           rankings: {
             singles: 1000,
             sameGenderDoubles: 1000,
-            mixedDoubles: 1000,
           },
           matchStats: {
             totalMatches: 0,
@@ -318,6 +334,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           displayName: '', // Will be set from username during onboarding
           username: '', // Will be set during onboarding
           photoURL: oauthUserInfo.photoURL || '', // Keep OAuth photo as default
+          authProvider: 'apple.com', // Track OAuth provider
           isVerified: true, // OAuth users are verified
           status: 'incomplete', // User needs to complete onboarding
           createdAt: new Date().toISOString(),
@@ -325,7 +342,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           rankings: {
             singles: 1000,
             sameGenderDoubles: 1000,
-            mixedDoubles: 1000,
           },
           matchStats: {
             totalMatches: 0,

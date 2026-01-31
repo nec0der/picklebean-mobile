@@ -57,7 +57,7 @@ export const LoginScreen = ({ navigation }: Props) => {
   };
 
   const handleCreateAccount = () => {
-    navigation.navigate("ChooseUsername", { isSignupFlow: true });
+    navigation.navigate("EnterEmail");
   };
 
   const handleTermsPress = () => {
@@ -76,9 +76,9 @@ export const LoginScreen = ({ navigation }: Props) => {
         
         {/* Header - Minimal & Clean */}
         <View className="items-center flex-1 justify-center max-h-[30%]">
-          <Logo size="xl" />
+          <Logo size="2xl" />
           {/* Removed tagline for cleaner look, or keep it very subtle */}
-          <Text size="md" className="mt-6 font-medium tracking-wide text-center !text-gray-500">
+          <Text className="mt-6 !text-xl font-medium tracking-wide text-center !text-gray-500">
             Track matches. Rise up.
           </Text>
         </View>
@@ -129,14 +129,14 @@ export const LoginScreen = ({ navigation }: Props) => {
             </Pressable>
           )}
 
-          {/* Username (Subtle) */}
+          {/* Email/Username Sign In (Subtle) */}
           <Pressable
             onPress={handleUsernameSignIn}
             disabled={isLoading}
             className="items-center justify-center py-3 mt-2"
           >
             <Text className="text-sm font-medium !text-gray-500">
-              Sign in with username
+              Sign in with email or username
             </Text>
           </Pressable>
         </VStack>

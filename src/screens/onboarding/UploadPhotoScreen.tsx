@@ -31,6 +31,7 @@ import {
 } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Button } from "@/components/ui/Button";
+import { StepIndicator } from "@/components/common/StepIndicator";
 import type { AuthStackScreenProps, OnboardingStackScreenProps } from "@/types/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { doc, updateDoc } from "firebase/firestore";
@@ -43,6 +44,7 @@ export const UploadPhotoScreen = ({
   route,
 }: UploadPhotoScreenProps) => {
   const { username, gender } = route.params;
+  const email = (route.params as any).email; // Optional - only for username signup
   const password = (route.params as any).password; // Optional for OAuth flow
   
   // Check if user is OAuth user by email domain
@@ -141,9 +143,9 @@ export const UploadPhotoScreen = ({
         });
         
         // Navigation will happen automatically when status changes to 'approved'
-      } else if (password) {
-        // Username/password flow: Create new account
-        await signUpWithUsername(username, password, gender, photoUri);
+      } else if (password && email) {
+        // Username/password flow: Create new account with real email
+        await signUpWithUsername(email, username, password, gender, photoUri);
       }
     } catch (error) {
       console.error('Error completing onboarding:', error);
@@ -170,9 +172,9 @@ export const UploadPhotoScreen = ({
           status: 'approved', // Complete onboarding
           updatedAt: new Date().toISOString(),
         });
-      } else if (password) {
+      } else if (password && email) {
         // Username/password flow: Create account without photo
-        await signUpWithUsername(username, password, gender, null);
+        await signUpWithUsername(email, username, password, gender, null);
       }
     } catch (error) {
       console.error('Error completing onboarding:', error);
@@ -185,26 +187,31 @@ export const UploadPhotoScreen = ({
     <SafeAreaView className="flex-1 bg-white">
       <Box className="flex-1 px-6">
         <View>
-          {/* Top Bar */}
-          <View className="flex-row items-center justify-between">
+          {/* Top Row - Back Button, Step Indicator, and Skip */}
+          <View className="flex-row items-center justify-between mb-6">
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               className="p-2 -ml-2"
             >
               <ChevronLeft size={28} color="#000" />
             </TouchableOpacity>
+            
+            <StepIndicator 
+              currentStep={email && password ? 5 : 4} 
+              totalSteps={email && password ? 5 : 4} 
+            />
 
             <TouchableOpacity
               onPress={handleSkip}
               disabled={loading}
-              className="p-2"
+              className="p-2 -mr-2"
             >
-              <Text className="text-lg font-semibold !text-blue-600">Skip</Text>
+              <Text className="text-base font-semibold !text-blue-600">Skip</Text>
             </TouchableOpacity>
           </View>
 
           {/* Header */}
-          <VStack space="sm" className="mt-6">
+          <VStack space="sm">
             <Heading size="2xl" className="!text-gray-900">
               Add Profile Photo
             </Heading>
@@ -230,10 +237,10 @@ export const UploadPhotoScreen = ({
               {photoUri ? (
                 <Image
                   source={{ uri: photoUri }}
-                  className="w-48 h-48 rounded-full"
+                  className="w-56 h-56 rounded-full"
                 />
               ) : (
-                <View className="items-center justify-center w-48 h-48 border-2 border-gray-200 border-dashed rounded-full bg-gray-50">
+                <View className="items-center justify-center w-56 h-56 border-2 border-gray-200 border-dashed rounded-full bg-gray-50">
                   <Camera size={40} color="#9CA3AF" />
                 </View>
               )}
@@ -261,84 +268,84 @@ export const UploadPhotoScreen = ({
           </View>
         </View>
 
-        {/* Bottom Button */}
-        <View className="pb-8 mt-8">
-          <Button
-            title="Complete Setup"
-            size="md"
-            onPress={handleContinue}
-            disabled={loading}
-            loading={loading}
-            fullWidth
-          />
-        </View>
+        {/* Bottom Button - Only show when photo is uploaded */}
+        {photoUri && photoUri !== oauthPhotoURL && (
+          <View className="pb-8 mt-8">
+            <Button
+              title="Complete Setup"
+              size="md"
+              onPress={handleContinue}
+              disabled={loading}
+              loading={loading}
+              fullWidth
+            />
+          </View>
+        )}
       </Box>
 
       {/* Selection ActionSheet */}
       <Actionsheet
         isOpen={showActionSheet}
         onClose={() => setShowActionSheet(false)}
-        snapPoints={[40]}
       >
         <ActionsheetBackdrop />
-        <ActionsheetContent className="pb-8">
+        <ActionsheetContent className="px-0 pb-8">
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
 
-          <VStack
-            space="xs"
-            className="flex flex-col content-between flex-1 w-full pb-2 mt-4"
-          >
-            <View className="flex-1">
-              <ActionsheetItem
+          <View className="w-full py-6">
+            {/* Action Buttons */}
+            <View className="px-2">
+              {/* Take Photo */}
+              <Pressable
                 onPress={handleTakePhoto}
-                className="rounded-lg active:bg-gray-100"
+                className="flex-row items-center gap-3 px-4 py-4 rounded-lg active:bg-gray-50"
               >
-                <Camera size={20} color="#374151" />
-                <ActionsheetItemText className="ml-3 font-medium !text-gray-700">
+                <Camera size={20} color="#1F2937" />
+                <Text className="text-base font-medium !text-gray-900">
                   Take Photo
-                </ActionsheetItemText>
-              </ActionsheetItem>
+                </Text>
+              </Pressable>
 
-              <Divider className="my-1 bg-gray-100" />
-
-              <ActionsheetItem
+              {/* Choose from Library */}
+              <Pressable
                 onPress={handleChoosePhoto}
-                className="rounded-lg active:bg-gray-100"
+                className="flex-row items-center gap-3 px-4 py-4 mt-2 rounded-lg active:bg-gray-50"
               >
-                <ImageIcon size={20} color="#374151" />
-                <ActionsheetItemText className="ml-3 font-medium !text-gray-700">
+                <ImageIcon size={20} color="#1F2937" />
+                <Text className="text-base font-medium !text-gray-900">
                   Choose from Library
-                </ActionsheetItemText>
-              </ActionsheetItem>
+                </Text>
+              </Pressable>
 
+              {/* Remove Photo - Conditional */}
               {photoUri && (
-                <>
-                  <Divider className="my-1 bg-gray-100" />
-                  <ActionsheetItem
-                    onPress={handleRemovePhoto}
-                    className="rounded-lg active:bg-red-50"
-                  >
-                    <Trash2 size={20} color="#EF4444" />
-                    <ActionsheetItemText className="ml-3 font-medium !text-red-600">
-                      Remove Photo
-                    </ActionsheetItemText>
-                  </ActionsheetItem>
-                </>
+                <Pressable
+                  onPress={handleRemovePhoto}
+                  className="flex-row items-center gap-3 px-4 py-4 mt-2 rounded-lg active:bg-red-50"
+                >
+                  <Trash2 size={20} color="#DC2626" />
+                  <Text className="text-base font-medium !text-red-600">
+                    Remove Photo
+                  </Text>
+                </Pressable>
               )}
             </View>
 
-            <View className="mt-6">
+            <Divider className="my-4" />
+
+            {/* Close Button */}
+            <View className="px-4">
               <Button
-                title="Cancel"
-                variant="secondary"
+                title="Close"
+                variant="subtle"
                 size="md"
                 onPress={() => setShowActionSheet(false)}
                 fullWidth
               />
             </View>
-          </VStack>
+          </View>
         </ActionsheetContent>
       </Actionsheet>
 
@@ -346,7 +353,7 @@ export const UploadPhotoScreen = ({
       <Actionsheet
         isOpen={showInfo}
         onClose={() => setShowInfo(false)}
-        snapPoints={[80]}
+        // snapPoints={[80]}
       >
         <ActionsheetBackdrop />
         <ActionsheetContent className="px-6 pt-4 pb-12">
@@ -354,22 +361,30 @@ export const UploadPhotoScreen = ({
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
 
-          <Heading size="xl" className="mt-4 mb-6 !text-gray-900">
+          <Heading size="xl" className="mt-4 mb-12 !text-gray-900">
             Profile Photo
           </Heading>
 
-          <VStack space="md">
+          <VStack space="md" className="mb-20">
             {infoContent.map((item, index) => (
-              <View key={index} className="flex-row gap-2">
+              <View key={index} className="flex-row gap-2 p-0">
                 <Text size="md" className="!text-gray-600">
                   •
                 </Text>
-                <Text size="md" className="flex-1 !text-gray-600">
+                <Text size="md" className="!text-gray-600">
                   {item}
                 </Text>
               </View>
             ))}
           </VStack>
+
+          {/* Close Button */}
+          <Button
+            title="Got It"
+            size="md"
+            onPress={() => setShowInfo(false)}
+            fullWidth
+          />
         </ActionsheetContent>
       </Actionsheet>
     </SafeAreaView>

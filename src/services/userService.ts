@@ -3,7 +3,7 @@
  * Firebase operations for user profile management
  */
 
-import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, getDoc, collection, query, where, orderBy, limit, getDocs, or } from 'firebase/firestore';
 import { firestore } from '@/config/firebase';
 import { getDefaultRankings, updateRankings } from '@/lib/points';
 import type { UserDocument, UserRankings, MatchStats } from '@/types/user';
@@ -163,4 +163,84 @@ export const markTapToPlayOnboardingSeen = async (userId: string): Promise<void>
     hasSeenTapToPlayOnboarding: true,
     updatedAt: serverTimestamp(),
   });
+};
+
+/**
+ * Search result item type for user search
+ */
+export interface UserSearchResult {
+  uid: string;
+  username: string;
+  displayName: string;
+  photoURL: string | null;
+}
+
+/**
+ * Search for users by username or displayName
+ * @param searchTerm - Search term (min 2 characters)
+ * @param excludeUserIds - User IDs to exclude from results
+ * @param resultLimit - Max number of results (default 10)
+ * @returns Array of matching users
+ */
+export const searchUsers = async (
+  searchTerm: string,
+  excludeUserIds: string[] = [],
+  resultLimit = 10
+): Promise<UserSearchResult[]> => {
+  if (!searchTerm || searchTerm.length < 2) {
+    return [];
+  }
+
+  const lowerTerm = searchTerm.toLowerCase();
+  
+  // Search by usernameLower (case-insensitive prefix search)
+  const q = query(
+    collection(firestore, 'users'),
+    where('usernameLower', '>=', lowerTerm),
+    where('usernameLower', '<=', lowerTerm + '\uf8ff'),
+    limit(resultLimit + excludeUserIds.length)
+  );
+
+  const snapshot = await getDocs(q);
+  const results: UserSearchResult[] = [];
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    // Exclude specified users
+    if (!excludeUserIds.includes(docSnap.id)) {
+      results.push({
+        uid: docSnap.id,
+        username: data.username || '',
+        displayName: data.displayName || data.username || 'Unknown',
+        photoURL: data.photoURL || null,
+      });
+    }
+  });
+
+  // Also search by displayName if we have fewer results
+  if (results.length < resultLimit) {
+    const displayNameQuery = query(
+      collection(firestore, 'users'),
+      where('displayName', '>=', searchTerm),
+      where('displayName', '<=', searchTerm + '\uf8ff'),
+      limit(resultLimit)
+    );
+
+    const displayNameSnapshot = await getDocs(displayNameQuery);
+    displayNameSnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const existingIds = results.map(r => r.uid);
+      // Avoid duplicates and excluded users
+      if (!existingIds.includes(docSnap.id) && !excludeUserIds.includes(docSnap.id)) {
+        results.push({
+          uid: docSnap.id,
+          username: data.username || '',
+          displayName: data.displayName || data.username || 'Unknown',
+          photoURL: data.photoURL || null,
+        });
+      }
+    });
+  }
+
+  return results.slice(0, resultLimit);
 };

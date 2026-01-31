@@ -4,11 +4,12 @@ import { Heading, Input, InputField, VStack, Text } from '@gluestack-ui/themed';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import type { AuthStackScreenProps } from '@/types/navigation';
 import { Button } from '@/components/ui/Button';
+import { StepIndicator } from '@/components/common/StepIndicator';
 
 type CreatePasswordScreenProps = AuthStackScreenProps<'CreatePassword'>;
 
 export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreenProps) => {
-  const { username } = route.params;
+  const { email } = route.params;
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -25,10 +26,11 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
       return;
     }
 
-    // Navigate to gender selection
-    navigation.navigate('SelectGender', {
-      username,
+    // Navigate to username selection
+    navigation.navigate('ChooseUsername', {
+      email,
       password,
+      isSignupFlow: true,
     });
   };
 
@@ -39,16 +41,22 @@ export const CreatePasswordScreen = ({ navigation, route }: CreatePasswordScreen
         className="flex-1"
       >
         <View className="px-6">
-          {/* Back button */}
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="self-start p-2 -ml-2"
-          >
-            <ChevronLeft size={28} color="#000" />
-          </TouchableOpacity>
+          {/* Top Row - Back Button and Step Indicator */}
+          <View className="flex-row items-center justify-between mb-6">
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              className="p-2 -ml-2"
+            >
+              <ChevronLeft size={28} color="#000" />
+            </TouchableOpacity>
+            
+            <StepIndicator currentStep={2} totalSteps={5} />
+            
+            <View className="w-10" />
+          </View>
 
           {/* Header */}
-          <VStack space="xs" className="mt-6">
+          <VStack space="xs">
             <Heading size="2xl" className="!text-gray-900">
               Create a password
             </Heading>

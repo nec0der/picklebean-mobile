@@ -5,6 +5,7 @@ import { ChevronLeft, Check, AlertCircle } from 'lucide-react-native';
 import type { AuthStackScreenProps, OnboardingStackScreenProps } from '@/types/navigation';
 import { validateUsername, checkUsernameAvailability } from '@/lib/username';
 import { Button } from '@/components/ui/Button';
+import { StepIndicator } from '@/components/common/StepIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAlert } from '@/hooks/common/useAlert';
 
@@ -13,8 +14,8 @@ type ChooseUsernameScreenProps =
   | OnboardingStackScreenProps<'ChooseUsername'>;
 
 export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreenProps) => {
-  const params = route.params as { isSignupFlow: boolean; oauthPhotoURL?: string };
-  const { isSignupFlow } = params;
+  const params = route.params as { email?: string; password?: string; isSignupFlow: boolean; oauthPhotoURL?: string };
+  const { email, password, isSignupFlow } = params;
   const { signOut, firebaseUser } = useAuth();
   const alert = useAlert();
   
@@ -115,11 +116,11 @@ export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreen
     }
     
     // Route based on flow type
-    if (isSignupFlow) {
-      // Signup flow: Username → Password → Gender → Photo
-      (navigation as any).navigate('CreatePassword', { username });
+    if (isSignupFlow && email && password) {
+      // Signup flow: Email → Password → Username → Gender → Photo
+      (navigation as any).navigate('SelectGender', { email, username, password });
     } else {
-      // OAuth flow: Username → Gender → Photo (no password needed)
+      // OAuth flow: Username → Gender → Photo (no email/password needed)
       (navigation as any).navigate('SelectGender', { username });
     }
   }, [username, isAvailable, error, checking, navigation, isSignupFlow]);
@@ -133,16 +134,25 @@ export const ChooseUsernameScreen = ({ navigation, route }: ChooseUsernameScreen
         <View className="justify-between flex-1">
           {/* Main Content */}
           <View className="px-6">
-            {/* Close button */}
-            <TouchableOpacity
-              onPress={handleBack}
-              className="self-start p-2 -ml-2"
-            >
-              <ChevronLeft size={28} color="#000" />
-            </TouchableOpacity>
+            {/* Top Row - Back Button and Step Indicator */}
+            <View className="flex-row items-center justify-between mb-6">
+              <TouchableOpacity
+                onPress={handleBack}
+                className="p-2 -ml-2"
+              >
+                <ChevronLeft size={28} color="#000" />
+              </TouchableOpacity>
+              
+              <StepIndicator 
+                currentStep={isSignupFlow ? 3 : 1} 
+                totalSteps={isSignupFlow ? 5 : 4} 
+              />
+              
+              <View className="w-10" />
+            </View>
 
             {/* Header */}
-            <VStack space="xs" className="mt-6">
+            <VStack space="xs">
               <Heading size="2xl" className="!text-gray-900">
                 Create a username
               </Heading>

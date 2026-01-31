@@ -14,6 +14,7 @@ import {
 } from "@gluestack-ui/themed";
 import { ChevronLeft, Mars, Venus, Check } from "lucide-react-native";
 import { Button } from "@/components/ui/Button";
+import { StepIndicator } from "@/components/common/StepIndicator";
 import type { AuthStackScreenProps, OnboardingStackScreenProps } from "@/types/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -24,6 +25,7 @@ export const SelectGenderScreen = ({
   route,
 }: SelectGenderScreenProps) => {
   const { username } = route.params;
+  const email = (route.params as any).email; // Optional - only for username signup
   const password = (route.params as any).password; // Optional for OAuth flow
   
   // Check if user is OAuth user by email domain
@@ -47,6 +49,7 @@ export const SelectGenderScreen = ({
       // Both flows navigate to UploadPhoto with same params
       // OAuth detection happens in UploadPhoto via email
       (navigation as any).navigate("UploadPhoto", {
+        email, // undefined for OAuth
         username,
         password, // undefined for OAuth
         gender: selectedGender,
@@ -57,16 +60,25 @@ export const SelectGenderScreen = ({
   return (
     <SafeAreaView className="flex-1 bg-white">
       <Box className="flex-1 px-6">
-        {/* Back Button */}
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          className="self-start p-2 -ml-2"
-        >
-          <ChevronLeft size={28} color="#000" />
-        </TouchableOpacity>
+        {/* Top Row - Back Button and Step Indicator */}
+        <View className="flex-row items-center justify-between mb-6">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="p-2 -ml-2"
+          >
+            <ChevronLeft size={28} color="#000" />
+          </TouchableOpacity>
+          
+          <StepIndicator 
+            currentStep={email && password ? 4 : 2} 
+            totalSteps={email && password ? 5 : 4} 
+          />
+          
+          <View className="w-10" />
+        </View>
 
         {/* Header */}
-        <VStack space="sm" className="mt-6">
+        <VStack space="sm">
           <Heading size="2xl" className="!text-gray-900">
             Select Gender
           </Heading>
